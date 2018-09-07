@@ -1,0 +1,22 @@
+#-----------------------------------------------------------------------------
+#
+# IGSIOConfig.cmake - IGSIO CMake configuration file for external projects.
+#
+
+
+# The vtkVideoIO include file directories.
+SET(VTKVIDEOIO_INCLUDE_DIRS "@VTKVIDEOIO_INCLUDE_DIRS_CONFIG@")
+
+# The vtkVideoIO library directories.
+SET(VTKVIDEOIO_LIBRARY_DIRS "@VTKVIDEOIO_LIBRARY_DIRS_CONFIG@")
+
+# A list of all libraries for vtkVideoIO.  Those listed here should
+# automatically pull in their dependencies.
+SET(VTKVIDEOIO_LIBRARIES vtkVideoIO)
+
+# The vtkVideoIO library targets.
+SET(IGSIO_LIBRARY_TARGETS_FILE "@IGSIO_LIBRARY_TARGETS_FILE_CONFIG@")
+INCLUDE(${IGSIO_LIBRARY_TARGETS_FILE})
+
+SET(IGSIO_BUILD_VTKVIDEOIO "@BUILD_VTKVIDEOIO@")
+SET(VTKVIDEOIO_ENABLE_MKV "@VTKVIDEOIO_ENABLE_MKV@")
