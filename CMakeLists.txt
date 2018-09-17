@@ -64,7 +64,7 @@ ENDIF()
 
 OPTION(BUILD_VTKVIDEOIO "Enable video reading/writing" ON)
 IF(BUILD_VTKVIDEOIO)
-  ADD_SUBDIRECTORY(Source/vtkVideoIO)
+  ADD_SUBDIRECTORY(Source/VideoIO)
 ENDIF()
 
 #-----------------------------------------------------------------------------
