@@ -1,0 +1,21 @@
+/*=IGSIO=header=begin======================================================
+  Program: IGSIO
+  Copyright (c) Laboratory for Percutaneous Surgery. All rights reserved.
+  See License.txt for details.
+=========================================================IGSIO=header=end*/
+
+// This file stores values determined during CMake configuration and
+// includes commonly needed header files.
+// This file has to be the first include in IGSIO cxx files.
+
+#ifndef __IGSIOConfigure_h
+#define __IGSIOConfigure_h
+
+#define IGSIO_VERSION "@IGSIO_VERSION@"
+#define IGSIO_VERSION_MAJOR @IGSIO_VERSION_MAJOR@
+#define IGSIO_VERSION_MINOR @IGSIO_VERSION_MINOR@
+#define IGSIO_VERSION_PATCH @IGSIO_VERSION_PATCH@
+
+#include "vtkVersionMacros.h"
+
+#endif // __IGSIOConfigure_h

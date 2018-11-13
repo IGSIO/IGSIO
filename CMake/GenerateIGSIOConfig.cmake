@@ -8,14 +8,23 @@
 # The "use" file.
 SET(IGSIO_USE_FILE ${IGSIO_BINARY_DIR}/UseIGSIO.cmake)
 
-# Determine the include directories needed.
-SET(VTKVIDEOIO_INCLUDE_DIRS_CONFIG
-  ${vtkVideoIO_INCLUDE_DIRS}
+# vtkSequenceIO
+# Include dirs
+SET(VTKSEQUENCEIO_INCLUDE_DIRS_CONFIG
+  ${vtkSequenceIO_INCLUDE_DIRS}
+  )
+# Library dirs
+SET(VTKSEQUENCEIO_LIBRARY_DIRS_CONFIG
+  ${vtkSequenceIO_LIBRARY_DIRS}
   )
 
-# Determine the include directories needed.
-SET(VTKVIDEOIO_LIBRARY_DIRS_CONFIG
-  ${vtkVideoIO_LIBRARY_DIRS}
+  # Include dirs
+SET(VTKIGSIOCOMMON_INCLUDE_DIRS
+  ${vtkIGSIOCommon_INCLUDE_DIRS}
+  )
+# Library dirs
+SET(VTKIGSIOCOMMON_LIBRARY_DIRS
+  ${vtkIGSIOCommon_LIBRARY_DIRS}
   )
 
 # The library dependencies file.
