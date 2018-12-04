@@ -666,7 +666,7 @@ public:
           } \
           ss << "'" << numberToStringConverter(value) << "'";  \
         } \
-        \ LOG_WARNING(ss.str()); \
+        LOG_WARNING(ss.str()); \
       } \
     } \
   }
