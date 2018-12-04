@@ -76,16 +76,14 @@ namespace
     }
 
     std::string spaces(" Testing PLUS is fun!");
-    std::string trimmed(spaces);
-    igsioCommon::Trim(trimmed);
+    std::string trimmed = igsioCommon::Trim(spaces);
     if (igsioCommon::IsEqualInsensitive(spaces, trimmed))
     {
       return IGSIO_FAIL;
     }
 
     spaces = "Testing PLUS is fun!";
-    trimmed = spaces;
-    igsioCommon::Trim(trimmed);
+    trimmed = igsioCommon::Trim(spaces);
     if (!igsioCommon::IsEqualInsensitive(spaces, trimmed))
     {
       return IGSIO_FAIL;
@@ -259,15 +257,36 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  if (TestValidTransformName("Image", "Probe") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
-  if (TestValidTransformName("Tool", "Tool") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
-  if (TestValidTransformName("TestTool", "OtherTool") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
+  if (TestValidTransformName("Image", "Probe") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  if (TestValidTransformName("Tool", "Tool") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  if (TestValidTransformName("TestTool", "OtherTool") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
 
 
-  if (TestInvalidTransformName("To", "To") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
-  if (TestInvalidTransformName("ToTol", "TolTo") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
-  if (TestInvalidTransformName("TolTo", "ToTol") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
-  if (TestInvalidTransformName("to", "to") != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
+  if (TestInvalidTransformName("To", "To") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  if (TestInvalidTransformName("ToTol", "TolTo") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  if (TestInvalidTransformName("TolTo", "ToTol") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
+  if (TestInvalidTransformName("to", "to") != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
 
   LOG_INFO("Test recursive critical section");
   vtkIGSIORecursiveCriticalSection* critSec = vtkIGSIORecursiveCriticalSection::New();
@@ -283,9 +302,15 @@ int main(int argc, char** argv)
   critSec->Delete();
   LOG_INFO(" Done");
 
-  if (TestStringFunctions() != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
+  if (TestStringFunctions() != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
 
-  if (TestXMLFunctions() != IGSIO_SUCCESS) { exit(EXIT_FAILURE); }
+  if (TestXMLFunctions() != IGSIO_SUCCESS)
+  {
+    exit(EXIT_FAILURE);
+  }
 
   LOG_INFO("Test finished successfully!");
   return EXIT_SUCCESS;

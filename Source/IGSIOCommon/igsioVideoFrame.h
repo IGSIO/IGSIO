@@ -179,11 +179,11 @@ public:
   /*! Get the fourCC of the frame encoding */
   igsioStatus GetEncodingFourCC(std::string& encodingFourCC) const;
 
-  /* Set if the frame is a keyframe */
-  void SetFrameType(int frameType);
+  /* Set the frame type */
+  void SetFrameType(FRAME_TYPE frameType);
 
-  /* Get if the frame is a keyframe */
-  bool GetFrameType();
+  /* Get the frame type */
+  FRAME_TYPE GetFrameType();
 
   /*! Get the pointer to the pixel buffer */
   void* GetScalarPointer() const;
@@ -294,10 +294,10 @@ public:
   \param clipRectangleSize the size of the clipping space, a value of NO_CLIP in either [0],[1] or [2] indicates no clipping performed
   */
   static igsioStatus FlipClipImage(vtkImageData* inUsImage,
-                                  const FlipInfoType& flipInfo,
-                                  const std::array<int, 3>& clipRectangleOrigin,
-                                  const std::array<int, 3>& clipRectangleSize,
-                                  vtkImageData* outUsOrientedImage);
+                                   const FlipInfoType& flipInfo,
+                                   const std::array<int, 3>& clipRectangleOrigin,
+                                   const std::array<int, 3>& clipRectangleSize,
+                                   vtkImageData* outUsOrientedImage);
 
   /*! Return true if the image data is valid (e.g. not NULL) */
   bool IsImageValid() const
@@ -330,7 +330,7 @@ protected:
   vtkImageData* Image;
   vtkUnsignedCharArray* EncodedFrame;
   std::string EncodingFourCC;
-  int FrameType;
+  FRAME_TYPE FrameType;
   US_IMAGE_TYPE ImageType;
   US_IMAGE_ORIENTATION ImageOrientation;
 };

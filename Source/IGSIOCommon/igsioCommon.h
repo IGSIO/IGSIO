@@ -95,8 +95,8 @@ public:
 
   // the parameters provide the maximum frequency of logging
   vtkIGSIOLogHelper(double minimumTimeBetweenLoggingSec = 60.0,
-                   unsigned long minimumCountBetweenLogging = 5000,
-                   vtkIGSIOLogger::LogLevelType logLevel = vtkIGSIOLogger::LOG_LEVEL_ERROR)
+                    unsigned long minimumCountBetweenLogging = 5000,
+                    vtkIGSIOLogger::LogLevelType logLevel = vtkIGSIOLogger::LOG_LEVEL_ERROR)
     : m_MinimumTimeBetweenLoggingSec(minimumTimeBetweenLoggingSec),
       m_MinimumCountBetweenLogging(minimumCountBetweenLogging),
       m_LogLevel(logLevel)
@@ -507,21 +507,21 @@ namespace igsioCommon
 
   //----------------------------------------------------------------------------
   VTKIGSIOCOMMON_EXPORT igsioStatus DrawLine(vtkImageData& imageData,
-                                          const std::array<float, 3>& colour,
-                                          LINE_STYLE style,
-                                          const std::array<int, 3>& startPixel,
-                                          const std::array<int, 3>& endPixel,
-                                          unsigned int numberOfPoints,
-                                          ALPHA_BEHAVIOR alphaBehavior = ALPHA_BEHAVIOR_OPAQUE);
+      const std::array<float, 3>& colour,
+      LINE_STYLE style,
+      const std::array<int, 3>& startPixel,
+      const std::array<int, 3>& endPixel,
+      unsigned int numberOfPoints,
+      ALPHA_BEHAVIOR alphaBehavior = ALPHA_BEHAVIOR_OPAQUE);
 
   //----------------------------------------------------------------------------
   VTKIGSIOCOMMON_EXPORT igsioStatus DrawLine(vtkImageData& imageData,
-                                          float greyValue,
-                                          LINE_STYLE style,
-                                          const std::array<int, 3>& startPixel,
-                                          const std::array<int, 3>& endPixel,
-                                          unsigned int numberOfPoints,
-                                          ALPHA_BEHAVIOR alphaBehavior = ALPHA_BEHAVIOR_OPAQUE);
+      float greyValue,
+      LINE_STYLE style,
+      const std::array<int, 3>& startPixel,
+      const std::array<int, 3>& endPixel,
+      unsigned int numberOfPoints,
+      ALPHA_BEHAVIOR alphaBehavior = ALPHA_BEHAVIOR_OPAQUE);
 
   //----------------------------------------------------------------------------
   bool VTKIGSIOCOMMON_EXPORT IsEqualInsensitive(std::string const& a, std::string const& b);
@@ -571,7 +571,7 @@ namespace igsioCommon
   VTKIGSIOCOMMON_EXPORT std::string Tail(const std::string& source, const std::string::size_type length);
 
   /*! Trim whitespace characters from the left and right */
-  VTKIGSIOCOMMON_EXPORT std::string& Trim(std::string& str);
+  VTKIGSIOCOMMON_EXPORT std::string Trim(const std::string& str);
 
   /*!
     On some systems fwrite may fail if a large chunk of data is attempted to written in one piece.

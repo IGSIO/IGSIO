@@ -143,8 +143,8 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
     }
 
     // trim spaces from the left and right
-    igsioCommon::Trim(name);
-    igsioCommon::Trim(value);
+    name = igsioCommon::Trim(name);
+    value = igsioCommon::Trim(value);
 
     if (!igsioCommon::HasSubstrInsensitive(name, SEQUENCE_FIELD_FRAME_FIELD_PREFIX))
     {
@@ -483,7 +483,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImagePixels()
       FSEEK(stream, offset, SEEK_SET);
       if (fread(&(pixelBuffer[0]), 1, frameSizeInBytes, stream) != frameSizeInBytes)
       {
-        LOG_ERROR("Could not read "<<frameSizeInBytes<<" bytes from "<<GetPixelDataFilePath());
+        LOG_ERROR("Could not read " << frameSizeInBytes << " bytes from " << GetPixelDataFilePath());
         numberOfErrors++;
       }
       FrameSizeType frameSize = { this->Dimensions[0], this->Dimensions[1], this->Dimensions[2] };
@@ -549,7 +549,7 @@ bool vtkIGSIONrrdSequenceIO::CanReadFile(const std::string& filename)
 {
   vtkSmartPointer<vtkNrrdReader> reader = vtkSmartPointer<vtkNrrdReader>::New();
 
-  return reader->CanReadFile(filename.c_str());
+  return reader->CanReadFile(filename.c_str()) == 2; // Why on earth is it 2!? Who uses int for true/false!
 }
 
 //----------------------------------------------------------------------------
@@ -1192,8 +1192,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateFieldInImageHeader(const char* fieldNa
       LOG_WARNING("Not a field line. Skipping... (" << line << ")");
       continue;
     }
-    std::string name = line.substr(0, colonFound);
-    igsioCommon::Trim(name);
+    std::string name = igsioCommon::Trim(line.substr(0, colonFound));
 
     bool isKeyValue(false);
     size_t equalFound;
@@ -1212,7 +1211,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateFieldInImageHeader(const char* fieldNa
         // It is a key/value
         value = line.substr(colonFound + 2);
       }
-      igsioCommon::Trim(value);
+      value = igsioCommon::Trim(value);
 
       // construct a new line with the updated value
       std::ostringstream newLineStr;

@@ -77,9 +77,9 @@ int main(int argc, char** argv)
     // ******************************************************************************
     // Test writing
 
-    int width = 10;
-    int height = 10;
-    int numFrames = 100;
+    unsigned int width = 10;
+    unsigned int height = 10;
+    unsigned int numFrames = 100;
     float fps = 10.0;
     double timeBetweenFrames = 1.0 / fps;
     double timestamp = 0.0;
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
       outputTrackedFrameList->AddTrackedFrame(&emptyFrame, vtkIGSIOTrackedFrameList::ADD_INVALID_FRAME);
     }
 
-    for (int i = 0; i < numFrames; ++i)
+    for (unsigned int i = 0; i < numFrames; ++i)
     {
       igsioTrackedFrame* trackedFrame = outputTrackedFrameList->GetTrackedFrame(i);
       igsioVideoFrame* videoFrame = trackedFrame->GetImageData();
@@ -103,10 +103,10 @@ int main(int argc, char** argv)
       vtkImageData* imageData = videoFrame->GetImage();
       unsigned char* imageDataScalars = (unsigned char*)imageData->GetScalarPointer();
       unsigned char blue = 255 * (i / (double)numFrames);
-      for (int y = 0; y < height; ++y)
+      for (unsigned int y = 0; y < height; ++y)
       {
         unsigned char green = 255 * (y / (double)height);
-        for (int x = 0; x < width; ++x)
+        for (unsigned int x = 0; x < width; ++x)
         {
           unsigned char red = 255 * (x / (double)width);
           imageDataScalars[0] = red;

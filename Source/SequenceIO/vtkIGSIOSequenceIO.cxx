@@ -28,13 +28,20 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     vtksys::SystemTools::RemoveFile(filename.c_str());
   }
 
+  std::string outputPath(path);
+  if (vtksys::SystemTools::FileIsFullPath(filename) && !path.empty())
+  {
+    LOG_ERROR("Filename contains absolute path and path argument is not empty, defaulting to absolute path.");
+    outputPath = vtksys::SystemTools::GetFilenamePath(filename);
+  }
+
   // Parse sequence filename to determine if it's metafile or NRRD
   if (vtkIGSIOMetaImageSequenceIO::CanWriteFile(filename))
   {
     vtkNew<vtkIGSIOMetaImageSequenceIO> writer;
     writer->SetUseCompression(useCompression);
     writer->SetFileName(filename);
-    writer->SetOutputFilePath(path);
+    writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
     writer->SetEnableImageDataWrite(enableImageDataWrite);
@@ -44,7 +51,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     }
     if (writer->Write() != IGSIO_SUCCESS)
     {
-      LOG_ERROR(frameList, "Couldn't write sequence metafile: " <<  filename);
+      LOG_ERROR("Couldn't write sequence metafile: " <<  filename);
       return IGSIO_FAIL;
     }
     return IGSIO_SUCCESS;
@@ -54,7 +61,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     vtkNew<vtkIGSIONrrdSequenceIO> writer;
     writer->SetUseCompression(useCompression);
     writer->SetFileName(filename);
-    writer->SetOutputFilePath(path);
+    writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
     writer->SetEnableImageDataWrite(enableImageDataWrite);
@@ -64,7 +71,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     }
     if (writer->Write() != IGSIO_SUCCESS)
     {
-      LOG_ERROR(frameList, "Couldn't write Nrrd file: " <<  filename);
+      LOG_ERROR("Couldn't write Nrrd file: " <<  filename);
       return IGSIO_FAIL;
     }
     return IGSIO_SUCCESS;
@@ -75,7 +82,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     vtkNew<vtkIGSIOMkvSequenceIO> writer;
     writer->SetUseCompression(useCompression);
     writer->SetFileName(filename);
-    writer->SetOutputFilePath(path);
+    writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
     writer->SetEnableImageDataWrite(enableImageDataWrite);
@@ -85,22 +92,34 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     }
     if (writer->Write() != IGSIO_SUCCESS)
     {
-      LOG_ERROR(frameList, "Couldn't write Nrrd file: " << filename);
+      LOG_ERROR("Couldn't write Nrrd file: " << filename);
       return IGSIO_FAIL;
     }
   }
 #endif
 
-  LOG_ERROR(frameList, "No writer for file: " << filename);
+  LOG_ERROR("No writer for file: " << filename);
   return IGSIO_FAIL;
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool EnableImageDataWrite /*= true*/)
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
 {
   vtkNew<vtkIGSIOTrackedFrameList> list;
   list->AddTrackedFrame(frame);
-  return vtkIGSIOSequenceIO::Write(filename, path, list.GetPointer(), orientationInFile, useCompression, EnableImageDataWrite);
+  return vtkIGSIOSequenceIO::Write(filename, path, list.GetPointer(), orientationInFile, useCompression, enableImageDataWrite);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
+{
+  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frame, orientationInFile, useCompression, enableImageDataWrite);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
+{
+  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frameList, orientationInFile, useCompression, enableImageDataWrite);
 }
 
 //----------------------------------------------------------------------------
@@ -108,7 +127,7 @@ igsioStatus vtkIGSIOSequenceIO::Read(const std::string& filename, vtkIGSIOTracke
 {
   if (!vtksys::SystemTools::FileExists(filename.c_str()))
   {
-    LOG_ERROR(frameList, "File: " << filename << " does not exist.");
+    LOG_ERROR("File: " << filename << " does not exist.");
     return IGSIO_FAIL;
   }
 
@@ -120,7 +139,7 @@ igsioStatus vtkIGSIOSequenceIO::Read(const std::string& filename, vtkIGSIOTracke
     reader->SetTrackedFrameList(frameList);
     if (reader->Read() != IGSIO_SUCCESS)
     {
-      LOG_ERROR(frameList, "Couldn't read sequence metafile: " << filename);
+      LOG_ERROR("Couldn't read sequence metafile: " << filename);
       return IGSIO_FAIL;
     }
     return IGSIO_SUCCESS;
@@ -133,7 +152,7 @@ igsioStatus vtkIGSIOSequenceIO::Read(const std::string& filename, vtkIGSIOTracke
     reader->SetTrackedFrameList(frameList);
     if (reader->Read() != IGSIO_SUCCESS)
     {
-      LOG_ERROR(frameList, "Couldn't read Nrrd file: " << filename);
+      LOG_ERROR("Couldn't read Nrrd file: " << filename);
       return IGSIO_FAIL;
     }
 
@@ -153,7 +172,7 @@ igsioStatus vtkIGSIOSequenceIO::Read(const std::string& filename, vtkIGSIOTracke
   }
 #endif
 
-  LOG_ERROR(frameList, "No reader for file: " << filename);
+  LOG_ERROR("No reader for file: " << filename);
   return IGSIO_FAIL;
 }
 

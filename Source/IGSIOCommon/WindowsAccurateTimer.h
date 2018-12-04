@@ -20,14 +20,14 @@
 #include "igsioCommon.h"
 
 /*!
-  If a waiting thread cannot ber resumed in this many attempts then 
+  If a waiting thread cannot ber resumed in this many attempts then
   the thread is just removed from the wait pool and resume will not be attempted
   any more.
 */
-static const int MAX_RESUME_ATTEMPTS=100;
+static const int MAX_RESUME_ATTEMPTS = 100;
 
 /*!
-\class WindowsAccurateTimer 
+\class WindowsAccurateTimer
 \brief Accurate delay and stopwatch function implementation in Windows
 
   This timer class was designed to give high precision < 2% average
@@ -62,10 +62,13 @@ static const int MAX_RESUME_ATTEMPTS=100;
 class WindowsAccurateTimer
 {
 public:
+  //----------------------------------------------------------------------------
   static WindowsAccurateTimer* Instance()
   {
     return &m_Instance;
   };
+
+  //----------------------------------------------------------------------------
   virtual ~WindowsAccurateTimer()
   {
     timeKillEvent(m_Timer);
@@ -73,29 +76,31 @@ public:
     DeleteCriticalSection(&m_CriticalSection);
   }
 
+  //----------------------------------------------------------------------------
   /*!
-    On some Windows XP SP3 machines the vtkTimerLog::GetUniversalTime() 
+    On some Windows XP SP3 machines the vtkTimerLog::GetUniversalTime()
     measures time with 15 ms resolution
-    timeBeginPeriod and timeEndPeriod are probably not needed because 
-    timer is already set to high frequency update in the constructor. 
+    timeBeginPeriod and timeEndPeriod are probably not needed because
+    timer is already set to high frequency update in the constructor.
   */
   static inline double GetSystemTime()
   {
-    return 0.001 * timeGetTime(); 
+    return 0.001 * timeGetTime();
   }
 
-  /*! 
+  //----------------------------------------------------------------------------
+  /*!
     Wait for a specified amount of time
     \param timeout waiting time in ms
   */
   void Wait(int timeout)
   {
-    if ( timeout > 0 )   // anything to wait on ?
+    if (timeout > 0)     // anything to wait on ?
     {
       HANDLE tHandle = 0;
       HANDLE pHandle = GetCurrentProcess();
       DuplicateHandle(pHandle, GetCurrentThread(), pHandle,
-        &tHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+                      &tHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
       // wrap pool data access
       EnterCriticalSection(&WindowsAccurateTimer::Instance()->m_CriticalSection);
       m_WaitPool.push_back(WaitData(tHandle, timeout));
@@ -104,73 +109,85 @@ public:
       CloseHandle(tHandle);
     }
   }
-  inline double Absolute(double val) { return val > 0 ? val : -val; }
-  inline LARGE_INTEGER GetFrequency() { return m_Freq; };
 
+  //----------------------------------------------------------------------------
+  inline double Absolute(double val)
+  {
+    return val > 0 ? val : -val;
+  }
+
+  //----------------------------------------------------------------------------
+  inline LARGE_INTEGER GetFrequency()
+  {
+    return m_Freq;
+  };
+
+  //----------------------------------------------------------------------------
   void Initialize()
   {
     // Set the thread priority to real-time
     HANDLE tHandle = 0;
     HANDLE pHandle = GetCurrentProcess();
-    bool duplicateHandleSuccess=DuplicateHandle(pHandle, GetCurrentThread(), pHandle, &tHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-    if (duplicateHandleSuccess && tHandle!=NULL)
+    BOOL duplicateHandleSuccess = DuplicateHandle(pHandle, GetCurrentThread(), pHandle, &tHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+    if (duplicateHandleSuccess == TRUE && tHandle != NULL)
     {
-      bool threadPrioritySet=SetThreadPriority(tHandle, THREAD_PRIORITY_TIME_CRITICAL);
-      if (!threadPrioritySet)
+      BOOL threadPrioritySet = SetThreadPriority(tHandle, THREAD_PRIORITY_TIME_CRITICAL);
+      if (threadPrioritySet == FALSE)
       {
-        DWORD lastError=GetLastError();
-        LOG_WARNING("Failed to raise the thread priority to real-time (SetThreadPriority failed with ErrorCode="<<lastError<<", pHandle="<<pHandle<<"). Timer accuracy may not be optimal.");
+        DWORD lastError = GetLastError();
+        LOG_WARNING("Failed to raise the thread priority to real-time (SetThreadPriority failed with ErrorCode=" << lastError << ", pHandle=" << pHandle << "). Timer accuracy may not be optimal.");
       }
       CloseHandle(tHandle);
     }
     else
     {
-      DWORD lastError=GetLastError();
-      LOG_WARNING("Failed to raise the thread priority to real-time (DuplicateHandle failed with ErrorCode="<<lastError<<", pHandle="<<pHandle<<"). Timer accuracy may not be optimal.");
+      DWORD lastError = GetLastError();
+      LOG_WARNING("Failed to raise the thread priority to real-time (DuplicateHandle failed with ErrorCode=" << lastError << ", pHandle=" << pHandle << "). Timer accuracy may not be optimal.");
     }
 
     // Set the process priority to real-time
     // This may fail depending on the privileges of the current user, but the accuracy should be still good enough,
     // so don't log it as an error.
-    int pid=_getpid();
+    int pid = _getpid();
     HANDLE h = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    if (h!=NULL)
+    if (h != NULL)
     {
       if (!SetPriorityClass(h, REALTIME_PRIORITY_CLASS))
       {
         DWORD lastError = GetLastError();
-        LOG_DEBUG("Failed to raise the process priority class to real-time (SetPriorityClass failed with ErrorCode="<<lastError<<", pid="<<pid<<"). Timer accuracy may not be optimal.");
+        LOG_DEBUG("Failed to raise the process priority class to real-time (SetPriorityClass failed with ErrorCode=" << lastError << ", pid=" << pid << "). Timer accuracy may not be optimal.");
       }
       CloseHandle(h);
     }
     else
     {
-      DWORD lastError=GetLastError();
-      LOG_DEBUG("Failed to raise the process priority class to real-time (OpenProcess failed with ErrorCode="<<lastError<<", pid="<<pid<<"). Timer accuracy may not be optimal.");
+      DWORD lastError = GetLastError();
+      LOG_DEBUG("Failed to raise the process priority class to real-time (OpenProcess failed with ErrorCode=" << lastError << ", pid=" << pid << "). Timer accuracy may not be optimal.");
     }
   }
 
+  //----------------------------------------------------------------------------
   /*! Media callback m_Timer method */
   static void CALLBACK TimerFunc(UINT uID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
   {
     WindowsAccurateTimer* pThis = (WindowsAccurateTimer*)dwUser;
 
     if (!pThis->m_Initialized)
-    {      
+    {
       pThis->Initialize();
       pThis->m_Initialized = true;
     }
 
     static LARGE_INTEGER s[2];
     QueryPerformanceCounter(&s[1]);
-    double diff = (((double)s[1].QuadPart - (double)s[0].QuadPart)/(double)pThis->m_Freq.QuadPart);
-    __int64 now = s[1].QuadPart+pThis->m_HalfMsec.QuadPart;
+    double diff = (((double)s[1].QuadPart - (double)s[0].QuadPart) / (double)pThis->m_Freq.QuadPart);
+    __int64 now = s[1].QuadPart + pThis->m_HalfMsec.QuadPart;
 
     EnterCriticalSection(&pThis->m_CriticalSection);
     std::deque<WaitData>::iterator it = pThis->m_WaitPool.begin();
-    while ( it != pThis->m_WaitPool.end() )
+    while (it != pThis->m_WaitPool.end())
     {
-      if ( now < it->timeout.QuadPart )
+      if (now < it->timeout.QuadPart)
       {
         // delay time not yet elapsed
         ++it;
@@ -178,32 +195,32 @@ public:
       }
 
       // delay time elapsed, resume the thread
-      DWORD res=ResumeThread(it->h);
-      if (res>0)
+      DWORD res = ResumeThread(it->h);
+      if (res > 0)
       {
         // the thread was successfully waken up, it can be removed from the wait pool
         it = pThis->m_WaitPool.erase(it);
         continue;
       }
-      
+
       // something is wrong with the thread resume
       ++(it->errorCount);
 
-      if (res==DWORD(-1))
+      if (res == DWORD(-1))
       {
-        DWORD err=GetLastError();
-        LOG_ERROR("Cannot resume thread "<<it->h<<", error: "<<err);
+        DWORD err = GetLastError();
+        LOG_ERROR("Cannot resume thread " << it->h << ", error: " << err);
       }
-      else if (res<1)
+      else if (res < 1)
       {
         // The thread has not yet been suspended, so don't try to resume it yet.
         // (keep it in the wait pool, it will be suspended later and we have to resume it to avoid hang)
-        LOG_DEBUG("Cannot resume thread "<<it->h<<", it has not yet been suspended");
+        LOG_DEBUG("Cannot resume thread " << it->h << ", it has not yet been suspended");
       }
 
-      if (it->errorCount>MAX_RESUME_ATTEMPTS)
+      if (it->errorCount > MAX_RESUME_ATTEMPTS)
       {
-        LOG_ERROR("Maximum thread resume attempts reached, remove item "<<it->h<<"from the wait pool");
+        LOG_ERROR("Maximum thread resume attempts reached, remove item " << it->h << "from the wait pool");
         it = pThis->m_WaitPool.erase(it);
         continue;
       }
@@ -216,6 +233,7 @@ public:
   }
 
 private:
+  //----------------------------------------------------------------------------
   WindowsAccurateTimer()
   {
     QueryPerformanceFrequency(&m_Freq);
@@ -223,35 +241,36 @@ private:
     m_Freq.QuadPart /= 1000;   // convert to msecs
     InitializeCriticalSection(&m_CriticalSection);
     m_Timer = timeSetEvent(1, 0, TimerFunc, (DWORD_PTR)this, TIME_PERIODIC);
-    m_Initialized=false;
+    m_Initialized = false;
   }
 
+private:
   /*!
-    \struct WaitData 
+    \struct WaitData
     \brief Stores information for a wait object (used by the accurate timer implementation in Windows)
     \ingroup PlusLibCommon
   */
   struct WaitData
-  { 
+  {
     WaitData(HANDLE _h, int _t) : h(_h)
     {
-      LARGE_INTEGER now; 
+      LARGE_INTEGER now;
       QueryPerformanceCounter(&now);
-      errorCount=0;
+      errorCount = 0;
       timeout.QuadPart = _t * WindowsAccurateTimer::Instance()->m_Freq.QuadPart + now.QuadPart;
     };
 
     HANDLE h;
     LARGE_INTEGER timeout;
-    /*! 
-      If the thread cannot be resumed then this counter is incremented, 
+    /*!
+      If the thread cannot be resumed then this counter is incremented,
       after many errors the item may be removed from the wait pool
     */
-    int errorCount; 
+    int errorCount;
   };
   friend struct WaitData;
 
-  static WindowsAccurateTimer    m_Instance;  
+  static WindowsAccurateTimer    m_Instance;
 
   CRITICAL_SECTION m_CriticalSection;
   std::deque<WaitData> m_WaitPool;

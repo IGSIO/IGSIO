@@ -689,13 +689,13 @@ igsioStatus igsioVideoFrame::GetEncodingFourCC(std::string& encoding) const
 }
 
 //----------------------------------------------------------------------------
-void igsioVideoFrame::SetFrameType(int FrameType)
+void igsioVideoFrame::SetFrameType(FRAME_TYPE FrameType)
 {
   this->FrameType = FrameType;
 }
 
 //----------------------------------------------------------------------------
-bool igsioVideoFrame::GetFrameType()
+FRAME_TYPE igsioVideoFrame::GetFrameType()
 {
   return this->FrameType;
 }
@@ -1145,7 +1145,7 @@ igsioStatus igsioVideoFrame::GetOrientedClippedImage(unsigned char* imageDataPtr
   inUsImage->Update();
 
   igsioStatus result = igsioVideoFrame::GetOrientedClippedImage(inUsImage->GetOutput(), flipInfo, inUsImageType,
-                      outUsOrientedImage, clipRectangleOrigin, clipRectangleSize);
+                       outUsOrientedImage, clipRectangleOrigin, clipRectangleSize);
 
   return result;
 }

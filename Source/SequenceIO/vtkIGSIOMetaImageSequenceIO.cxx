@@ -112,12 +112,10 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
       LOG_WARNING("Parsing line failed, equal sign is missing (" << lineStr << ")");
       continue;
     }
-    std::string name = lineStr.substr(0, equalSignFound);
-    std::string value = lineStr.substr(equalSignFound + 1);
-
     // trim spaces from the left and right
-    igsioCommon::Trim(name);
-    igsioCommon::Trim(value);
+    std::string name = igsioCommon::Trim(lineStr.substr(0, equalSignFound));
+    std::string value = igsioCommon::Trim(lineStr.substr(equalSignFound + 1));
+
     if (!igsioCommon::HasSubstrInsensitive(name, SEQMETA_FIELD_FRAME_FIELD_PREFIX))
     {
       // field
@@ -316,7 +314,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
         default:
           if (this->Dimensions[0] == 0 && this->Dimensions[1] == 0 && this->Dimensions[2] == 1)
           {
-             LOG_DEBUG("Only tracking data is available in the metafile");
+            LOG_DEBUG("Only tracking data is available in the metafile");
           }
           else
           {
@@ -344,7 +342,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImagePixels()
 
   if (frameSizeInBytes == 0)
   {
-     LOG_DEBUG("No image data in the metafile");
+    LOG_DEBUG("No image data in the metafile");
     return IGSIO_SUCCESS;
   }
 
@@ -456,7 +454,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImagePixels()
       FSEEK(stream, offset, SEEK_SET);
       if (fread(&(pixelBuffer[0]), 1, frameSizeInBytes, stream) != frameSizeInBytes)
       {
-        LOG_ERROR("Could not read "<<frameSizeInBytes<<" bytes from "<<GetPixelDataFilePath());
+        LOG_ERROR("Could not read " << frameSizeInBytes << " bytes from " << GetPixelDataFilePath());
         numberOfErrors++;
       }
       FrameSizeType frameSize = { this->Dimensions[0], this->Dimensions[1], this->Dimensions[2] };
@@ -545,12 +543,9 @@ bool vtkIGSIOMetaImageSequenceIO::CanReadFile(const std::string& filename)
     LOG_DEBUG("Parsing line failed, equal sign is missing (" << lineStr << ")");
     return false;
   }
-  std::string name = lineStr.substr(0, equalSignFound);
-  std::string value = lineStr.substr(equalSignFound + 1);
-
   // trim spaces from the left and right
-  igsioCommon::Trim(name);
-  igsioCommon::Trim(value);
+  std::string name = igsioCommon::Trim(lineStr.substr(0, equalSignFound));
+  std::string value = igsioCommon::Trim(lineStr.substr(equalSignFound + 1));
 
   if (!igsioCommon::IsEqualInsensitive(name, "ObjectType"))
   {
@@ -926,7 +921,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::FinalizeHeader()
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOMetaImageSequenceIO::WriteCompressedImagePixelsToFile(int& compressedDataSize)
 {
-   LOG_DEBUG("Writing compressed pixel data into file started");
+  LOG_DEBUG("Writing compressed pixel data into file started");
 
   compressedDataSize = 0;
 
@@ -1026,7 +1021,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteCompressedImagePixelsToFile(int& c
 
   deflateEnd(&strm);   // clean up
 
-   LOG_DEBUG("Writing compressed pixel data into file completed");
+  LOG_DEBUG("Writing compressed pixel data into file completed");
 
   if (ret != Z_STREAM_END)
   {
@@ -1245,8 +1240,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateFieldInImageHeader(const char* fi
       LOG_WARNING("Parsing line failed, equal sign is missing (" << line << ")");
       continue;
     }
-    std::string name = line.substr(0, equalSignFound);
-    igsioCommon::Trim(name);
+    std::string name = igsioCommon::Trim(line.substr(0, equalSignFound));
 
     if (igsioCommon::IsEqualInsensitive(name, fieldName))
     {
@@ -1337,8 +1331,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::SetFileName(const std::string& aFilenam
 
   this->FileName = aFilename;
   // Trim whitespace and " characters from the beginning and end of the filename
-  this->FileName.erase(this->FileName.find_last_not_of(" \"\t\r\n") + 1);
-  this->FileName.erase(0, this->FileName.find_first_not_of(" \"\t\r\n"));
+  this->FileName = igsioCommon::Trim(aFilename);
 
   // Set pixel data filename at the same time
   std::string fileExt = vtksys::SystemTools::GetFilenameLastExtension(this->FileName);

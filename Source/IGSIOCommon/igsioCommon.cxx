@@ -19,7 +19,7 @@ See License.txt for details.
 #include <string>
 
 #ifdef _WIN32
-#include <Windows.h>
+  #include <Windows.h>
 #endif
 
 //-------------------------------------------------------
@@ -30,7 +30,7 @@ bool vtkIGSIOLogHelper::ShouldWeLog(bool errorPresent)
     ++m_Count;
     double timeStamp = vtkIGSIOAccurateTimer::GetSystemTime();
     if (timeStamp - m_LastError > m_MinimumTimeBetweenLoggingSec
-      || m_Count > m_MinimumCountBetweenLogging)
+        || m_Count > m_MinimumCountBetweenLogging)
     {
       //log the error this time
       m_LastError = timeStamp;
@@ -139,7 +139,7 @@ igsioStatus igsioTransformName::SetTransformName(const std::string& aTransformNa
   if (numOfMatch != 1)
   {
     LOG_ERROR("Unable to parse transform name, there are " << numOfMatch
-      << " matching 'To' phrases in the transform name '" << aTransformName << "', while exactly one allowed.");
+              << " matching 'To' phrases in the transform name '" << aTransformName << "', while exactly one allowed.");
     return IGSIO_FAIL;
   }
 
@@ -323,20 +323,20 @@ std::vector<std::string> igsioCommon::GetSequenceExtensions()
 {
   // Return list of supported sequence file extensions in lower case
   return std::vector<std::string>(
-    {
-      ".igs.mha",
-      ".igs.mhd",
-      ".igs.nrrd",
-      ".igs.nhdr",
-      ".seq.mha",
-      ".seq.mhd",
-      ".seq.nrrd",
-      ".seq.nhdr",
-      ".mha",
-      ".mhd",
-      ".nrrd",
-      ".nhdr",
-    }
+  {
+    ".igs.mha",
+    ".igs.mhd",
+    ".igs.nrrd",
+    ".igs.nhdr",
+    ".seq.mha",
+    ".seq.mhd",
+    ".seq.nrrd",
+    ".seq.nhdr",
+    ".mha",
+    ".mhd",
+    ".nrrd",
+    ".nhdr",
+  }
   );
 }
 
@@ -384,12 +384,13 @@ std::string igsioCommon::Tail(const std::string& source, const std::string::size
 
 
 //-------------------------------------------------------
-std::string& igsioCommon::Trim(std::string& str)
+std::string igsioCommon::Trim(const std::string& str)
 {
-  str.erase(str.find_last_not_of(" \t\r\n") + 1);
-  str.erase(0, str.find_first_not_of(" \t\r\n"));
+  std::string copyStr(str);
+  copyStr.erase(str.find_last_not_of(" \t\r\n") + 1);
+  copyStr.erase(0, str.find_first_not_of(" \t\r\n"));
 
-  return str;
+  return copyStr;
 }
 
 //----------------------------------------------------------------------------
@@ -401,23 +402,23 @@ void PrintWithEscapedData(ostream& os, const char* data)
   {
     switch (data[i])
     {
-    case '&':
-      os << "&amp;";
-      break;
-    case '<':
-      os << "&lt;";
-      break;
-    case '>':
-      os << "&gt;";
-      break;
-    case '"':
-      os << "&quot;";
-      break;
-    case '\'':
-      os << "&apos;";
-      break;
-    default:
-      os << data[i];
+      case '&':
+        os << "&amp;";
+        break;
+      case '<':
+        os << "&lt;";
+        break;
+      case '>':
+        os << "&gt;";
+        break;
+      case '"':
+        os << "&quot;";
+        break;
+      case '\'':
+        os << "&apos;";
+        break;
+      default:
+        os << data[i];
     }
   }
 }
@@ -493,8 +494,7 @@ igsioStatus igsioCommon::XML::PrintXML(ostream& os, vtkIndent indent, vtkXMLData
   char* charDataPtr = elem->GetCharacterData();
   if (charDataPtr != NULL)
   {
-    charData = charDataPtr;
-    Trim(charData);
+    charData = Trim(charDataPtr);
   }
 
   if (elem->GetNumberOfNestedElements() > 0 || !charData.empty())
@@ -579,8 +579,8 @@ VTKIGSIOCOMMON_EXPORT std::vector<std::string> igsioCommon::SplitStringIntoToken
 
 //----------------------------------------------------------------------------
 igsioStatus igsioCommon::DrawLine(vtkImageData& imageData, const std::array<float, 3>& colour, LINE_STYLE style,
-                                const std::array<int, 3>& startPixel, const std::array<int, 3>& endPixel,
-                                unsigned int numberOfPoints, ALPHA_BEHAVIOR alphaBehavior /*= ALPHA_BEHAVIOR_OPAQUE */)
+                                  const std::array<int, 3>& startPixel, const std::array<int, 3>& endPixel,
+                                  unsigned int numberOfPoints, ALPHA_BEHAVIOR alphaBehavior /*= ALPHA_BEHAVIOR_OPAQUE */)
 {
   auto checkRange([](int startPixel, int endPixel) -> bool
   {
@@ -797,7 +797,7 @@ std::string igsioCommon::ConvertToolStatusToString(const ToolStatus& status)
   }
   else
   {
-     LOG_ERROR("Unknown tracker status received - set \"UNKNOWN\" by default!");
+    LOG_ERROR("Unknown tracker status received - set \"UNKNOWN\" by default!");
     flagFieldValue = "UNKNOWN";
   }
 
@@ -907,7 +907,7 @@ VTKIGSIOCOMMON_EXPORT igsioStatus igsioCommon::DrawScanLines(int* inputImageExte
 
 //----------------------------------------------------------------------------
 igsioStatus igsioCommon::DrawLine(vtkImageData& imageData, float greyValue, LINE_STYLE style, const std::array<int, 3>& startPixel,
-                                const std::array<int, 3>& endPixel, unsigned int numberOfPoints, ALPHA_BEHAVIOR alphaBehavior /*= ALPHA_BEHAVIOR_OPAQUE */)
+                                  const std::array<int, 3>& endPixel, unsigned int numberOfPoints, ALPHA_BEHAVIOR alphaBehavior /*= ALPHA_BEHAVIOR_OPAQUE */)
 {
   std::array<float, 3> colour;
   colour[0] = colour[1] = colour[2] = greyValue;
@@ -1026,7 +1026,7 @@ std::string igsioCommon::GetAbsolutePath(const std::string& path, const std::str
     // already absolute
     return filename;
   }
-  
+
   // relative to the ProgramDirectory
   return  vtksys::SystemTools::CollapseFullPath(filename.c_str(), path.c_str());
 }
