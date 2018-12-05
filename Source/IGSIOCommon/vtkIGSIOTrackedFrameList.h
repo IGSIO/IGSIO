@@ -171,7 +171,7 @@ public:
   igsioStatus GetFrameSize(FrameSizeType& outFrameSize);
 
   /* Get tracked frame encoding */
-  igsioStatus vtkIGSIOTrackedFrameList::GetEncodingFourCC(std::string& encoding);
+  igsioStatus GetEncodingFourCC(std::string& encoding);
 
   /*! Get the value of the custom field. If we couldn't find it, return NULL */
   virtual const char* GetCustomString(const char* fieldName);

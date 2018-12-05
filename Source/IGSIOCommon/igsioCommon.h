@@ -14,6 +14,7 @@
 
 // VTK includes
 #include <vtkImageData.h>
+#include <vtkXMLDataElement.h>
 #include <vtksys/SystemTools.hxx>
 
 // System includes

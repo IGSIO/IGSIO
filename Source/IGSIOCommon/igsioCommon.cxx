@@ -17,6 +17,7 @@ See License.txt for details.
 // STL includes
 #include <algorithm>
 #include <string>
+#include <limits>
 
 #ifdef _WIN32
   #include <Windows.h>
