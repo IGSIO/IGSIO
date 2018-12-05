@@ -7,7 +7,7 @@
 #ifndef __vtkIGSIONrrdSequenceIO_h
 #define __vtkIGSIONrrdSequenceIO_h
 
-#include "VTKSEQUENCEIO_EXPORT.h"
+#include "vtksequenceio_export.h"
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
@@ -135,4 +135,4 @@ private:
   void operator=( const vtkIGSIONrrdSequenceIO& ); //purposely not implemented
 };
 
-#endif // __vtkIGSIONrrdSequenceIO_h 
+#endif // __vtkIGSIONrrdSequenceIO_h

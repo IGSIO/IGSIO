@@ -8,12 +8,12 @@
 #define __vtkIGSIOSequenceIOBase_h
 
 #include "igsioCommon.h"
-#include "VTKSEQUENCEIO_EXPORT.h"
+#include "vtksequenceio_export.h"
 #include "igsioVideoFrame.h"
 #include "vtkObject.h"
 
 class vtkIGSIOTrackedFrameList;
-class igsioTrackedFrame; 
+class igsioTrackedFrame;
 
 #ifndef Z_BUFSIZE
   #ifdef MAXSEG_64K
@@ -267,4 +267,4 @@ protected:
   virtual ~vtkIGSIOSequenceIOBase();
 };
 
-#endif // __vtkIGSIOSequenceIOBase_h 
+#endif // __vtkIGSIOSequenceIOBase_h

@@ -17,7 +17,8 @@
 #include "vtksys/SystemTools.hxx"
 #include "vtkXMLUtilities.h"
 
-// std includes
+// STD includes
+#include <algorithm>
 #include <math.h>
 
 //----------------------------------------------------------------------------

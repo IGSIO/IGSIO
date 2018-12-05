@@ -11,6 +11,9 @@
 #include <vtkMath.h>
 #include <vtkTransform.h>
 
+// STD includes
+#include <algorithm>
+
 #define MINIMUM_NUMBER_OF_CALIBRATION_EQUATIONS 8
 
 //----------------------------------------------------------------------------
@@ -29,7 +32,7 @@ igsioMath::~igsioMath()
 // Spherical linear interpolation between two rotation quaternions.
 // t is a value between 0 and 1 that interpolates between from and to (t=0 means the results is the same as "from").
 // Precondition: no aliasing problems to worry about ("result" can be "from" or "to" param).
-// Parameters: adjustSign - If true, then slerp will operate by adjusting the sign of the slerp to take shortest path. True is recommended, otherwise the interpolation sometimes give unexpected results. 
+// Parameters: adjustSign - If true, then slerp will operate by adjusting the sign of the slerp to take shortest path. True is recommended, otherwise the interpolation sometimes give unexpected results.
 // References: From Adv Anim and Rendering Tech. Pg 364
 void igsioMath::Slerp(double *result, double t, double *from, double *to, bool adjustSign /*= true*/)
 {
@@ -279,43 +282,43 @@ namespace std
 //----------------------------------------------------------------------------
 double igsioMath::GetPositionDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix)
 {
-  LOG_TRACE("igsioMath::GetPositionDifference"); 
-  vtkSmartPointer<vtkTransform> aTransform = vtkSmartPointer<vtkTransform>::New(); 
-  aTransform->SetMatrix(aMatrix); 
+  LOG_TRACE("igsioMath::GetPositionDifference");
+  vtkSmartPointer<vtkTransform> aTransform = vtkSmartPointer<vtkTransform>::New();
+  aTransform->SetMatrix(aMatrix);
 
-  vtkSmartPointer<vtkTransform> bTransform = vtkSmartPointer<vtkTransform>::New(); 
-  bTransform->SetMatrix(bMatrix); 
+  vtkSmartPointer<vtkTransform> bTransform = vtkSmartPointer<vtkTransform>::New();
+  bTransform->SetMatrix(bMatrix);
 
-  double ax = aTransform->GetPosition()[0]; 
-  double ay = aTransform->GetPosition()[1]; 
-  double az = aTransform->GetPosition()[2]; 
+  double ax = aTransform->GetPosition()[0];
+  double ay = aTransform->GetPosition()[1];
+  double az = aTransform->GetPosition()[2];
 
-  double bx = bTransform->GetPosition()[0]; 
-  double by = bTransform->GetPosition()[1]; 
-  double bz = bTransform->GetPosition()[2]; 
+  double bx = bTransform->GetPosition()[0];
+  double by = bTransform->GetPosition()[1];
+  double bz = bTransform->GetPosition()[2];
 
   // Euclidean distance
-  double distance = sqrt( pow(ax-bx,2) + pow(ay-by,2) + pow(az-bz,2) ); 
+  double distance = sqrt( pow(ax-bx,2) + pow(ay-by,2) + pow(az-bz,2) );
 
-  return distance; 
+  return distance;
 }
 
 //----------------------------------------------------------------------------
 double igsioMath::GetOrientationDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix)
 {
-  vtkSmartPointer<vtkMatrix4x4> diffMatrix = vtkSmartPointer<vtkMatrix4x4>::New(); 
-  vtkSmartPointer<vtkMatrix4x4> invBmatrix = vtkSmartPointer<vtkMatrix4x4>::New(); 
+  vtkSmartPointer<vtkMatrix4x4> diffMatrix = vtkSmartPointer<vtkMatrix4x4>::New();
+  vtkSmartPointer<vtkMatrix4x4> invBmatrix = vtkSmartPointer<vtkMatrix4x4>::New();
 
-  vtkMatrix4x4::Invert(bMatrix, invBmatrix);  
+  vtkMatrix4x4::Invert(bMatrix, invBmatrix);
 
-  vtkMatrix4x4::Multiply4x4(aMatrix, invBmatrix, diffMatrix); 
+  vtkMatrix4x4::Multiply4x4(aMatrix, invBmatrix, diffMatrix);
 
-  vtkSmartPointer<vtkTransform> diffTransform = vtkSmartPointer<vtkTransform>::New(); 
-  diffTransform->SetMatrix(diffMatrix); 
+  vtkSmartPointer<vtkTransform> diffTransform = vtkSmartPointer<vtkTransform>::New();
+  diffTransform->SetMatrix(diffMatrix);
 
   double angleDiff_rad= vtkMath::RadiansFromDegrees(diffTransform->GetOrientationWXYZ()[0]);
 
-  double normalizedAngleDiff_rad = atan2( sin(angleDiff_rad), cos(angleDiff_rad) ); // normalize angle to domain -pi, pi 
+  double normalizedAngleDiff_rad = atan2( sin(angleDiff_rad), cos(angleDiff_rad) ); // normalize angle to domain -pi, pi
 
   return vtkMath::DegreesFromRadians(normalizedAngleDiff_rad);
 }

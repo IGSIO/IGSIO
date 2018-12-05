@@ -9,7 +9,7 @@
 
 //#include "igsioCommon.h"
 #include "igsioVideoFrame.h"
-#include "VTKSEQUENCEIO_EXPORT.h"
+#include "vtksequenceio_export.h"
 #include "vtkIGSIOSequenceIOBase.h"
 
 //class vtkIGSIOTrackedFrameList;
@@ -41,4 +41,4 @@ protected:
   virtual ~vtkIGSIOSequenceIO();
 };
 
-#endif // __vtkIGSIOSequenceIO_h 
+#endif // __vtkIGSIOSequenceIO_h

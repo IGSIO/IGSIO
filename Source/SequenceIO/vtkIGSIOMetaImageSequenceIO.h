@@ -7,7 +7,7 @@
 #ifndef __vtkIGSIOMetaImageSequenceIO_h
 #define __vtkIGSIOMetaImageSequenceIO_h
 
-#include "VTKSEQUENCEIO_EXPORT.h"
+#include "vtksequenceio_export.h"
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
@@ -114,4 +114,4 @@ protected:
   void operator=(const vtkIGSIOMetaImageSequenceIO&); //purposely not implemented
 };
 
-#endif // __vtkIGSIOMetaImageSequenceIO_h 
+#endif // __vtkIGSIOMetaImageSequenceIO_h

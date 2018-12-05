@@ -4,17 +4,19 @@ Copyright (c) Laboratory for Percutaneous Surgery. All rights reserved.
 See License.txt for details.
 =========================================================Plus=header=end*/
 
-//#include "PlusConfigure.h"
+// IGSIO includes
 #include "igsioMath.h"
 #include "igsioTrackedFrame.h"
-//#include "itkCastImageFilter.h"
-//#include "itkImageFileWriter.h"
-//#include "metaImage.h"
-#include "vtkImageData.h"
-#include "vtkMatrix4x4.h"
-#include "vtkPoints.h"
-#include "vtkXMLUtilities.h"
+
+// VTK includes
+#include <vtkImageData.h>
+#include <vtkMatrix4x4.h>
+#include <vtkPoints.h>
+#include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
+
+// STD includes
+#include <algorithm>
 
 //----------------------------------------------------------------------------
 // ************************* TrackedFrame ************************************
