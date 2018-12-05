@@ -31,7 +31,6 @@ SET(${PROJECT_NAME}_HDRS
   vtkIGSIOAccurateTimer.h
   WindowsAccurateTimer.h
   igsioVideoFrame.h
-  igsioVideoFrame.txx
   igsioTrackedFrame.h
   vtkIGSIOTrackedFrameList.h
   vtkIGSIOTransformRepository.h

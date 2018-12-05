@@ -335,6 +335,4 @@ protected:
   US_IMAGE_ORIENTATION ImageOrientation;
 };
 
-#include "igsioVideoFrame.txx"
-
 #endif
