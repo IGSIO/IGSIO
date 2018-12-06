@@ -182,10 +182,6 @@ protected:
   /*! Writes the messages that are cached in memory to the log file and clears the cache. */
   void Flush();
 
-private:
-  vtkIGSIOLogger(vtkIGSIOLogger const&);
-  vtkIGSIOLogger& operator=(vtkIGSIOLogger const&);
-
   /*! Pointer to the singleton instance */
   static vtkIGSIOLogger*   m_pInstance;
   /*! Log level used for controlling the verbosity of the logging */
@@ -203,6 +199,10 @@ private:
     threads simultaneously.
   */
   vtkIGSIORecursiveCriticalSection* m_CriticalSection;
+
+private:
+  vtkIGSIOLogger(vtkIGSIOLogger const&);
+  vtkIGSIOLogger& operator=(vtkIGSIOLogger const&);
 };
 
 #endif
