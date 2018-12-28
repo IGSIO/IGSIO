@@ -110,7 +110,7 @@ public:
   {
   }
 
-  // 
+  //
   virtual bool FourCCRequiresEncoding(std::string fourCC)
   {
     if (fourCC == "RV24")
@@ -359,7 +359,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
 
     int numberOfComponents = image->GetNumberOfScalarComponents();
 
-    
+
     if (numberOfComponents == 1)
     {
       encodingFourCC = VTKSEQUENCEIO_GRAYSCALE8_FOURCC;
@@ -539,7 +539,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::WriteFile()
     this->Close();
   }
 
-  std::string trackName = ""; // TODO: 
+  std::string trackName = ""; // TODO:
 
   FrameSizeType frameSize;
   this->External->TrackedFrameList->GetFrameSize(frameSize);
