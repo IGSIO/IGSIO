@@ -8,11 +8,19 @@ See License.txt for details.
 #ifndef __igsioVideoFrame_h
 #define __igsioVideoFrame_h
 
-#include "vtkigsiocommon_export.h"
+// VTK includes
+#include <vtkImageData.h>
+#include <vtkImageExport.h>
+#include <vtkSmartPointer.h>
+
+// IGSIO includes
 #include "igsioCommon.h"
-//#include "itkImage.h"
-#include "vtkImageExport.h"
-#include "vtkImageData.h"
+#include "vtkigsiocommon_export.h"
+
+// vtkAddon includes
+#include <vtkStreamingVolumeFrame.h>
+
+class vtkStreamingVolumeCodec;
 
 /*!
 \enum US_IMAGE_ORIENTATION
@@ -64,20 +72,6 @@ enum US_IMAGE_TYPE
 };
 
 /*!
-\enum FRAME_TYPE
-\breif Defines constant values for frame types
-\ingroup igsioCommon
-*/
-enum FRAME_TYPE
-{
-  FRAME_KEY,
-  FRAME_P,
-  FRAME_B,
-  FRAME_I = FRAME_KEY,
-  FRAME_LAST
-};
-
-/*!
 \class igsioVideoFrame
 \brief Store images in a variety of pixel formats
 A VTK image can only store a certain pixel type.
@@ -124,11 +118,6 @@ public:
   /*! Allocate memory for the image. */
   igsioStatus AllocateFrame(const FrameSizeType& imageSize, igsioCommon::VTKScalarPixelType vtkScalarPixelType, unsigned int numberOfScalarComponents);
 
-  /* Allocate memory for the encoded frame. The frame object must already be created. */
-  static igsioStatus AllocateEncodedFrame(vtkUnsignedCharArray* frameData, const unsigned long size);
-  /*! Allocate memory for the encoded frame. */
-  igsioStatus AllocateEncodedFrame(const unsigned long size);
-
   /*! Return the pixel type using VTK enums. */
   igsioCommon::VTKScalarPixelType GetVTKScalarPixelType() const;
 
@@ -173,17 +162,10 @@ public:
   /*! Get the dimensions of the frame in pixels */
   igsioStatus GetFrameSize(FrameSizeType& frameSize) const;
 
-  /*! Set the fourCC of the frame encoding */
-  void SetEncodingFourCC(std::string encodingFourCC);
-
   /*! Get the fourCC of the frame encoding */
   igsioStatus GetEncodingFourCC(std::string& encodingFourCC) const;
 
-  /* Set the frame type */
-  void SetFrameType(FRAME_TYPE frameType);
-
-  /* Get the frame type */
-  FRAME_TYPE GetFrameType();
+  bool IsFrameEncoded() const;
 
   /*! Get the pointer to the pixel buffer */
   void* GetScalarPointer() const;
@@ -194,8 +176,11 @@ public:
   /*! Get the VTK image, does not copy the pixel buffer */
   vtkImageData* GetImage() const;
 
-  /*! Get the encoded frame data, does not copy the frame buffer*/
-  vtkUnsignedCharArray* GetEncodedFrame() const;
+  /*! Get the encoded frame data */
+  vtkStreamingVolumeFrame* GetEncodedFrame() const;
+
+  /*! Set the encoded frame data */
+  void SetEncodedFrame(vtkStreamingVolumeFrame* encodedFrame);
 
   /*! Copy pixel data from another igsioVideoFrame object, same as operator= */
   igsioStatus DeepCopy(igsioVideoFrame* DataBufferItem);
@@ -325,12 +310,12 @@ public:
 
 protected:
   void SetImageData(vtkImageData* imageData);
-  void SetEncodedFrame(vtkUnsignedCharArray* encodedFrame);
 
   vtkImageData* Image;
-  vtkUnsignedCharArray* EncodedFrame;
-  std::string EncodingFourCC;
-  FRAME_TYPE FrameType;
+  vtkSmartPointer<vtkStreamingVolumeFrame> EncodedFrame;
+  vtkSmartPointer<vtkImageData> DecodedFrame;
+  vtkSmartPointer<vtkStreamingVolumeCodec> Codec;
+
   US_IMAGE_TYPE ImageType;
   US_IMAGE_ORIENTATION ImageOrientation;
 };

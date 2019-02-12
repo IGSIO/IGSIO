@@ -18,6 +18,11 @@ CONFIGURE_FILE(
   ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
   )
 
+SET(CMAKE_MODULE_PATH
+  ${CMAKE_CURRENT_SOURCE_DIR}/Modules
+  ${CMAKE_MODULE_PATH}
+  )
+
 # --------------------------------------------------------------------------
 # Configure output paths for libraries and executables.
 IF(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
@@ -29,7 +34,7 @@ IF(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 ENDIF()
 
 IF(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-  SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/share")
+  SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 ENDIF()
 
 IF(NOT IGSIO_INSTALL_BIN_DIR)
@@ -82,35 +87,61 @@ IF (COPY_EXTERNAL_LIBS)
   CopyLibrariesToDirectory(${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${VTK_LIBRARIES})
 ENDIF()
 
-OPTION(USE_SYSTEM_ZLIB "Use system zlib" OFF)
-SET(IGSIOZLIB_INCLUDE_DIR "")
-IF(USE_SYSTEM_ZLIB) # setting IGSIOZLib needs to come before processing subdirectories
-  SET(IGSIOZLIB_LIBRARY ${ZLIB_LIBRARY})
-  INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
-  LIST(APPEND IGSIOZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR})
-ELSE()
-  SET(IGSIOZLIB_LIBRARY vtkzlib)
-ENDIF()
-
+OPTION(IGSIO_USE_SYSTEM_ZLIB "Use system zlib" OFF)
 OPTION(BUILD_TESTING "Enable tests" ON)
 IF(BUILD_TESTING)
   INCLUDE(CTest)
 ENDIF()
 
-ADD_SUBDIRECTORY(Source/IGSIOCommon)
+OPTION(IGSIO_BUILD_SEQUENCEIO "Build classes for reading/writing sequence files" ON)
+OPTION(IGSIO_SEQUENCEIO_ENABLE_MKV "Enable MKV reading/writing" OFF)
+OPTION(IGSIO_USE_VP9 "Enable VP9 codec" OFF)
 
-OPTION(BUILD_SEQUENCEIO "Build classes for reading/writing" ON)
-IF(BUILD_SEQUENCEIO)
-  ADD_SUBDIRECTORY(Source/SequenceIO)
+IF(IGSIO_SEQUENCEIO_ENABLE_MKV)
+  SET(IGSIO_BUILD_SEQUENCEIO ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
+ENDIF()
+
+OPTION(IGSIO_USE_3DSlicer "" OFF)
+IF (IGSIO_USE_3DSlicer)
+  FIND_PACKAGE(Slicer REQUIRED)
+  SET(IGSIO_Slicer_DIR ${Slicer_DIR} CACHE STRING "")
+ENDIF()
+
+SET(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY} CACHE STRING "")
+SET(IGSIO_ZLIB_INCLUDE_DIR CACHE STRING "")
+IF(IGSIO_USE_SYSTEM_ZLIB) # setting IGSIOZLib needs to come before Superbuild
+  SET(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY})
+  SET(IGSIO_ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR})
+ELSE()
+  SET(IGSIO_ZLIB_LIBRARY vtkzlib)
+  SET(IGSIO_ZLIB_INCLUDE_DIR "")
 ENDIF()
 
 #-----------------------------------------------------------------------------
-# Export all targets at once from the build tree in their final configuration.
-get_property(_igsio_targets GLOBAL PROPERTY IGSIO_TARGETS)
-if (_igsio_targets)
-  list(REMOVE_DUPLICATES _igsio_targets)
-  EXPORT(TARGETS ${_igsio_targets} FILE ${IGSIO_BINARY_DIR}/IGSIOTargets.cmake)
-endif()
-unset(_igsio_targets)
+# Run superbuild script instead of library script
+IF (${CMAKE_VERSION} VERSION_GREATER 3.4)
+  OPTION(IGSIO_SUPERBUILD "Build IGSIO as Superbuild." OFF)
+ENDIF()
 
-INCLUDE(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
+IF(IGSIO_SUPERBUILD)
+    INCLUDE(SuperBuild/Superbuild.cmake)
+ELSE()
+
+  ADD_SUBDIRECTORY(Source/Codecs)
+  ADD_SUBDIRECTORY(Source/IGSIOCommon)
+  IF(IGSIO_BUILD_SEQUENCEIO)
+    ADD_SUBDIRECTORY(Source/SequenceIO)
+  ENDIF()
+
+  #-----------------------------------------------------------------------------
+  # Export all targets at once from the build tree in their final configuration.
+  get_property(_igsio_targets GLOBAL PROPERTY IGSIO_TARGETS)
+  if (_igsio_targets)
+    list(REMOVE_DUPLICATES _igsio_targets)
+    EXPORT(TARGETS ${_igsio_targets} FILE ${IGSIO_BINARY_DIR}/IGSIOTargets.cmake)
+  endif()
+  unset(_igsio_targets)
+
+  INCLUDE(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
+
+ENDIF()
