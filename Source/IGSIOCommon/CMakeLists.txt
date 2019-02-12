@@ -6,6 +6,7 @@ SET(${PROJECT_NAME}_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_BINARY_DIR}
+  ${vtkIGSIOCodecs_INCLUDE_DIRS}
   ${IGSIOZLIB_INCLUDE_DIR}
   CACHE INTERNAL ""
   )
@@ -17,6 +18,7 @@ SET(${PROJECT_NAME}_SRCS
   vtkIGSIOAccurateTimer.cxx
   igsioVideoFrame.cxx
   igsioTrackedFrame.cxx
+  vtkIGSIOFrameConverter.cxx
   vtkIGSIOTrackedFrameList.cxx
   vtkIGSIOTransformRepository.cxx
   vtkIGSIORecursiveCriticalSection.cxx
@@ -32,6 +34,7 @@ SET(${PROJECT_NAME}_HDRS
   WindowsAccurateTimer.h
   igsioVideoFrame.h
   igsioTrackedFrame.h
+  vtkIGSIOFrameConverter.h
   vtkIGSIOTrackedFrameList.h
   vtkIGSIOTransformRepository.h
   vtkIGSIORecursiveCriticalSection.h
@@ -44,9 +47,12 @@ SET(${PROJECT_NAME}_LIBS
   vtkIOXMLParser
   vtkImagingCore
   vtkCommonSystem
-  ${IGSIOZLIB_LIBRARY}
+  vtkIGSIOCodecs
   )
-  
+
+SET(${PROJECT_NAME}_LIBS_PRIVATE
+  )
+
 IF(WIN32)
   LIST(APPEND ${PROJECT_NAME}_LIBS Winmm)
 ENDIF(WIN32)
@@ -58,7 +64,10 @@ IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
 ELSE()
   ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
 ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_LIBS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}
+  PUBLIC ${${PROJECT_NAME}_LIBS}
+  PRIVATE ${${PROJECT_NAME}_LIBS_PRIVATE}
+  )
 
 INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   RUNTIME DESTINATION ${IGSIO_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries

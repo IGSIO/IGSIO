@@ -12,7 +12,7 @@ ADD_TEST(vtkMetaImageSequenceIOTest
   )
 SET_TESTS_PROPERTIES(vtkMetaImageSequenceIOTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
 
-IF (VTKSEQUENCEIO_ENABLE_MKV)
+IF (SEQUENCEIO_ENABLE_MKV)
 
 #*************************** vtkMkvSequenceIOTest ***************************
 ADD_EXECUTABLE(vtkMkvSequenceIOTest vtkMkvSequenceIOTest.cxx)

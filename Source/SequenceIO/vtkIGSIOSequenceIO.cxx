@@ -4,8 +4,6 @@
   See License.txt for details.
 =========================================================Plus=header=end*/
 
-//#include "PlusConfigure.h"
-
 #include "vtkIGSIOMetaImageSequenceIO.h"
 #include "vtkIGSIONrrdSequenceIO.h"
 #include "vtkIGSIOSequenceIO.h"
@@ -14,20 +12,15 @@
 /// VTK includes
 #include <vtkNew.h>
 
-#ifdef VTKSEQUENCEIO_USE_MKV
+#ifdef IGSIO_SEQUENCEIO_ENABLE_MKV
   #include "vtkIGSIOMkvSequenceIO.h"
 #endif
 
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile/*=US_IMG_ORIENT_MF*/, bool useCompression/*=true*/, bool enableImageDataWrite/*=true*/)
 {
-  // Convert local filename to plus output filename
-  if (vtksys::SystemTools::FileExists(filename.c_str()))
-  {
-    // Remove the file before replacing it
-    vtksys::SystemTools::RemoveFile(filename.c_str());
-  }
 
+  // Convert local filename to plus output filename
   std::string outputPath(path);
   if (vtksys::SystemTools::FileIsFullPath(filename) && !path.empty())
   {
@@ -35,7 +28,13 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     outputPath = vtksys::SystemTools::GetFilenamePath(filename);
   }
 
-  // Parse sequence filename to determine if it's metafile or NRRD
+  if (vtksys::SystemTools::FileExists(outputPath+"/"+filename))
+  {
+    // Remove the file before replacing it
+    vtksys::SystemTools::RemoveFile(outputPath+filename);
+  }
+
+  // Parse sequence filename to determine file type
   if (vtkIGSIOMetaImageSequenceIO::CanWriteFile(filename))
   {
     vtkNew<vtkIGSIOMetaImageSequenceIO> writer;
@@ -76,7 +75,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     }
     return IGSIO_SUCCESS;
   }
-#ifdef VTKSEQUENCEIO_USE_MKV
+#ifdef IGSIO_SEQUENCEIO_ENABLE_MKV
   else if (vtkIGSIOMkvSequenceIO::CanWriteFile(filename))
   {
     vtkNew<vtkIGSIOMkvSequenceIO> writer;
@@ -92,9 +91,10 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     }
     if (writer->Write() != IGSIO_SUCCESS)
     {
-      LOG_ERROR("Couldn't write Nrrd file: " << filename);
+      LOG_ERROR("Couldn't write MKV file: " << filename);
       return IGSIO_FAIL;
     }
+    return IGSIO_SUCCESS;
   }
 #endif
 
@@ -158,13 +158,15 @@ igsioStatus vtkIGSIOSequenceIO::Read(const std::string& filename, vtkIGSIOTracke
 
     return IGSIO_SUCCESS;
   }
-#ifdef VTKSEQUENCEIO_ENABLE_MKV
-  else if (vtkPlusMkvSequenceIO::CanReadFile(filename))
+#ifdef IGSIO_SEQUENCEIO_ENABLE_MKV
+  else if (vtkIGSIOMkvSequenceIO::CanReadFile(filename))
   {
-    // Attempt MKV read
-    if (frameList->ReadFromMatroskaFile(filename.c_str()) != IGSIO_SUCCESS)
+    vtkNew<vtkIGSIOMkvSequenceIO> reader;
+    reader->SetFileName(filename);
+    reader->SetTrackedFrameList(frameList);
+    if (reader->Read() != IGSIO_SUCCESS)
     {
-      LOG_ERROR("Failed to read video buffer from MKV file: " << filename);
+      LOG_ERROR("Couldn't read Nrrd file: " << filename);
       return IGSIO_FAIL;
     }
 
@@ -188,10 +190,10 @@ vtkIGSIOSequenceIOBase* vtkIGSIOSequenceIO::CreateSequenceHandlerForFile(const s
   {
     return vtkIGSIONrrdSequenceIO::New();
   }
-#ifdef PLUS_USE_VTKSEQUENCEIO_MKV
-  else if (vtkPlusMkvSequenceIO::CanReadFile(filename))
+#ifdef IGSIO_SEQUENCEIO_ENABLE_MKV
+  else if (vtkIGSIOMkvSequenceIO::CanReadFile(filename))
   {
-    return vtkPlusMkvSequenceIO::New();
+    return vtkIGSIOMkvSequenceIO::New();
   }
 #endif
 

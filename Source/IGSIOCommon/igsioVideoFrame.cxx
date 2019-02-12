@@ -25,6 +25,11 @@ See License.txt for details.
 #include <algorithm>
 #include <string>
 
+// vtkAddon includes
+#include <vtkStreamingVolumeCodec.h>
+#include <vtkStreamingVolumeFrame.h>
+#include <vtkStreamingVolumeCodecFactory.h>
+
 //----------------------------------------------------------------------------
 
 namespace
@@ -341,7 +346,6 @@ namespace
 igsioVideoFrame::igsioVideoFrame()
   : Image(NULL)
   , EncodedFrame(NULL)
-  , FrameType(FRAME_KEY)
   , ImageType(US_IMG_BRIGHTNESS)
   , ImageOrientation(US_IMG_ORIENT_MF)
 {
@@ -351,7 +355,6 @@ igsioVideoFrame::igsioVideoFrame()
 igsioVideoFrame::igsioVideoFrame(const igsioVideoFrame& videoItem)
   : Image(NULL)
   , EncodedFrame(NULL)
-  , FrameType(FRAME_KEY)
   , ImageType(US_IMG_BRIGHTNESS)
   , ImageOrientation(US_IMG_ORIENT_MF)
 {
@@ -362,7 +365,6 @@ igsioVideoFrame::igsioVideoFrame(const igsioVideoFrame& videoItem)
 igsioVideoFrame::~igsioVideoFrame()
 {
   DELETE_IF_NOT_NULL(this->Image);
-  DELETE_IF_NOT_NULL(this->EncodedFrame);
 }
 
 //----------------------------------------------------------------------------
@@ -388,15 +390,20 @@ igsioVideoFrame& igsioVideoFrame::operator=(igsioVideoFrame const& videoItem)
     {
       LOG_ERROR("Unable to retrieve number of scalar components.");
     }
-    if (this->AllocateFrame(frameSize, videoItem.GetVTKScalarPixelType(), numberOfScalarComponents) != IGSIO_SUCCESS)
+
+    if (!videoItem.IsFrameEncoded())
     {
-      LOG_ERROR("Failed to allocate memory for the new frame in the buffer!");
-    }
-    else
-    {
-      this->Image->DeepCopy(videoItem.GetImage());
+      if (this->AllocateFrame(frameSize, videoItem.GetVTKScalarPixelType(), numberOfScalarComponents) != IGSIO_SUCCESS)
+      {
+        LOG_ERROR("Failed to allocate memory for the new frame in the buffer!");
+      }
+      else
+      {
+        this->Image->DeepCopy(videoItem.Image);
+      }
     }
   }
+  this->SetEncodedFrame(videoItem.GetEncodedFrame());
 
   return *this;
 }
@@ -466,33 +473,6 @@ igsioStatus igsioVideoFrame::AllocateFrame(const FrameSizeType& imageSize, igsio
     this->SetImageData(vtkImageData::New());
   }
   igsioStatus allocStatus = igsioVideoFrame::AllocateFrame(this->GetImage(), imageSize, pixType, numberOfScalarComponents);
-  return allocStatus;
-}
-
-//----------------------------------------------------------------------------
-igsioStatus igsioVideoFrame::AllocateEncodedFrame(vtkUnsignedCharArray* frameData, const unsigned long size)
-{
-  if (!frameData != NULL)
-  {
-    return IGSIO_FAIL;
-  }
-
-  if (!frameData->Allocate(size))
-  {
-    return IGSIO_FAIL;
-  }
-
-  return IGSIO_SUCCESS;
-}
-
-//----------------------------------------------------------------------------
-igsioStatus igsioVideoFrame::AllocateEncodedFrame(const unsigned long size)
-{
-  if (this->GetEncodedFrame() == NULL)
-  {
-    this->SetEncodedFrame(vtkUnsignedCharArray::New());
-  }
-  igsioStatus allocStatus = igsioVideoFrame::AllocateEncodedFrame(this->GetEncodedFrame(), size);
   return allocStatus;
 }
 
@@ -596,8 +576,16 @@ igsioStatus igsioVideoFrame::GetNumberOfScalarComponents(unsigned int& scalarCom
 {
   if (IsImageValid())
   {
-    scalarComponents = static_cast<unsigned int>(this->Image->GetNumberOfScalarComponents());
-    return IGSIO_SUCCESS;
+    if (this->Image)
+    {
+      scalarComponents = static_cast<unsigned int>(this->Image->GetNumberOfScalarComponents());
+      return IGSIO_SUCCESS;
+    }
+    else if (this->EncodedFrame)
+    {
+      scalarComponents = static_cast<unsigned int>(this->EncodedFrame->GetNumberOfComponents());
+      return IGSIO_SUCCESS;
+    }
   }
 
   return IGSIO_FAIL;
@@ -637,7 +625,18 @@ igsioStatus igsioVideoFrame::GetFrameSize(FrameSizeType& frameSize) const
   }
 
   int frameSizeSigned[3];
-  this->Image->GetDimensions(frameSizeSigned);
+  if (this->Image)
+  {
+    this->Image->GetDimensions(frameSizeSigned);
+  }
+  else if (this->EncodedFrame)
+  {
+    this->EncodedFrame->GetDimensions(frameSizeSigned);
+  }
+  else
+  {
+    return IGSIO_FAIL;
+  }
 
   if (frameSizeSigned[0] < 0)
   {
@@ -657,11 +656,6 @@ igsioStatus igsioVideoFrame::GetFrameSize(FrameSizeType& frameSize) const
   return IGSIO_SUCCESS;
 }
 
-//----------------------------------------------------------------------------
-void igsioVideoFrame::SetEncodingFourCC(std::string encodingFourCC)
-{
-  this->EncodingFourCC = encodingFourCC;
-}
 
 //----------------------------------------------------------------------------
 igsioStatus igsioVideoFrame::GetEncodingFourCC(std::string& encoding) const
@@ -680,7 +674,7 @@ igsioStatus igsioVideoFrame::GetEncodingFourCC(std::string& encoding) const
 
   if (this->EncodedFrame)
   {
-    encoding = this->EncodingFourCC;
+    encoding = this->EncodedFrame->GetCodecFourCC();
     return IGSIO_SUCCESS;
   }
 
@@ -689,15 +683,9 @@ igsioStatus igsioVideoFrame::GetEncodingFourCC(std::string& encoding) const
 }
 
 //----------------------------------------------------------------------------
-void igsioVideoFrame::SetFrameType(FRAME_TYPE FrameType)
+bool igsioVideoFrame::IsFrameEncoded() const
 {
-  this->FrameType = FrameType;
-}
-
-//----------------------------------------------------------------------------
-FRAME_TYPE igsioVideoFrame::GetFrameType()
-{
-  return this->FrameType;
+  return this->EncodedFrame != NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -705,7 +693,7 @@ igsioCommon::VTKScalarPixelType igsioVideoFrame::GetVTKScalarPixelType() const
 {
   if (this->Image == NULL || !this->IsImageValid())
   {
-    return VTK_VOID;
+    return VTK_UNSIGNED_CHAR;
   }
   return this->Image->GetScalarType();
 }
@@ -1374,7 +1362,7 @@ vtkImageData* igsioVideoFrame::GetImage() const
 }
 
 //----------------------------------------------------------------------------
-vtkUnsignedCharArray* igsioVideoFrame::GetEncodedFrame() const
+vtkStreamingVolumeFrame* igsioVideoFrame::GetEncodedFrame() const
 {
   return this->EncodedFrame;
 }
@@ -1386,7 +1374,7 @@ void igsioVideoFrame::SetImageData(vtkImageData* imageData)
 }
 
 //----------------------------------------------------------------------------
-void igsioVideoFrame::SetEncodedFrame(vtkUnsignedCharArray* encodedFrame)
+void igsioVideoFrame::SetEncodedFrame(vtkStreamingVolumeFrame* encodedFrame)
 {
   this->EncodedFrame = encodedFrame;
 }

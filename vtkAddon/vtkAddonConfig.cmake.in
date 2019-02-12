@@ -1,0 +1,5 @@
+set(vtkAddon_INCLUDE_DIRS "@vtkAddon_INCLUDE_DIRS@")
+set(vtkAddon_LIB_DIR "@vtkAddon_INSTALL_LIB_DIR@")
+set(vtkAddon_LIBRARIES vtkAddon)
+set(VTK_DIR "@VTK_DIR@")
+INCLUDE(@CMAKE_CURRENT_BINARY_DIR@/vtkAddonTargets.cmake)
