@@ -1,15 +1,23 @@
 PROJECT(vtkIGSIOCommon)
 
+IF (NOT USE_SLICER)
+  FIND_PACKAGE(vtkAddon REQUIRED)
+ENDIF()
+
 # --------------------------------------------------------------------------
 # Configure library
 SET(${PROJECT_NAME}_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_BINARY_DIR}
-  ${vtkIGSIOCodecs_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   ${IGSIOZLIB_INCLUDE_DIR}
   CACHE INTERNAL ""
   )
+
+IF(IGSIO_BUILD_CODECS)
+  LIST(APPEND ${PROJECT_NAME}_INCLUDE_DIRS ${vtkIGSIOCodecs_INCLUDE_DIRS})
+ENDIF()
 
 SET(${PROJECT_NAME}_SRCS
   igsioCommon.cxx
@@ -47,8 +55,12 @@ SET(${PROJECT_NAME}_LIBS
   vtkIOXMLParser
   vtkImagingCore
   vtkCommonSystem
-  vtkIGSIOCodecs
+  vtkAddon
   )
+
+IF(IGSIO_BUILD_CODECS)
+  LIST(APPEND ${PROJECT_NAME}_LIBS vtkIGSIOCodecs)
+ENDIF()
 
 SET(${PROJECT_NAME}_LIBS_PRIVATE
   )

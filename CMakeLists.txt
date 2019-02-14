@@ -95,7 +95,11 @@ ENDIF()
 
 OPTION(IGSIO_BUILD_SEQUENCEIO "Build classes for reading/writing sequence files" ON)
 OPTION(IGSIO_SEQUENCEIO_ENABLE_MKV "Enable MKV reading/writing" OFF)
+OPTION(IGSIO_BUILD_CODECS "Build classes for Video codecs" OFF)
 OPTION(IGSIO_USE_VP9 "Enable VP9 codec" OFF)
+IF(IGSIO_USE_VP9)
+  SET(IGSIO_BUILD_CODECS ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
+ENDIF()
 
 IF(IGSIO_SEQUENCEIO_ENABLE_MKV)
   SET(IGSIO_BUILD_SEQUENCEIO ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
