@@ -140,10 +140,6 @@ vtkIGSIOLogger::vtkIGSIOLogger()
 
   m_LogLevel = LOG_LEVEL_INFO;
 
-  // redirect VTK error logs to the Plus logger
-  vtkSmartPointer<vtkIGSIOLoggerOutputWindow> vtkLogger = vtkSmartPointer<vtkIGSIOLoggerOutputWindow>::New();
-  vtkOutputWindow::SetInstance(vtkLogger);
-
   this->m_LogStream << "time|level|timeoffset|message|location" << std::endl;
 }
 
@@ -177,6 +173,11 @@ vtkIGSIOLogger* vtkIGSIOLogger::Instance()
     }
 
     vtkIGSIOLogger* newLoggerInstance = new vtkIGSIOLogger;
+
+    // redirect VTK error logs to the Plus logger
+    vtkSmartPointer<vtkIGSIOLoggerOutputWindow> vtkLogger = vtkSmartPointer<vtkIGSIOLoggerOutputWindow>::New();
+    vtkOutputWindow::SetInstance(vtkLogger);
+
     // lock the instance even before making it available to make sure the instance is fully
     // initialized before anybody uses it
     igsioLockGuard<vtkIGSIORecursiveCriticalSection> critSectionGuard(newLoggerInstance->m_CriticalSection);

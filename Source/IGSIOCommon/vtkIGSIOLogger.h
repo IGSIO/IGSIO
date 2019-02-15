@@ -139,10 +139,10 @@ public:
     \param lineNumber Line number within the file where the message comes from
     \param optionalPrefix a prefix to append after the timestamp, but before the logged message
   */
-  void LogMessage(LogLevelType level, const char* msg, const char* fileName, int lineNumber, const char* optionalPrefix = NULL);
-  void LogMessage(LogLevelType level, const wchar_t* msg, const char* fileName, int lineNumber, const wchar_t* optionalPrefix = NULL);
-  void LogMessage(LogLevelType level, const std::string& msg, const char* fileName, int lineNumber, const std::string& optionalPrefix = "");
-  void LogMessage(LogLevelType level, const std::wstring& msg, const char* fileName, int lineNumber, const std::wstring& optionalPrefix = L"");
+  virtual void LogMessage(LogLevelType level, const char* msg, const char* fileName, int lineNumber, const char* optionalPrefix = NULL);
+  virtual void LogMessage(LogLevelType level, const wchar_t* msg, const char* fileName, int lineNumber, const wchar_t* optionalPrefix = NULL);
+  virtual void LogMessage(LogLevelType level, const std::string& msg, const char* fileName, int lineNumber, const std::string& optionalPrefix = "");
+  virtual void LogMessage(LogLevelType level, const std::wstring& msg, const char* fileName, int lineNumber, const std::wstring& optionalPrefix = L"");
 
   /*!
     Add a new message to the log without line number of filename
