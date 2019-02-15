@@ -45,6 +45,9 @@ vtkIGSIOAccurateTimer* vtkIGSIOAccurateTimer::GetInstance()
     if (!vtkIGSIOAccurateTimer::Instance)
     {
       vtkIGSIOAccurateTimer::Instance = new vtkIGSIOAccurateTimer;
+#ifdef VTK_HAS_INITIALIZE_OBJECT_BASE
+      vtkIGSIOAccurateTimer::Instance->InitializeObjectBase();
+#endif
     }
     vtkIGSIOAccurateTimer::Instance->SystemStartTime = vtkIGSIOAccurateTimer::Instance->GetInternalSystemTime();
     vtkIGSIOAccurateTimer::Instance->UniversalStartTime = vtkTimerLog::GetUniversalTime();
