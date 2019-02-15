@@ -16,6 +16,24 @@
 
 class vtkIGSIORecursiveCriticalSection;
 
+//----------------------------------------------------------------------------
+/*!
+\class vtkIGSIOLoggerCleanup
+\brief Does the cleanup needed for the singleton class
+\ingroup PlusLibCommon
+*/
+
+//BTX
+class VTKIGSIOCOMMON_EXPORT vtkIGSIOLoggerCleanup
+{
+public:
+  /*! Constructor */
+  vtkIGSIOLoggerCleanup();
+  /*! Destructor */
+  ~vtkIGSIOLoggerCleanup();
+};
+//ETX
+
 /*!
   \class vtkIGSIOConsoleOutputWindow
   \brief This is a special output class for VTK logs that enforces VTK to
@@ -126,6 +144,7 @@ public:
 
   /*!  Get a pointer to the single existing object instance */
   static vtkIGSIOLogger* Instance();
+  void SetInstance(vtkIGSIOLogger* instance);
 
   /*! Convert a string into a log level type */
   static LogLevelType GetLogLevelType(const std::string& logLevelString);
@@ -199,6 +218,9 @@ protected:
     threads simultaneously.
   */
   vtkIGSIORecursiveCriticalSection* m_CriticalSection;
+
+  /*! The singleton cleanup instance */
+  static vtkIGSIOLoggerCleanup m_Cleanup;
 
 private:
   vtkIGSIOLogger(vtkIGSIOLogger const&);

@@ -26,8 +26,18 @@ See License.txt for details.
 #include <algorithm>
 
 //-----------------------------------------------------------------------------
+// The singleton, and the singleton cleanup
 
 vtkIGSIOLogger* vtkIGSIOLogger::m_pInstance = NULL;
+vtkIGSIOLoggerCleanup vtkIGSIOLogger::m_Cleanup;
+
+vtkIGSIOLoggerCleanup::vtkIGSIOLoggerCleanup() {}
+
+vtkIGSIOLoggerCleanup::~vtkIGSIOLoggerCleanup()
+{
+  // Destroy any remaining output window.
+  vtkIGSIOLogger::Instance()->SetInstance(NULL);
+}
 
 //-----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkIGSIOLoggerOutputWindow);
@@ -173,6 +183,9 @@ vtkIGSIOLogger* vtkIGSIOLogger::Instance()
     }
 
     vtkIGSIOLogger* newLoggerInstance = new vtkIGSIOLogger;
+#ifdef VTK_HAS_INITIALIZE_OBJECT_BASE
+    newLoggerInstance->InitializeObjectBase();
+#endif
 
     // redirect VTK error logs to the Plus logger
     vtkSmartPointer<vtkIGSIOLoggerOutputWindow> vtkLogger = vtkSmartPointer<vtkIGSIOLoggerOutputWindow>::New();
@@ -196,7 +209,29 @@ vtkIGSIOLogger* vtkIGSIOLogger::Instance()
   return m_pInstance;
 }
 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------
+void vtkIGSIOLogger::SetInstance(vtkIGSIOLogger* instance)
+{
+  if (m_pInstance == instance)
+  {
+    return;
+  }
+
+  if (m_pInstance)
+  {
+    m_pInstance->Delete();
+  }
+
+  m_pInstance = instance;
+
+  // User will call ->Delete() after setting instance
+  if (instance)
+  {
+    instance->Register(NULL);
+  }
+}
+
+//-------------------------------------------------------
 vtkIGSIOLogger::LogLevelType vtkIGSIOLogger::GetLogLevelType(const std::string& logLevelString)
 {
   if (logLevelString == "DEBUG")
