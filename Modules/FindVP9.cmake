@@ -7,10 +7,10 @@
 #  VP9_INCLUDE_DIR - the VP9 include directory
 #  VP9_LIBRARY_DIR - VP9 library directory
 #  VP9_LIBRARIES - VP9 libraries
-
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
   SET( VP9_PATH_HINTS
       ${VP9_DIR}
+      ${VP9_DIR}/vpx/src
       ${VP9_INCLUDE_DIR}
       ${VP9_LIBRARY_DIR}
       )
@@ -19,13 +19,16 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     PATH_SUFFIXES vpx
     HINTS ${VP9_PATH_HINTS}
     )
-
   unset(VP9_LIBRARY_DIR CACHE)
   find_path(VP9_LIBRARY_DIR
      NAMES libvpx.a
      PATH_SUFFIXES ${Platform}/${CMAKE_BUILD_TYPE}
      HINTS ${VP9_PATH_HINTS}
      )
+
+  SET(VP9_STATIC_LIBRARIES
+      ${VP9_LIBRARY_DIR}/libvpx.a
+      CACHE PATH "" FORCE)
 else()
   SET(VP9_PATH_HINTS
       ${VP9_DIR}
@@ -82,9 +85,7 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(VP9 REQUIRED_VARS
-  VP9_BINARY_DIR
   VP9_LIBRARY_DIR
   VP9_INCLUDE_DIR
-  VP9_LIBRARIES
   )
 mark_as_advanced(VP9_INCLUDE_DIR VP9_BINARY_DIR VP9_LIBRARY_DIR VP9_STATIC_LIBRARIES VP9_BINARIES VP9_LIBRARIES)

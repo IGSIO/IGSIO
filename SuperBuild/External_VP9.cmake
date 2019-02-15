@@ -12,10 +12,9 @@ ELSE()
   # VP9 has not been built yet, so download and build it as an external project
   MESSAGE(STATUS "Downloading VP9 from https://github.com/webmproject/libvpx.git")
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_yasm.cmake)
+    INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
     IF(NOT YASM_FOUND)
       LIST(APPEND VP9_DEPENDENCIES YASM)
-      message("VP9 dependencies modified." VP9_DEPENDENCIES)
     ENDIF()
     SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
     SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
@@ -28,7 +27,6 @@ ELSE()
       CONFIGURE_COMMAND "${CMAKE_BINARY_DIR}/VP9/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc WORKING_DIRECTORY "${VP9_LIBRARY_DIR}"
       BUILD_ALWAYS 1
       BUILD_COMMAND PATH=${YASM_BINARY_DIR}:$ENV{PATH}; make
-      BUILD_IN_SOURCE 1
       INSTALL_COMMAND   ""
       TEST_COMMAND      ""
       DEPENDS ${VP9_DEPENDENCIES}
