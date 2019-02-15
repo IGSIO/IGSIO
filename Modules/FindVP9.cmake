@@ -11,6 +11,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
   SET( VP9_PATH_HINTS
       ${VP9_DIR}
       ${VP9_DIR}/vpx/src
+      ${VP9_DIR}/../VP9
       ${VP9_INCLUDE_DIR}
       ${VP9_LIBRARY_DIR}
       )
