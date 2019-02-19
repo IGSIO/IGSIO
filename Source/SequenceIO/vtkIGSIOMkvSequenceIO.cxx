@@ -832,7 +832,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadVideoData()
           trackedFrame->GetImageData()->SetImageOrientation(US_IMG_ORIENT_MF); // TODO: save orientation and type
           trackedFrame->GetImageData()->SetImageType(US_IMG_RGB_COLOR);
           trackedFrame->SetTimestamp(timestampSeconds);
-          FrameSizeType frameSize = { videoTrack->Width, videoTrack->Height, 1 };
+          FrameSizeType frameSize = { static_cast<unsigned int>(videoTrack->Width), static_cast<unsigned int>(videoTrack->Height), 1 };
           if (videoTrack->Encoding.empty())
           {
             trackedFrame->GetImageData()->AllocateFrame(frameSize, VTK_UNSIGNED_CHAR, 3);
