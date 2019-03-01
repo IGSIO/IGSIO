@@ -9,58 +9,29 @@ ELSE()
 
   SET(IGSIO_VP9_DIR "${CMAKE_BINARY_DIR}/VP9-bin")
 
-  # VP9 has not been built yet, so download and build it as an external project
-  MESSAGE(STATUS "Downloading VP9 from https://github.com/webmproject/libvpx.git")
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(EP_SOURCE_DIR "${CMAKE_BINARY_DIR}/${proj}")
-
+  # OpenIGTLink has not been built yet, so download and build it as an external project
+  MESSAGE(STATUS "Downloading VP9 from https://github.com/webmproject/libvpx.git")              
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") 
     INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
     IF(NOT YASM_FOUND)
       LIST(APPEND ${proj}_DEPENDENCIES YASM)
     ENDIF()
 
-    SET(IGSIO_YASM_DIR "${CMAKE_BINARY_DIR}/yasm-bin")
-    IF (YASM_DIR)
-      SET(IGSIO_YASM_DIR ${YASM_DIR})
-    ENDIF()
-
-    include(ExternalProjectForNonCMakeProject)
-
-    # environment
-    set(_env_script ${CMAKE_BINARY_DIR}/${proj}_Env.cmake)
-    ExternalProject_Write_SetBuildEnv_Commands(${_env_script})
-
-    # configure step
-    set(_configure_script ${CMAKE_BINARY_DIR}/${proj}_configure_step.cmake)
-    file(WRITE ${_configure_script}
-    "include(\"${_env_script}\")
-  set(${proj}_WORKING_DIR \"${EP_SOURCE_DIR}\")
-  ExternalProject_Execute(${proj} \"configure\" sh ${EP_SOURCE_DIR}/configure
-  --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc
-  )
-  ")
-
-    # build step
-    set(_build_script ${CMAKE_BINARY_DIR}/${proj}_build_step.cmake)
-    file(WRITE ${_build_script}
-    "include(\"${_env_script}\")
-  set(${proj}_WORKING_DIR \"${EP_SOURCE_DIR}\")
-  set(ENV{PATH} \"${IGSIO_YASM_DIR}:${IGSIO_YASM_DIR}/Debug:${IGSIO_YASM_DIR}/Release:$ENV{PATH}\")
-  ExternalProject_Execute(${proj} \"build\" make)
-  ")
-
-    ExternalProject_Add(${proj}
-      GIT_REPOSITORY "https://github.com/webmproject/libvpx.git"
-      GIT_TAG "v1.6.1"
-      SOURCE_DIR "${EP_SOURCE_DIR}"
+    SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/Deps/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
+    SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/Deps/VP9" CACHE PATH "VP9 library directory" FORCE)                 
+    ExternalProject_Add(VP9
+      PREFIX "${CMAKE_BINARY_DIR}/Deps/VP9-prefix"
+      GIT_REPOSITORY https://github.com/webmproject/libvpx/
+      GIT_TAG v1.6.1
+      SOURCE_DIR        "${CMAKE_BINARY_DIR}/Deps/VP9"
+      CONFIGURE_COMMAND "${CMAKE_BINARY_DIR}/Deps/VP9/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc WORKING_DIRECTORY "${VP9_LIBRARY_DIR}"
+      BUILD_ALWAYS 1
+      BUILD_COMMAND PATH=${YASM_BINARY_DIR}:$ENV{PATH}; make
       BUILD_IN_SOURCE 1
-      CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${_configure_script}
-      BUILD_COMMAND ${CMAKE_COMMAND} -P ${_build_script}
-      INSTALL_COMMAND ""
-      DEPENDS ${${proj}_DEPENDENCIES}
-      )
-
-    set(VP9_LIBRARY_DIR "${EP_SOURCE_DIR}")
+      INSTALL_COMMAND   ""
+      TEST_COMMAND      ""
+      DEPENDS ${VP9_DEPENDENCIES}
+    )
 
   else()
     if( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64" ) OR
