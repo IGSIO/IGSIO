@@ -30,7 +30,7 @@ class VTKIGSIOCODECS_EXPORT vtkVP9VolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
   static vtkVP9VolumeCodec *New();
-  virtual vtkStreamingVolumeCodec* CreateCodecInstance();
+  virtual vtkStreamingVolumeCodec* CreateCodecInstance() VTK_OVERRIDE;
   vtkTypeMacro(vtkVP9VolumeCodec, vtkStreamingVolumeCodec);
 
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
@@ -43,9 +43,9 @@ public:
   std::string GetRateControlParameter() { return "rateControl"; };
   std::string GetDeadlineModeParameter() { return "deadlineMode"; };
 
-  virtual std::string GetFourCC() { return "VP90"; };
+  virtual std::string GetFourCC() VTK_OVERRIDE { return "VP90"; };
 
-  virtual std::string GetParameterDescription(std::string parameterName);
+  virtual std::string GetParameterDescription(std::string parameterName) VTK_OVERRIDE;
 
   virtual bool SetParametersFromPresetValue(const std::string& presetValue) VTK_OVERRIDE;
 
@@ -53,9 +53,9 @@ protected:
   vtkVP9VolumeCodec();
   ~vtkVP9VolumeCodec();
 
-  virtual bool DecodeFrameInternal(vtkStreamingVolumeFrame* inputFrame, vtkImageData* outputImageData, bool saveDecodedImage = true);
-  virtual bool EncodeImageDataInternal(vtkImageData* outputImageData, vtkStreamingVolumeFrame* inputFrame, bool forceKeyFrame);
-  virtual bool UpdateParameterInternal(std::string parameterValue, std::string parameterName);
+  virtual bool DecodeFrameInternal(vtkStreamingVolumeFrame* inputFrame, vtkImageData* outputImageData, bool saveDecodedImage = true) VTK_OVERRIDE;
+  virtual bool EncodeImageDataInternal(vtkImageData* outputImageData, vtkStreamingVolumeFrame* inputFrame, bool forceKeyFrame) VTK_OVERRIDE;
+  virtual bool UpdateParameterInternal(std::string parameterValue, std::string parameterName) VTK_OVERRIDE;
 
 private:
   vtkVP9VolumeCodec(const vtkVP9VolumeCodec&);
