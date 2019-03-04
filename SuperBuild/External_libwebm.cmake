@@ -11,9 +11,25 @@ IF(libwebm_DIR)
   SET (IGSIO_libwebm_DIR "${libwebm_DIR}" CACHE INTERNAL "Path to store libwebm binaries")
 ELSE()
 
- SET (IGSIO_libwebm_SRC_DIR ${CMAKE_BINARY_DIR}/libwebm CACHE INTERNAL "Path to store libwebm contents.")
- SET (IGSIO_libwebm_PREFIX_DIR ${CMAKE_BINARY_DIR}/libwebm-prefix CACHE INTERNAL "Path to store libwebm prefix data.")
- SET (IGSIO_libwebm_DIR ${CMAKE_BINARY_DIR}/libwebm-bin CACHE INTERNAL "Path to store libwebm binaries")
+  SET (IGSIO_libwebm_SRC_DIR ${CMAKE_BINARY_DIR}/libwebm CACHE INTERNAL "Path to store libwebm contents.")
+  SET (IGSIO_libwebm_PREFIX_DIR ${CMAKE_BINARY_DIR}/libwebm-prefix CACHE INTERNAL "Path to store libwebm prefix data.")
+  SET (IGSIO_libwebm_DIR ${CMAKE_BINARY_DIR}/libwebm-bin CACHE INTERNAL "Path to store libwebm binaries")
+
+  SET(BUILD_OPTIONS
+    -DENABLE_WEBMINFO:BOOL=OFF
+    -DENABLE_WEBMTS:BOOL=OFF
+    -DENABLE_WEBM_PARSER:BOOL=OFF
+    -DENABLE_SAMPLES:BOOL=OFF
+    -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS:BOOL=ON
+    )
+
+  IF(APPLE)
+    LIST(APPEND BUILD_OPTIONS
+      -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
+      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
+      -DCMAKE_OSX_SYSROOT:STRING=${CMAKE_OSX_SYSROOT}
+      )
+  ENDIF()
 
  ExternalProject_Add( libwebm
    SOURCE_DIR ${IGSIO_libwebm_SRC_DIR}
@@ -33,11 +49,7 @@ ELSE()
      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
      -DBUILD_SHARED_LIBS:BOOL=OFF
      # Options
-     -DENABLE_WEBMINFO:BOOL=OFF
-     -DENABLE_WEBMTS:BOOL=OFF
-     -DENABLE_WEBM_PARSER:BOOL=OFF
-     -DENABLE_SAMPLES:BOOL=OFF
-     -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS:BOOL=ON
+     ${BUILD_OPTIONS}
    #--Build step-----------------
    BUILD_ALWAYS 1
    #--Install step-----------------
