@@ -128,9 +128,8 @@ IF (${CMAKE_VERSION} VERSION_GREATER 3.4)
 ENDIF()
 
 IF(IGSIO_SUPERBUILD)
-    INCLUDE(SuperBuild/Superbuild.cmake)
+  INCLUDE(SuperBuild/Superbuild.cmake)
 ELSE()
-
   ADD_SUBDIRECTORY(Source/Codecs)
   ADD_SUBDIRECTORY(Source/IGSIOCommon)
   IF(IGSIO_BUILD_SEQUENCEIO)
