@@ -11,13 +11,6 @@ SET(IGSIO_VERSION_MINOR "0")
 SET(IGSIO_VERSION_PATCH "0")
 SET(IGSIO_VERSION ${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}.${IGSIO_VERSION_PATCH})
 
-# --------------------------------------------------------------------------
-# Configure include file
-CONFIGURE_FILE(
-  ${CMAKE_CURRENT_SOURCE_DIR}/igsioConfigure.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
-  )
-
 SET(CMAKE_MODULE_PATH
   ${CMAKE_CURRENT_SOURCE_DIR}/Modules
   ${CMAKE_MODULE_PATH}
@@ -61,18 +54,6 @@ OPTION(COPY_EXTERNAL_LIBS "Copy external libraries to output directory." OFF)
 #-----------------------------------------------------------------------------
 INCLUDE(${CMAKE_ROOT}/Modules/GenerateExportHeader.cmake)
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/CMake/IGSIOMacros.cmake)
-
-# Create an IGSIOConfig.cmake and IGSIOConfig Version.cmake file for the use from the build tree
-#-----------------------------------------------------------------------------
-INCLUDE(CMakePackageConfigHelpers)
-# Re: #1075 eventually remove this section after people are used to the new location
-CONFIGURE_FILE(IGSIOConfig.cmake.in
-  "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfig.cmake" @ONLY)
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake"
-  VERSION ${IGSIO_VERSION}
-  COMPATIBILITY ExactVersion)
-LIST(APPEND IGSIO_INSTALL_CMAKE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake")
 
 # --------------------------------------------------------------------------
 # Try to find VTK and include its settings (otherwise complain)
@@ -130,6 +111,14 @@ ENDIF()
 IF(IGSIO_SUPERBUILD)
   INCLUDE(SuperBuild/Superbuild.cmake)
 ELSE()
+
+  # --------------------------------------------------------------------------
+  # Configure include file
+  CONFIGURE_FILE(
+    ${CMAKE_CURRENT_SOURCE_DIR}/igsioConfigure.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
+    )
+
   ADD_SUBDIRECTORY(Source/Codecs)
   ADD_SUBDIRECTORY(Source/IGSIOCommon)
   IF(IGSIO_BUILD_SEQUENCEIO)
@@ -145,6 +134,14 @@ ELSE()
   endif()
   unset(_igsio_targets)
 
+  # Create an IGSIOConfig.cmake and IGSIOConfig Version.cmake file for the use from the build tree
+  #-----------------------------------------------------------------------------
+  INCLUDE(CMakePackageConfigHelpers)
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake"
+    VERSION ${IGSIO_VERSION}
+    COMPATIBILITY ExactVersion)
+  LIST(APPEND IGSIO_INSTALL_CMAKE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake")
   INCLUDE(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
 
 ENDIF()
