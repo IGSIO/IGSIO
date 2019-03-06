@@ -685,7 +685,6 @@ igsioStatus vtkIGSIOTransformRepository::ReadConfiguration(vtkXMLDataElement* co
       continue;
     }
 
-    ToolStatus toolStatus = TOOL_OK;
     std::string toolStatusStr;
     if (igsioCommon::XML::SafeGetAttributeValueInsensitive(*nestedElement, "Status", toolStatusStr) == IGSIO_SUCCESS)
     {
