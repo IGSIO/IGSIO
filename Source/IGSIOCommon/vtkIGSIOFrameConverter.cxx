@@ -50,6 +50,11 @@ vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsio
       }
     }
 
+    if (codec == nullptr)
+    {
+      return NULL;
+    }
+
     if (compressedFrame && codec)
     {
       uncompressedImage = vtkSmartPointer<vtkImageData>::New();
@@ -87,6 +92,11 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
       {
         this->Codecs[codecFourCC] = codec;
       }
+    }
+
+    if (codec == nullptr)
+    {
+      return NULL;
     }
 
     compressedFrame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
