@@ -10,21 +10,22 @@ ELSE()
   SET(IGSIO_VP9_DIR "${CMAKE_BINARY_DIR}/VP9")
 
   # VP9 has not been built yet, so download and build it as an external project
-  MESSAGE(STATUS "Downloading VP9 from https://github.com/webmproject/libvpx.git")              
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") 
     INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
     IF(NOT YASM_FOUND)
       LIST(APPEND ${proj}_DEPENDENCIES YASM)
     ENDIF()
-  
+
     SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
     SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)                 
+
+    MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")  
     ExternalProject_Add(VP9
       PREFIX "${CMAKE_BINARY_DIR}/VP9-prefix"
       GIT_REPOSITORY https://github.com/webmproject/libvpx/
       GIT_TAG v1.6.1
       SOURCE_DIR        "${IGSIO_VP9_DIR}"
-      CONFIGURE_COMMAND "${IGSIO_VP9_DIR}/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc WORKING_DIRECTORY "${VP9_LIBRARY_DIR}"
+      CONFIGURE_COMMAND "${IGSIO_VP9_DIR}/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc
       BUILD_ALWAYS 1
       BUILD_COMMAND PATH=${YASM_BINARY_DIR}:$ENV{PATH}; make
       BUILD_IN_SOURCE 1
@@ -59,6 +60,8 @@ ELSE()
         SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
         SET (BinaryURL "${BinaryURL}msvc12.zip")
       endif()
+
+      MESSAGE(STATUS "Downloading VP9 from ${BinaryURL}")
       ExternalProject_Add(VP9
         URL               ${BinaryURL}
         SOURCE_DIR        "${IGSIO_VP9_DIR}"
