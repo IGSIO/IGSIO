@@ -279,7 +279,7 @@ public:
     memberVarType tmpValue[vectorSize] = {0}; \
     if ( xmlElementVar->GetVectorAttribute(#memberVar, vectorSize, tmpValue) )  \
     { \
-      for(int i = 0; i < vectorSize+1; ++i) \
+      for(int i = 0; i < vectorSize; ++i) \
       { \
         memberVar[i] = tmpValue[i]; \
       } \
