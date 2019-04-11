@@ -44,7 +44,7 @@ else()
       ${VP9_DIR}
       )
 
-  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     list(APPEND VP9_PATH_HINTS  ${VP9_DIR}/lib/x64/)
     list(APPEND VP9_PATH_HINTS  ${VP9_DIR}/bin/x64/)
   else()
