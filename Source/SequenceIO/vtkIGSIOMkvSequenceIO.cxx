@@ -20,6 +20,9 @@ See License.txt for details.
 #include <mkvparser.h>
 #include <mkvreader.h>
 
+// std includes
+#include <errno.h>
+
 #include <vtkStreamingVolumeFrame.h>
 
 #define NANOSECONDS_IN_SECOND 1000000000.0
@@ -261,7 +264,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::ReadImageHeader()
 {
   if (!this->Internal->ReadHeader())
   {
-    LOG_ERROR("Could not read mkv header!")
+    LOG_ERROR("Could not read mkv header!");
     return IGSIO_FAIL;
   }
 
@@ -340,8 +343,6 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
     trackName = "Video";
   }
 
-  this->Internal->WriteHeader();
-
   igsioTrackedFrame* frame = this->TrackedFrameList->GetTrackedFrame(0);
   if (!frame)
   {
@@ -386,6 +387,11 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
   else
   {
     encodingFourCC = frame->GetEncodingFourCC();
+  }
+
+  if (!this->Internal->WriteHeader())
+  {
+    LOG_ERROR("Could not write MKV header!");
   }
 
   this->Internal->VideoTrackNumber = this->Internal->AddVideoTrack(trackName, encodingFourCC, frameSize[0], frameSize[1]);
@@ -553,7 +559,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::WriteHeader()
 
   if (!this->MKVWriter->Open(fileFullPath.c_str()))
   {
-    LOG_ERROR("Could not open file " << this->External->FileName << "!");
+    LOG_ERROR("Could not open file " << this->External->FileName << " for writing: " << strerror(errno));
     return false;
   }
 
@@ -579,18 +585,24 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::WriteHeader()
 //----------------------------------------------------------------------------
 int vtkIGSIOMkvSequenceIO::vtkInternal::AddVideoTrack(std::string name, std::string encodingFourCC, int width, int height, std::string language/*="und"*/)
 {
+  if (!this->MKVWriteSegment)
+  {
+    LOG_ERROR("Could not create metadata track! MKVWriteSegment does not exist!");
+    return -1;
+  }
+
   int trackNumber = this->MKVWriteSegment->AddVideoTrack(width, height, 0);
   if (trackNumber <= 0)
   {
     LOG_ERROR("Could not create video track!");
-    return false;
+    return -1;
   }
 
   mkvmuxer::VideoTrack* videoTrack = (mkvmuxer::VideoTrack*)this->MKVWriteSegment->GetTrackByNumber(trackNumber);
   if (!videoTrack)
   {
     LOG_ERROR("Could not find video track: " << trackNumber << "!");
-    return false;
+    return -1;
   }
 
   std::string codecId = FourCCToCodecId(encodingFourCC);
@@ -611,6 +623,11 @@ int vtkIGSIOMkvSequenceIO::vtkInternal::AddVideoTrack(std::string name, std::str
 //----------------------------------------------------------------------------
 int vtkIGSIOMkvSequenceIO::vtkInternal::AddMetadataTrack(std::string name, std::string language/*="und"*/)
 {
+  if (!this->MKVWriteSegment)
+  {
+    LOG_ERROR("Could not create metadata track! MKVWriteSegment does not exist!");
+  }
+
   mkvmuxer::Track* const track = this->MKVWriteSegment->AddTrack(0);
   if (!track)
   {
