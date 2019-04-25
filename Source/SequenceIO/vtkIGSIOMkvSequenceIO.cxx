@@ -445,7 +445,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteImages()
     this->Internal->WriterInitialized = true;
   }
 
-  FrameSizeType frameSize = { 0,0,0 };
+  FrameSizeType frameSize = { 0, 0, 0 };
   this->TrackedFrameList->GetFrameSize(frameSize);
 
   for (unsigned int frameNumber = 0; frameNumber < this->TrackedFrameList->GetNumberOfTrackedFrames(); frameNumber++)
@@ -501,8 +501,8 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteImages()
         }
       }
 
-      std::map<std::string, std::string> customFields = trackedFrame->GetCustomFields();
-      for (std::map<std::string, std::string>::iterator customFieldIt = customFields.begin(); customFieldIt != customFields.end(); ++customFieldIt)
+      igsioFieldMapType customFields = trackedFrame->GetCustomFields();
+      for (igsioFieldMapType::const_iterator customFieldIt = customFields.begin(); customFieldIt != customFields.end(); ++customFieldIt)
       {
         uint64_t trackID = this->Internal->FrameFieldTracks[customFieldIt->first];
         if (trackID == 0)
@@ -511,7 +511,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteImages()
           continue;
         }
 
-        this->Internal->WriteMetadata(customFieldIt->second, trackID, trackedFrame->GetTimestamp() - this->Internal->InitialTimestamp);
+        this->Internal->WriteMetadata(customFieldIt->second.second, trackID, trackedFrame->GetTimestamp() - this->Internal->InitialTimestamp);
       }
     }
   }
