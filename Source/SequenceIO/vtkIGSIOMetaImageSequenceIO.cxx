@@ -409,8 +409,8 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImagePixels()
     igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
 
     // Allocate frame only if it is valid
-    const char* imgStatus = trackedFrame->GetFrameField(SEQMETA_FIELD_IMG_STATUS.c_str());
-    if (imgStatus != NULL)    // Found the image status field
+    std::string imgStatus = trackedFrame->GetFrameField(SEQMETA_FIELD_IMG_STATUS);
+    if (!imgStatus.empty())    // Found the image status field
     {
       // Save status field
       std::string strImgStatus(imgStatus);

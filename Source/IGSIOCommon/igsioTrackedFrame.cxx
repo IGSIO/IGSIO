@@ -76,7 +76,7 @@ igsioTrackedFrame& igsioTrackedFrame::operator=(igsioTrackedFrame const& tracked
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::GetTrackedFrameInXmlData(std::string& strXmlData, const std::vector<igsioTransformName>& requestedTransforms)
+igsioStatus igsioTrackedFrame::GetTrackedFrameInXmlData(std::string& strXmlData, const std::vector<igsioTransformName>& requestedTransforms) const
 {
   vtkSmartPointer<vtkXMLDataElement> xmlData = vtkSmartPointer<vtkXMLDataElement>::New();
   igsioStatus status = this->PrintToXML(xmlData, requestedTransforms);
@@ -90,7 +90,7 @@ igsioStatus igsioTrackedFrame::GetTrackedFrameInXmlData(std::string& strXmlData,
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const std::vector<igsioTransformName>& requestedTransforms)
+igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const std::vector<igsioTransformName>& requestedTransforms) const
 {
   if (trackedFrame == NULL)
   {
@@ -100,9 +100,9 @@ igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const
 
   trackedFrame->SetName("TrackedFrame");
   trackedFrame->SetDoubleAttribute("Timestamp", this->Timestamp);
-  trackedFrame->SetAttribute("ImageDataValid", (this->GetImageData()->IsImageValid() ? "true" : "false"));
+  trackedFrame->SetAttribute("ImageDataValid", (this->ImageData.IsImageValid() ? "true" : "false"));
 
-  if (this->GetImageData()->IsImageValid())
+  if (this->ImageData.IsImageValid())
   {
     trackedFrame->SetIntAttribute("NumberOfBits", this->GetNumberOfBitsPerScalar());
     unsigned int numberOfScalarComponents(1);
@@ -123,12 +123,12 @@ igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const
     trackedFrame->SetVectorAttribute("FrameSize", 3, frameSizeSigned);
   }
 
-  for (auto fieldIter = FrameFields.begin(); fieldIter != FrameFields.end(); ++fieldIter)
+  for (igsioFieldMapType::const_iterator fieldIter = this->FrameFields.begin(); fieldIter != this->FrameFields.end(); ++fieldIter)
   {
     // Only use requested transforms mechanism if the vector is not empty
-    if (!requestedTransforms.empty() && (IsTransform(fieldIter->first) || IsTransformStatus(fieldIter->first)))
+    if (!requestedTransforms.empty() && (igsioTrackedFrame::IsTransform(fieldIter->first) || igsioTrackedFrame::IsTransformStatus(fieldIter->first)))
     {
-      if (IsTransformStatus(fieldIter->first))
+      if (igsioTrackedFrame::IsTransformStatus(fieldIter->first))
       {
         continue;
       }
@@ -140,28 +140,36 @@ igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const
       statusName = statusName.substr(0, fieldIter->first.length() - TransformPostfix.length());
       statusName = statusName.append(TransformStatusPostfix);
       vtkSmartPointer<vtkXMLDataElement> customField = vtkSmartPointer<vtkXMLDataElement>::New();
-      customField->SetName("FrameField");
-      customField->SetAttribute("Name", statusName.c_str());
-      customField->SetAttribute("Value", FrameFields[statusName].c_str());
-      trackedFrame->AddNestedElement(customField);
+      auto iter = this->FrameFields.find(statusName);
+      if (iter != this->FrameFields.end())
+      {
+        customField->SetName("FrameField");
+        customField->SetAttribute("Name", statusName.c_str());
+        customField->SetAttribute("Value", iter->second.second.c_str());
+        trackedFrame->AddNestedElement(customField);
+      }
     }
     vtkSmartPointer<vtkXMLDataElement> customField = vtkSmartPointer<vtkXMLDataElement>::New();
     customField->SetName("FrameField");
     customField->SetAttribute("Name", fieldIter->first.c_str());
-    customField->SetAttribute("Value", fieldIter->second.c_str());
+    customField->SetAttribute("Value", fieldIter->second.second.c_str());
     trackedFrame->AddNestedElement(customField);
   }
 
-  if (FiducialPointsCoordinatePx != NULL)
+  if (this->FiducialPointsCoordinatePx != NULL)
   {
+    // make copy to protect const-ness
+    vtkNew<vtkPoints> fiducialPoints;
+    this->FiducialPointsCoordinatePx->DeepCopy(fiducialPoints);
+
     vtkSmartPointer<vtkXMLDataElement> segmentation = vtkSmartPointer<vtkXMLDataElement>::New();
     segmentation->SetName("Segmentation");
 
-    if (FiducialPointsCoordinatePx->GetNumberOfPoints() == 0)
+    if (fiducialPoints->GetNumberOfPoints() == 0)
     {
       segmentation->SetAttribute("SegmentationStatus", "Failed");
     }
-    else if (FiducialPointsCoordinatePx->GetNumberOfPoints() % 3 != 0)
+    else if (fiducialPoints->GetNumberOfPoints() % 3 != 0)
     {
       segmentation->SetAttribute("SegmentationStatus", "InvalidPatterns");
     }
@@ -173,10 +181,10 @@ igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const
     vtkSmartPointer<vtkXMLDataElement> segmentedPoints = vtkSmartPointer<vtkXMLDataElement>::New();
     segmentedPoints->SetName("SegmentedPoints");
 
-    for (int i = 0; i < FiducialPointsCoordinatePx->GetNumberOfPoints(); i++)
+    for (int i = 0; i < fiducialPoints->GetNumberOfPoints(); i++)
     {
       double point[3] = {0};
-      FiducialPointsCoordinatePx->GetPoint(i, point);
+      fiducialPoints->GetPoint(i, point);
 
       vtkSmartPointer<vtkXMLDataElement> pointElement = vtkSmartPointer<vtkXMLDataElement>::New();
       pointElement->SetName("Point");
@@ -271,14 +279,14 @@ igsioStatus igsioTrackedFrame::SetTrackedFrameFromXmlData(const char* strXmlData
 }
 
 //----------------------------------------------------------------------------
-FrameSizeType igsioTrackedFrame::GetFrameSize()
+FrameSizeType igsioTrackedFrame::GetFrameSize() const
 {
   this->ImageData.GetFrameSize(this->FrameSize);
   return this->FrameSize;
 }
 
 //----------------------------------------------------------------------------
-std::string igsioTrackedFrame::GetEncodingFourCC()
+std::string igsioTrackedFrame::GetEncodingFourCC() const
 {
   this->ImageData.GetEncodingFourCC(this->EncodingFourCC);
   return this->EncodingFourCC;
@@ -299,11 +307,12 @@ void igsioTrackedFrame::SetTimestamp(double value)
   this->Timestamp = value;
   std::ostringstream strTimestamp;
   strTimestamp << std::setprecision(FLOATING_POINT_PRECISION) << this->Timestamp;
-  this->FrameFields["Timestamp"] = strTimestamp.str();
+  this->FrameFields["Timestamp"].first = FRAMEFIELD_NONE;
+  this->FrameFields["Timestamp"].second = strTimestamp.str();
 }
 
 //----------------------------------------------------------------------------
-int igsioTrackedFrame::GetNumberOfBitsPerScalar()
+int igsioTrackedFrame::GetNumberOfBitsPerScalar() const
 {
   int numberOfBitsPerScalar(0);
   numberOfBitsPerScalar = this->ImageData.GetNumberOfBytesPerScalar() * 8;
@@ -311,7 +320,7 @@ int igsioTrackedFrame::GetNumberOfBitsPerScalar()
 }
 
 //----------------------------------------------------------------------------
-int igsioTrackedFrame::GetNumberOfBitsPerPixel()
+int igsioTrackedFrame::GetNumberOfBitsPerPixel() const
 {
   int numberOfBitsPerScalar(0);
   unsigned int numberOfScalarComponents(1);
@@ -325,7 +334,7 @@ int igsioTrackedFrame::GetNumberOfBitsPerPixel()
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::GetNumberOfScalarComponents(unsigned int& numberOfScalarComponents)
+igsioStatus igsioTrackedFrame::GetNumberOfScalarComponents(unsigned int& numberOfScalarComponents) const
 {
   return this->ImageData.GetNumberOfScalarComponents(numberOfScalarComponents);
 }
@@ -351,9 +360,9 @@ void igsioTrackedFrame::SetFiducialPointsCoordinatePx(vtkPoints* fiducialPoints)
 }
 
 //----------------------------------------------------------------------------
-void igsioTrackedFrame::SetFrameField(std::string name, std::string value)
+void igsioTrackedFrame::SetFrameField(std::string name, std::string value, igsioFrameFieldFlags flags)
 {
-  if (STRCASECMP(name.c_str(), "Timestamp") == 0)
+  if (igsioCommon::IsEqualInsensitive(name, "Timestamp"))
   {
     double timestamp(0);
     if (igsioCommon::StringToDouble(value.c_str(), timestamp) != IGSIO_SUCCESS)
@@ -366,29 +375,30 @@ void igsioTrackedFrame::SetFrameField(std::string name, std::string value)
     }
   }
 
-  this->FrameFields[name] = value;
+  this->FrameFields[name].first = flags;
+  this->FrameFields[name].second = value;
 }
 
 //----------------------------------------------------------------------------
-const char* igsioTrackedFrame::GetFrameField(const char* fieldName)
+std::string igsioTrackedFrame::GetFrameField(const char* fieldName) const
 {
   if (fieldName == NULL)
   {
     LOG_ERROR("Unable to get frame field: field name is NULL!");
-    return NULL;
+    return "";
   }
 
-  FieldMapType::iterator fieldIterator;
+  igsioFieldMapType::const_iterator fieldIterator;
   fieldIterator = this->FrameFields.find(fieldName);
   if (fieldIterator != this->FrameFields.end())
   {
-    return fieldIterator->second.c_str();
+    return fieldIterator->second.second;
   }
-  return NULL;
+  return "";
 }
 
 //----------------------------------------------------------------------------
-const char* igsioTrackedFrame::GetFrameField(const std::string& fieldName)
+std::string igsioTrackedFrame::GetFrameField(const std::string& fieldName) const
 {
   return this->GetFrameField(fieldName.c_str());
 }
@@ -402,7 +412,7 @@ igsioStatus igsioTrackedFrame::DeleteFrameField(const char* fieldName)
     return IGSIO_FAIL;
   }
 
-  FieldMapType::iterator field = this->FrameFields.find(fieldName);
+  igsioFieldMapType::iterator field = this->FrameFields.find(fieldName);
   if (field != this->FrameFields.end())
   {
     this->FrameFields.erase(field);
@@ -412,6 +422,12 @@ igsioStatus igsioTrackedFrame::DeleteFrameField(const char* fieldName)
   return IGSIO_FAIL;
 }
 
+
+//----------------------------------------------------------------------------
+igsioStatus igsioTrackedFrame::DeleteFrameField(const std::string& fieldName)
+{
+  return DeleteFrameField(fieldName.c_str());
+}
 
 //----------------------------------------------------------------------------
 bool igsioTrackedFrame::IsFrameTransformNameDefined(const igsioTransformName& transformName)
@@ -439,7 +455,7 @@ bool igsioTrackedFrame::IsFrameFieldDefined(const char* fieldName)
     return false;
   }
 
-  FieldMapType::iterator fieldIterator;
+  igsioFieldMapType::iterator fieldIterator;
   fieldIterator = this->FrameFields.find(fieldName);
   if (fieldIterator != this->FrameFields.end())
   {
@@ -451,25 +467,25 @@ bool igsioTrackedFrame::IsFrameFieldDefined(const char* fieldName)
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frameTransformName, double transform[16])
+igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frameTransformName, double transform[16]) const
 {
   std::string transformName;
   if (frameTransformName.GetTransformName(transformName) != IGSIO_SUCCESS)
   {
-    LOG_ERROR("Unable to get custom transform, transform name is wrong!");
+    LOG_ERROR("Unable to get transform, transform name is wrong!");
     return IGSIO_FAIL;
   }
 
   // Append Transform to the end of the transform name
-  if (!IsTransform(transformName))
+  if (!igsioTrackedFrame::IsTransform(transformName))
   {
     transformName.append(TransformPostfix);
   }
 
-  const char* frameTransformStr = GetFrameField(transformName.c_str());
-  if (frameTransformStr == NULL)
+  std::string frameTransformStr = GetFrameField(transformName);
+  if (frameTransformStr.empty())
   {
-    LOG_ERROR("Unable to get custom transform from name: " << transformName);
+    LOG_ERROR("Unable to get transform from name: " << transformName);
     return IGSIO_FAIL;
   }
 
@@ -485,7 +501,7 @@ igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frame
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frameTransformName, vtkMatrix4x4* transformMatrix)
+igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frameTransformName, vtkMatrix4x4* transformMatrix) const
 {
   double transform[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
   const igsioStatus retValue = this->GetFrameTransform(frameTransformName, transform);
@@ -495,7 +511,7 @@ igsioStatus igsioTrackedFrame::GetFrameTransform(const igsioTransformName& frame
 }
 
 //----------------------------------------------------------------------------
-igsioStatus igsioTrackedFrame::GetFrameTransformStatus(const igsioTransformName& frameTransformName, ToolStatus& status)
+igsioStatus igsioTrackedFrame::GetFrameTransformStatus(const igsioTransformName& frameTransformName, ToolStatus& status) const
 {
   status = TOOL_INVALID;
   std::string transformStatusName;
@@ -506,7 +522,7 @@ igsioStatus igsioTrackedFrame::GetFrameTransformStatus(const igsioTransformName&
   }
 
   // Append TransformStatus to the end of the transform name
-  if (IsTransform(transformStatusName))
+  if (igsioTrackedFrame::IsTransform(transformStatusName))
   {
     transformStatusName.append("Status");
   }
@@ -515,8 +531,8 @@ igsioStatus igsioTrackedFrame::GetFrameTransformStatus(const igsioTransformName&
     transformStatusName.append(TransformStatusPostfix);
   }
 
-  const char* strStatus = this->GetFrameField(transformStatusName.c_str());
-  if (strStatus == NULL)
+  std::string strStatus = this->GetFrameField(transformStatusName);
+  if (strStatus.empty())
   {
     LOG_ERROR("Unable to get custom transform status from name: " << transformStatusName);
     return IGSIO_FAIL;
@@ -624,22 +640,22 @@ std::string igsioTrackedFrame::ConvertFieldStatusToString(TrackedFrameFieldStatu
 }
 
 //----------------------------------------------------------------------------
-void igsioTrackedFrame::GetFrameFieldNameList(std::vector<std::string>& fieldNames)
+void igsioTrackedFrame::GetFrameFieldNameList(std::vector<std::string>& fieldNames) const
 {
   fieldNames.clear();
-  for (FieldMapType::const_iterator it = this->FrameFields.begin(); it != this->FrameFields.end(); it++)
+  for (igsioFieldMapType::const_iterator it = this->FrameFields.begin(); it != this->FrameFields.end(); it++)
   {
     fieldNames.push_back(it->first);
   }
 }
 
 //----------------------------------------------------------------------------
-void igsioTrackedFrame::GetFrameTransformNameList(std::vector<igsioTransformName>& transformNames)
+void igsioTrackedFrame::GetFrameTransformNameList(std::vector<igsioTransformName>& transformNames) const
 {
   transformNames.clear();
-  for (FieldMapType::const_iterator it = this->FrameFields.begin(); it != this->FrameFields.end(); it++)
+  for (igsioFieldMapType::const_iterator it = this->FrameFields.begin(); it != this->FrameFields.end(); it++)
   {
-    if (IsTransform(it->first))
+    if (igsioTrackedFrame::IsTransform(it->first))
     {
       igsioTransformName trName;
       trName.SetTransformName(it->first.substr(0, it->first.length() - TransformPostfix.length()).c_str());
@@ -697,42 +713,42 @@ igsioStatus igsioTrackedFrameEncoderPositionFinder::GetStepperEncoderValues(igsi
   }
 
   // Get the probe position from tracked frame info
-  const char* cProbePos = trackedFrame->GetFrameField("ProbePosition");
-  if (cProbePos == NULL)
+  std::string cProbePos = trackedFrame->GetFrameField("ProbePosition");
+  if (cProbePos.empty())
   {
     LOG_ERROR("Couldn't find ProbePosition field in tracked frame!");
     return IGSIO_FAIL;
   }
 
-  if (igsioCommon::StringToDouble(cProbePos, probePosition) != IGSIO_SUCCESS)
+  if (igsioCommon::StringToNumber<double>(cProbePos, probePosition) != IGSIO_SUCCESS)
   {
     LOG_ERROR("Failed to convert probe position " << cProbePos << " to double!");
     return IGSIO_FAIL;
   }
 
   // Get the probe rotation from tracked frame info
-  const char* cProbeRot = trackedFrame->GetFrameField("ProbeRotation");
-  if (cProbeRot == NULL)
+  std::string cProbeRot = trackedFrame->GetFrameField("ProbeRotation");
+  if (cProbeRot.empty())
   {
     LOG_ERROR("Couldn't find ProbeRotation field in tracked frame!");
     return IGSIO_FAIL;
   }
 
-  if (igsioCommon::StringToDouble(cProbeRot, probeRotation) != IGSIO_SUCCESS)
+  if (igsioCommon::StringToNumber<double>(cProbeRot, probeRotation) != IGSIO_SUCCESS)
   {
     LOG_ERROR("Failed to convert probe rotation " << cProbeRot << " to double!");
     return IGSIO_FAIL;
   }
 
   // Get the template position from tracked frame info
-  const char* cTemplatePos = trackedFrame->GetFrameField("TemplatePosition");
-  if (cTemplatePos == NULL)
+  std::string cTemplatePos = trackedFrame->GetFrameField("TemplatePosition");
+  if (cTemplatePos.empty())
   {
     LOG_ERROR("Couldn't find TemplatePosition field in tracked frame!");
     return IGSIO_FAIL;
   }
 
-  if (igsioCommon::StringToDouble(cTemplatePos, templatePosition) != IGSIO_SUCCESS)
+  if (igsioCommon::StringToNumber<double>(cTemplatePos, templatePosition) != IGSIO_SUCCESS)
   {
     LOG_ERROR("Failed to convert template position " << cTemplatePos << " to double!");
     return IGSIO_FAIL;
