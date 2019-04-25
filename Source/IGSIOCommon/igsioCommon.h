@@ -53,6 +53,7 @@ enum TrackedFrameFieldStatus
   FIELD_OK,           /*!< Field is valid */
   FIELD_INVALID       /*!< Field is invalid */
 };
+typedef TrackedFrameFieldStatus igsioTrackedFrameFieldStatus;
 
 enum ToolStatus
 {
@@ -68,8 +69,19 @@ enum ToolStatus
   TOOL_INVALID,         /*!< Invalid tool status */
   TOOL_PATH_NOT_FOUND   /*!< Transform cannot be computed from existing transforms */
 };
+typedef ToolStatus igsioToolStatus;
+
+enum igsioFrameFieldFlags
+{
+  FRAMEFIELD_NONE         = 0x0,  // 0b0000'0000'0000'0000
+  FRAMEFIELD_SERVER_SEND  = 0x1   // 0b0000'0000'0000'0001
+};
+
+typedef std::map<std::string, std::pair<igsioFrameFieldFlags, std::string>> igsioFieldMapType;
+typedef igsioFieldMapType FieldMapType; // Backwards compatibility
 
 typedef std::array<unsigned int, 3> FrameSizeType;
+typedef FrameSizeType igsioFrameSizeType;
 
 #define UNDEFINED_TIMESTAMP DBL_MAX
 
@@ -427,6 +439,25 @@ namespace igsioCommon
   }
 
   //----------------------------------------------------------------------------
+  /*! Quick and robust string to number conversion */
+  template<class T>
+  igsioStatus StringToNumber(const std::string& string, T& result)
+  {
+    if (string.empty())
+    {
+      return IGSIO_FAIL;
+    }
+    std::stringstream ss;
+    ss << string;
+    ss >> result;
+    if (!ss.good())
+    {
+      return IGSIO_FAIL;
+    }
+    return IGSIO_SUCCESS;
+  }
+
+  //----------------------------------------------------------------------------
   /*! Quick and robust string to int conversion */
   template<class T>
   igsioStatus StringToUInt(const char* strPtr, T& result)
@@ -461,6 +492,7 @@ namespace igsioCommon
     }
     return IGSIO_SUCCESS;
   }
+
   //---------------------------------------------------------------------------
   struct ImageMetaDataItem
   {

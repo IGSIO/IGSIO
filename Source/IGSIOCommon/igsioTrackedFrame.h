@@ -9,6 +9,7 @@
 
 #include "vtkigsiocommon_export.h"
 
+#include "igsioCommon.h"
 #include "igsioVideoFrame.h"
 
 class vtkMatrix4x4;
@@ -27,7 +28,6 @@ public:
 public:
   static const std::string TransformPostfix;
   static const std::string TransformStatusPostfix;
-  typedef std::map<std::string, std::string> FieldMapType;
 
 public:
   igsioTrackedFrame();
@@ -49,14 +49,15 @@ public:
   double GetTimestamp() { return this->Timestamp; };
 
   /*! Set frame field */
-  void SetFrameField(std::string name, std::string value);
+  void SetFrameField(std::string name, std::string value, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
 
   /*! Get frame field value */
-  const char* GetFrameField(const char* fieldName);
-  const char* GetFrameField(const std::string& fieldName);
+  std::string GetFrameField(const char* fieldName) const;
+  std::string GetFrameField(const std::string& fieldName) const;
 
   /*! Delete frame field */
   igsioStatus DeleteFrameField(const char* fieldName);
+  igsioStatus DeleteFrameField(const std::string& fieldName);
 
   /*!
     Check if a frame field is defined or not
@@ -71,12 +72,12 @@ public:
   bool IsFrameTransformNameDefined(const igsioTransformName& transformName);
 
   /*! Get frame transform */
-  igsioStatus GetFrameTransform(const igsioTransformName& frameTransformName, double transform[16]);
+  igsioStatus GetFrameTransform(const igsioTransformName& frameTransformName, double transform[16]) const;
   /*! Get frame transform */
-  igsioStatus GetFrameTransform(const igsioTransformName& frameTransformName, vtkMatrix4x4* transformMatrix);
+  igsioStatus GetFrameTransform(const igsioTransformName& frameTransformName, vtkMatrix4x4* transformMatrix) const;
 
   /*! Get frame status */
-  igsioStatus GetFrameTransformStatus(const igsioTransformName& frameTransformName, ToolStatus& status);
+  igsioStatus GetFrameTransformStatus(const igsioTransformName& frameTransformName, ToolStatus& status) const;
   /*! Set frame status */
   igsioStatus SetFrameTransformStatus(const igsioTransformName& frameTransformName, ToolStatus status);
 
@@ -87,25 +88,25 @@ public:
   igsioStatus SetFrameTransform(const igsioTransformName& frameTransformName, vtkMatrix4x4* transform);
 
   /*! Get the list of the name of all frame fields */
-  void GetFrameFieldNameList(std::vector<std::string>& fieldNames);
+  void GetFrameFieldNameList(std::vector<std::string>& fieldNames) const;
 
   /*! Get the list of the transform name of all frame transforms*/
-  void GetFrameTransformNameList(std::vector<igsioTransformName>& transformNames);
+  void GetFrameTransformNameList(std::vector<igsioTransformName>& transformNames) const;
 
   /*! Get tracked frame size in pixel. Returns: FrameSizeType.  */
-  FrameSizeType GetFrameSize();
+  FrameSizeType GetFrameSize() const;
 
   /* Get the fourCC of the encoded frame */
-  std::string GetEncodingFourCC();
+  std::string GetEncodingFourCC() const;
 
   /*! Get tracked frame pixel size in bits (scalar size * number of scalar components) */
-  int GetNumberOfBitsPerScalar();
+  int GetNumberOfBitsPerScalar() const;
 
   /*! Get number of scalar components in a pixel */
-  igsioStatus GetNumberOfScalarComponents(unsigned int& numberOfScalarComponents);
+  igsioStatus GetNumberOfScalarComponents(unsigned int& numberOfScalarComponents) const;
 
   /*! Get number of bits in a pixel */
-  int GetNumberOfBitsPerPixel();
+  int GetNumberOfBitsPerPixel() const;
 
   /*! Set Segmented fiducial point pixel coordinates */
   void SetFiducialPointsCoordinatePx(vtkPoints* fiducialPoints);
@@ -116,10 +117,10 @@ public:
   /*! Print tracked frame human readable serialization data to XML data
       If requestedTransforms is empty, all stored FrameFields are sent
   */
-  igsioStatus PrintToXML(vtkXMLDataElement* xmlData, const std::vector<igsioTransformName>& requestedTransforms);
+  igsioStatus PrintToXML(vtkXMLDataElement* xmlData, const std::vector<igsioTransformName>& requestedTransforms) const;
 
   /*! Serialize Tracked frame human readable data to xml data and return in string */
-  igsioStatus GetTrackedFrameInXmlData(std::string& strXmlData, const std::vector<igsioTransformName>& requestedTransforms);
+  igsioStatus GetTrackedFrameInXmlData(std::string& strXmlData, const std::vector<igsioTransformName>& requestedTransforms) const;
 
   /*! Deserialize TrackedFrame human readable data from xml data string */
   igsioStatus SetTrackedFrameFromXmlData(const char* strXmlData);
@@ -133,7 +134,7 @@ public:
   static std::string ConvertFieldStatusToString(TrackedFrameFieldStatus status);
 
   /*! Return all custom fields in a map */
-  const FieldMapType& GetCustomFields() { return this->FrameFields; }
+  const igsioFieldMapType& GetCustomFields() { return this->FrameFields; }
 
   /*! Returns true if the input string ends with "Transform", else false */
   static bool IsTransform(std::string str);
@@ -152,10 +153,10 @@ protected:
   igsioVideoFrame ImageData;
   double Timestamp;
 
-  FieldMapType FrameFields;
+  igsioFieldMapType FrameFields;
 
-  FrameSizeType FrameSize;
-  std::string   EncodingFourCC;
+  mutable FrameSizeType FrameSize;      // Cached value is updated from underlying image data when accessed
+  mutable std::string   EncodingFourCC; // Cached value is updated from underlying image data when accessed
 
   /*! Stores segmented fiducial point pixel coordinates */
   vtkPoints* FiducialPointsCoordinatePx;
