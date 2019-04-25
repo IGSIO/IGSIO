@@ -73,8 +73,8 @@ typedef ToolStatus igsioToolStatus;
 
 enum igsioFrameFieldFlags
 {
-  FRAMEFIELD_NONE         = 0x0,  // 0b0000'0000'0000'0000
-  FRAMEFIELD_SERVER_SEND  = 0x1   // 0b0000'0000'0000'0001
+  FRAMEFIELD_NONE               = 0x0,  // 0b0000'0000'0000'0000
+  FRAMEFIELD_FORCE_SERVER_SEND  = 0x1   // 0b0000'0000'0000'0001
 };
 
 typedef std::map<std::string, std::pair<igsioFrameFieldFlags, std::string>> igsioFieldMapType;
