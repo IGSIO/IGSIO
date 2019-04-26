@@ -11,6 +11,7 @@ See License.txt for details.
 // VTK includes
 #include <vtkImageData.h>
 #include <vtkMatrix4x4.h>
+#include <vtkNew.h>
 #include <vtkPoints.h>
 #include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
@@ -160,7 +161,7 @@ igsioStatus igsioTrackedFrame::PrintToXML(vtkXMLDataElement* trackedFrame, const
   {
     // make copy to protect const-ness
     vtkNew<vtkPoints> fiducialPoints;
-    this->FiducialPointsCoordinatePx->DeepCopy(fiducialPoints);
+    this->FiducialPointsCoordinatePx->DeepCopy(fiducialPoints.GetPointer());
 
     vtkSmartPointer<vtkXMLDataElement> segmentation = vtkSmartPointer<vtkXMLDataElement>::New();
     segmentation->SetName("Segmentation");
