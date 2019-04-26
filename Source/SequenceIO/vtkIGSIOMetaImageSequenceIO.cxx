@@ -119,7 +119,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
     if (!igsioCommon::HasSubstrInsensitive(name, SEQMETA_FIELD_FRAME_FIELD_PREFIX))
     {
       // field
-      SetCustomString(name.c_str(), value.c_str());
+      this->SetFrameField(name, value);
 
       // Arrived to ElementDataFile, this is the last element
       if (igsioCommon::IsEqualInsensitive(name, SEQMETA_FIELD_ELEMENT_DATA_FILE))
@@ -598,27 +598,27 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   {
     this->NumberOfDimensions++;
   }
-  SetCustomString("NDims", this->NumberOfDimensions);
+  this->SetFrameField("NDims", igsioCommon::ToString<int>(this->NumberOfDimensions));
 
-  SetCustomString("BinaryData", "True");
-  SetCustomString("BinaryDataByteOrderMSB", "False");
+  this->SetFrameField("BinaryData", "True");
+  this->SetFrameField("BinaryDataByteOrderMSB", "False");
 
   // CompressedData
   if (GetUseCompression())
   {
-    SetCustomString("CompressedData", "True");
+    this->SetFrameField("CompressedData", "True");
     int paddingCharacters = SEQMETA_FIELD_PADDED_LINE_LENGTH - strlen(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) - 4;
     std::string compDataSize("0");
     for (int i = 0; i < paddingCharacters; ++i)
     {
       compDataSize += " ";
     }
-    SetCustomString(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, compDataSize);   // add spaces so that later the field can be updated with larger values
+    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, compDataSize);   // add spaces so that later the field can be updated with larger values
   }
   else
   {
-    SetCustomString("CompressedData", "False");
-    SetCustomString(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, (const char*)(NULL));
+    this->SetFrameField("CompressedData", "False");
+    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, (const char*)(NULL));
   }
 
   FrameSizeType frameSize = {0, 0, 0};
@@ -672,7 +672,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   }
   std::string pixelTypeStr;
   vtkIGSIOMetaImageSequenceIO::ConvertVtkPixelTypeToMetaElementType(this->PixelType, pixelTypeStr);
-  SetCustomString("ElementType", pixelTypeStr.c_str());   // pixel type (a.k.a component type) is stored in the ElementType element
+  this->SetFrameField("ElementType", pixelTypeStr);   // pixel type (a.k.a component type) is stored in the ElementType element
 
   // ElementNumberOfChannels
   if (this->EnableImageDataWrite)
@@ -681,22 +681,22 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
     {
       this->NumberOfScalarComponents = this->TrackedFrameList->GetNumberOfScalarComponents();
     }
-    SetCustomString("ElementNumberOfChannels", this->NumberOfScalarComponents);
+    this->SetFrameField("ElementNumberOfChannels", igsioCommon::ToString<int>(this->NumberOfScalarComponents));
   }
 
-  SetCustomString(SEQMETA_FIELD_US_IMG_ORIENT, igsioVideoFrame::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF));
+  this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, igsioVideoFrame::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF));
   // Image orientation
   if (this->EnableImageDataWrite)
   {
     std::string orientationStr = igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInFile);
-    SetCustomString(SEQMETA_FIELD_US_IMG_ORIENT, orientationStr.c_str());
+    this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, orientationStr);
   }
 
   // Image type
   if (this->EnableImageDataWrite)
   {
     std::string typeStr = igsioVideoFrame::GetStringFromUsImageType(this->ImageType);
-    SetCustomString(SEQMETA_FIELD_US_IMG_TYPE, typeStr.c_str());
+    this->SetFrameField(SEQMETA_FIELD_US_IMG_TYPE, typeStr);
   }
 
   // Add fields with default values if they are not present already
@@ -737,7 +737,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
         transformMatrixStream << " ";
       }
     }
-    SetCustomString("TransformMatrix", transformMatrixStream.str());
+    this->SetFrameField("TransformMatrix", transformMatrixStream.str());
   }
 
   if (GetCustomString("Offset") == NULL
@@ -763,7 +763,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
         offsetStream << " ";
       }
     }
-    SetCustomString("Offset", offsetStream.str());
+    this->SetFrameField("Offset", offsetStream.str());
   }
   if (GetCustomString("CenterOfRotation") == NULL
       || igsioCommon::SplitStringIntoTokens(GetCustomString("CenterOfRotation"), ' ', false).size() != numSpaceDimensions)
@@ -778,7 +778,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
         rotationStream << " ";
       }
     }
-    SetCustomString("CenterOfRotation", rotationStream.str());
+    this->SetFrameField("CenterOfRotation", rotationStream.str());
   }
 
   if (GetCustomString("ElementSpacing") == NULL
@@ -804,12 +804,12 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
         spacingStream << " ";
       }
     }
-    SetCustomString("ElementSpacing", spacingStream.str());
+    this->SetFrameField("ElementSpacing", spacingStream.str());
   }
 
   if (GetCustomString("AnatomicalOrientation") == NULL)
   {
-    SetCustomString("AnatomicalOrientation", "RAI");
+    this->SetFrameField("AnatomicalOrientation", "RAI");
   }
 
   FILE* stream = NULL;
@@ -1323,7 +1323,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::Close()
   {
     std::stringstream ss;
     ss << this->CompressedBytesWritten;
-    this->SetCustomString(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, ss.str().c_str());
+    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, ss.str());
     if (UpdateFieldInImageHeader(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) != IGSIO_SUCCESS)
     {
       return IGSIO_FAIL;
@@ -1450,8 +1450,8 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateDimensionsCustomStrings(int numbe
   }
   kindStr << lastKind;
 
-  this->SetCustomString(SEQMETA_FIELD_DIMSIZE, sizesStr.str());
-  this->SetCustomString(SEQMETA_FIELD_KINDS, kindStr.str());
+  this->SetFrameField(SEQMETA_FIELD_DIMSIZE, sizesStr.str());
+  this->SetFrameField(SEQMETA_FIELD_KINDS, kindStr.str());
 
   return IGSIO_SUCCESS;
 }

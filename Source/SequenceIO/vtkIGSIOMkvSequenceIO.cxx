@@ -758,7 +758,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadHeader()
       bool isGreyScale = false;
       VideoTrackInfo videoTrackInfo(trackName, encodingFourCC, colourSpace, width, height, frameRate, isGreyScale);
       this->VideoTracks[trackNumber] = videoTrackInfo;
-      this->External->TrackedFrameList->SetCustomString("TrackName", trackName);
+      this->External->TrackedFrameList->SetFrameField("TrackName", trackName);
     }
     else if (trackType == mkvparser::Track::kMetadata || trackType == mkvparser::Track::kSubtitle)
     {

@@ -33,10 +33,8 @@ class vtkMatrix4x4;
 */
 class VTKIGSIOCOMMON_EXPORT vtkIGSIOTrackedFrameList : public vtkObject
 {
-
 public:
   typedef std::deque<igsioTrackedFrame*> TrackedFrameListType;
-  typedef std::map<std::string, std::string> FieldMapType;
 
   static vtkIGSIOTrackedFrameList* New();
   vtkTypeMacro(vtkIGSIOTrackedFrameList, vtkObject);
@@ -68,17 +66,11 @@ public:
   virtual igsioTrackedFrame* GetTrackedFrame(unsigned int frameNumber);
 
   /*! Get number of tracked frames */
-  virtual unsigned int GetNumberOfTrackedFrames()
-  {
-    return this->Size();
-  }
-  virtual unsigned int Size() { return this->TrackedFrameList.size(); }
+  virtual unsigned int GetNumberOfTrackedFrames();
+  virtual unsigned int Size();
 
   /*! Get the tracked frame list */
-  TrackedFrameListType GetTrackedFrameList()
-  {
-    return this->TrackedFrameList;
-  }
+  TrackedFrameListType GetTrackedFrameList();
 
   /* Retrieve the latest timestamp in the tracked frame list */
   double GetMostRecentTimestamp();
@@ -144,10 +136,7 @@ public:
   }
 
   /*! Get frame transform name used for transform validation */
-  igsioTransformName GetFrameTransformNameForValidation()
-  {
-    return this->FrameTransformNameForValidation;
-  }
+  igsioTransformName GetFrameTransformNameForValidation();
 
   /*! Get tracked frame scalar size in bits */
   virtual int GetNumberOfBitsPerScalar();
@@ -176,28 +165,34 @@ public:
   /*! Get the value of the custom field. If we couldn't find it, return NULL */
   virtual const char* GetCustomString(const char* fieldName);
   virtual std::string GetCustomString(const std::string& fieldName) const;
+  virtual std::string GetFrameField(const std::string& fieldName) const;
 
   /*! Set custom string value to \c fieldValue. If \c fieldValue is NULL then the field is deleted. */
-  virtual igsioStatus SetCustomString(const char* fieldName, const char* fieldValue);
-  virtual igsioStatus SetCustomString(const std::string& fieldName, const std::string& fieldValue);
+  virtual igsioStatus SetCustomString(const char* fieldName, const char* fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
+  virtual igsioStatus SetCustomString(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
+  virtual igsioStatus SetFrameField(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
 
   /*! Get the custom transformation matrix from metafile by frame transform name
   * It will search for a field like: Seq_Frame[frameNumber]_[frameTransformName]
   * Return false if the the field is missing */
-  virtual igsioStatus GetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix);
+  virtual igsioStatus GetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix) const;
+  virtual igsioStatus GetTransform(const igsioTransformName& name, vtkMatrix4x4& outMatrix) const;
 
   /*! Get the custom transformation matrix from metafile by frame transform name
   * It will search for a field like: Seq_Frame[frameNumber]_[frameTransformName]
   * Return false if the the field is missing */
-  virtual igsioStatus GetCustomTransform(const char* frameTransformName, double* transformMatrix);
+  virtual igsioStatus GetCustomTransform(const char* frameTransformName, double* transformMatrix) const;
+  virtual igsioStatus GetTransform(const igsioTransformName& name, double* outMatrix) const;
 
   /*! Set the custom transformation matrix from metafile by frame transform name
   * It will search for a field like: Seq_Frame[frameNumber]_[frameTransformName] */
-  virtual void SetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix);
+  virtual igsioStatus SetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix);
+  virtual igsioStatus SetTransform(const igsioTransformName& frameTransformName, const vtkMatrix4x4& transformMatrix);
 
   /*! Set the custom transformation matrix from metafile by frame transform name
   * It will search for a field like: Seq_Frame[frameNumber]_[frameTransformName] */
-  virtual void SetCustomTransform(const char* frameTransformName, double* transformMatrix);
+  virtual igsioStatus SetCustomTransform(const char* frameTransformName, double* transformMatrix);
+  virtual igsioStatus SetTransform(const igsioTransformName& frameTransformName, double* transformMatrix);
 
   /*! Get custom field name list */
   void GetCustomFieldNameList(std::vector<std::string>& fieldNames);
@@ -248,7 +243,7 @@ protected:
   bool ValidateSpeed(igsioTrackedFrame* trackedFrame);
 
   TrackedFrameListType TrackedFrameList;
-  FieldMapType CustomFields;
+  igsioFieldMapType CustomFields;
 
   int NumberOfUniqueFrames;
 

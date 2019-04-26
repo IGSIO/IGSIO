@@ -40,13 +40,13 @@ public:
   void SetImageData(const igsioVideoFrame& value);
 
   /*! Get image data */
-  igsioVideoFrame* GetImageData() { return &(this->ImageData); };
+  igsioVideoFrame* GetImageData();
 
   /*! Set timestamp */
   void SetTimestamp(double value);
 
   /*! Get timestamp */
-  double GetTimestamp() { return this->Timestamp; };
+  double GetTimestamp();
 
   /*! Set frame field */
   void SetFrameField(std::string name, std::string value, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
@@ -112,7 +112,7 @@ public:
   void SetFiducialPointsCoordinatePx(vtkPoints* fiducialPoints);
 
   /*! Get Segmented fiducial point pixel coordinates */
-  vtkPoints* GetFiducialPointsCoordinatePx() { return this->FiducialPointsCoordinatePx; };
+  vtkPoints* GetFiducialPointsCoordinatePx();
 
   /*! Print tracked frame human readable serialization data to XML data
       If requestedTransforms is empty, all stored FrameFields are sent
@@ -134,7 +134,8 @@ public:
   static std::string ConvertFieldStatusToString(TrackedFrameFieldStatus status);
 
   /*! Return all custom fields in a map */
-  const igsioFieldMapType& GetCustomFields() { return this->FrameFields; }
+  const igsioFieldMapType& GetCustomFields();
+  igsioFieldMapType GetFrameFields() const;
 
   /*! Returns true if the input string ends with "Transform", else false */
   static bool IsTransform(std::string str);
@@ -143,7 +144,10 @@ public:
   static bool IsTransformStatus(std::string str);
 
 public:
-  bool operator< (igsioTrackedFrame data) { return Timestamp < data.Timestamp; }
+  bool operator< (igsioTrackedFrame data)
+  {
+    return Timestamp < data.Timestamp;
+  }
   bool operator== (const igsioTrackedFrame& data) const
   {
     return (Timestamp == data.Timestamp);
