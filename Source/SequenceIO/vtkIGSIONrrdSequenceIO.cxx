@@ -149,7 +149,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
     if (!igsioCommon::HasSubstrInsensitive(name, SEQUENCE_FIELD_FRAME_FIELD_PREFIX))
     {
       // field
-      SetCustomString(name.c_str(), value.c_str());
+      this->SetFrameField(name, value);
 
       // data file found, separate data file
       if (igsioCommon::IsEqualInsensitive(name, SEQUENCE_FIELD_ELEMENT_DATA_FILE))
@@ -177,12 +177,12 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
       std::string frameFieldName = name.substr(underscoreFound + 1);   // CustomTransform
 
       int frameNumber = 0;
-      if (igsioCommon::StringToInt(frameNumberStr.c_str(), frameNumber) != IGSIO_SUCCESS)
+      if (igsioCommon::StringToNumber<int>(frameNumberStr, frameNumber) != IGSIO_SUCCESS)
       {
         LOG_WARNING("Parsing line failed, cannot get frame number from frame field (" << lineStr << ")");
         continue;
       }
-      SetFrameString(frameNumber, frameFieldName.c_str(), value.c_str());
+      this->SetFrameString(frameNumber, frameFieldName.c_str(), value.c_str());
 
       if (ferror(stream))
       {
@@ -596,10 +596,10 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
     this->NumberOfDimensions++;
   }
 
-  SetCustomString("dimension", this->NumberOfDimensions);
+  this->SetFrameField("dimension", igsioCommon::ToString<int>(this->NumberOfDimensions));
 
   // CompressedData
-  SetCustomString("encoding", GetUseCompression() ? "gz" : "raw");
+  this->SetFrameField("encoding", GetUseCompression() ? "gz" : "raw");
 
   FrameSizeType frameSize = {0, 0, 0};
   if (this->EnableImageDataWrite)
@@ -638,7 +638,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   }
 
   // Does endian come from somewhere?
-  SetCustomString("endian", "little");
+  this->SetFrameField("endian", "little");
 
   // Update sizes field in header
   this->UpdateDimensionsCustomStrings(this->TrackedFrameList->GetNumberOfTrackedFrames(), isData3D);
@@ -655,7 +655,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   }
   std::string pixelTypeStr;
   vtkIGSIONrrdSequenceIO::ConvertVtkPixelTypeToNrrdType(this->PixelType, pixelTypeStr);
-  SetCustomString("type", pixelTypeStr);   // pixel type (a.k.a component type) is stored in the type element
+  this->SetFrameField("type", pixelTypeStr);   // pixel type (a.k.a component type) is stored in the type element
 
   // Add fields with default values if they are not present already
 
@@ -663,7 +663,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   // "This (or "space dimension") has to precede the other orientation-related fields, because it determines
   // how many components there are in the vectors of the space origin, space directions, and measurement frame fields."
   int numSpaceDimensions = isData3D ? 3 : 2;
-  SetCustomString("space dimension", numSpaceDimensions);
+  this->SetFrameField("space dimension", igsioCommon::ToString<int>(numSpaceDimensions));
 
   // Generate the origin string, such as (0,0) or (0,0,0)
   std::stringstream originStr;
@@ -721,13 +721,13 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   }
 
   // Add fields with default values if they are not present already
-  if (GetCustomString(SEQUENCE_FIELD_SPACE_DIRECTIONS) == NULL)
+  if (this->GetFrameField(SEQUENCE_FIELD_SPACE_DIRECTIONS).empty())
   {
-    SetCustomString(SEQUENCE_FIELD_SPACE_DIRECTIONS, spaceDirectionStr.str());
+    this->SetFrameField(SEQUENCE_FIELD_SPACE_DIRECTIONS, spaceDirectionStr.str());
   }
-  if (GetCustomString(SEQUENCE_FIELD_SPACE_ORIGIN) == NULL)
+  if (this->GetFrameField(SEQUENCE_FIELD_SPACE_ORIGIN).empty())
   {
-    SetCustomString(SEQUENCE_FIELD_SPACE_ORIGIN, originStr.str());
+    this->SetFrameField(SEQUENCE_FIELD_SPACE_ORIGIN, originStr.str());
   }
 
   FILE* stream = NULL;
@@ -747,7 +747,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
 
   if (!this->PixelDataFileName.empty())
   {
-    SetCustomString(SEQUENCE_FIELD_ELEMENT_DATA_FILE, this->PixelDataFileName.c_str());
+    this->SetFrameField(SEQUENCE_FIELD_ELEMENT_DATA_FILE, this->PixelDataFileName.c_str());
   }
 
   std::vector<std::string> fieldNames;
@@ -1364,8 +1364,8 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateDimensionsCustomStrings(int numberOfFr
   }
   kindStr << lastKind;
 
-  this->SetCustomString(SEQUENCE_FIELD_SIZES, sizesStr.str());
-  this->SetCustomString(SEQUENCE_FIELD_KINDS, kindStr.str());
+  this->SetFrameField(SEQUENCE_FIELD_SIZES, sizesStr.str());
+  this->SetFrameField(SEQUENCE_FIELD_KINDS, kindStr.str());
 
   return IGSIO_SUCCESS;
 }

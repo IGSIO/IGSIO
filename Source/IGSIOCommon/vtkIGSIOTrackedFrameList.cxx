@@ -101,7 +101,7 @@ void vtkIGSIOTrackedFrameList::PrintSelf(std::ostream& os, vtkIndent indent)
   os << indent << "Number of frames = " << GetNumberOfTrackedFrames();
   for (FieldMapType::const_iterator it = this->CustomFields.begin(); it != this->CustomFields.end(); it++)
   {
-    os << indent << it->first << " = " << it->second << std::endl;
+    os << indent << it->first << " = " << it->second.second << std::endl;
   }
 }
 
@@ -126,6 +126,24 @@ igsioTrackedFrame* vtkIGSIOTrackedFrameList::GetTrackedFrame(unsigned int frameN
     return NULL;
   }
   return this->TrackedFrameList[frameNumber];
+}
+
+//----------------------------------------------------------------------------
+unsigned int vtkIGSIOTrackedFrameList::GetNumberOfTrackedFrames()
+{
+  return this->Size();
+}
+
+//----------------------------------------------------------------------------
+unsigned int vtkIGSIOTrackedFrameList::Size()
+{
+  return this->TrackedFrameList.size();
+}
+
+//----------------------------------------------------------------------------
+vtkIGSIOTrackedFrameList::TrackedFrameListType vtkIGSIOTrackedFrameList::GetTrackedFrameList()
+{
+  return this->TrackedFrameList;
 }
 
 //----------------------------------------------------------------------------
@@ -422,6 +440,12 @@ bool vtkIGSIOTrackedFrameList::ValidateSpeed(igsioTrackedFrame* trackedFrame)
 }
 
 //----------------------------------------------------------------------------
+igsioTransformName vtkIGSIOTrackedFrameList::GetFrameTransformNameForValidation()
+{
+  return this->FrameTransformNameForValidation;
+}
+
+//----------------------------------------------------------------------------
 int vtkIGSIOTrackedFrameList::GetNumberOfBitsPerScalar()
 {
   int numberOfBitsPerScalar = 0;
@@ -585,93 +609,197 @@ igsioStatus vtkIGSIOTrackedFrameList::GetEncodingFourCC(std::string& encoding)
 //----------------------------------------------------------------------------
 const char* vtkIGSIOTrackedFrameList::GetCustomString(const char* fieldName)
 {
-  FieldMapType::iterator fieldIterator;
-  fieldIterator = this->CustomFields.find(fieldName);
-  if (fieldIterator != this->CustomFields.end())
+  if (fieldName == nullptr)
   {
-    return fieldIterator->second.c_str();
+    return nullptr;
   }
-  return NULL;
+  return this->GetFrameField(fieldName).c_str();
 }
 
 
 //----------------------------------------------------------------------------
-std::string vtkIGSIOTrackedFrameList::GetCustomString(const std::string& fieldName) const
+std::string vtkIGSIOTrackedFrameList::GetFrameField(const std::string& fieldName) const
 {
-  FieldMapType::const_iterator fieldIterator = this->CustomFields.find(fieldName);
+  igsioFieldMapType::const_iterator fieldIterator = this->CustomFields.find(fieldName);
   if (fieldIterator != this->CustomFields.end())
   {
-    return fieldIterator->second;
+    return fieldIterator->second.second;
   }
   return std::string("");
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOTrackedFrameList::GetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix)
+std::string vtkIGSIOTrackedFrameList::GetCustomString(const std::string& fieldName) const
 {
-  double transform[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
-  const igsioStatus retValue = this->GetCustomTransform(frameTransformName, transform);
-  transformMatrix->DeepCopy(transform);
-
-  return retValue;
+  return this->GetFrameField(fieldName);
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOTrackedFrameList::GetCustomTransform(const char* frameTransformName, double* transformMatrix)
+igsioStatus vtkIGSIOTrackedFrameList::GetCustomTransform(const char* frameTransformName, vtkMatrix4x4* outMatrix) const
 {
   if (frameTransformName == NULL)
   {
     LOG_ERROR("Invalid frame transform name");
     return IGSIO_FAIL;
   }
-  const char* customString = this->GetCustomString(frameTransformName);
-  if (customString == NULL)
+  if (outMatrix == nullptr)
   {
-    LOG_ERROR("Cannot find frame transform " << frameTransformName);
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
+  }
+
+  return this->GetTransform(igsioTransformName(frameTransformName), *outMatrix);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::GetCustomTransform(const char* frameTransformName, double* transformMatrix) const
+{
+  if (frameTransformName == NULL)
+  {
+    LOG_ERROR("Invalid frame transform name");
+    return IGSIO_FAIL;
+  }
+  if (transformMatrix == nullptr)
+  {
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
+  }
+
+  return this->GetTransform(igsioTransformName(frameTransformName), transformMatrix);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::GetTransform(const igsioTransformName& name, vtkMatrix4x4& outMatrix) const
+{
+  if (name.GetTransformName().empty())
+  {
+    LOG_ERROR("Invalid transform name.");
+    return IGSIO_FAIL;
+  }
+
+  std::string customString = this->GetFrameField(name.GetTransformName());
+  if (customString.empty())
+  {
+    LOG_ERROR("Cannot find frame transform " << name.GetTransformName());
+    return IGSIO_FAIL;
+  }
+
+  std::vector<std::string> entries = igsioCommon::SplitStringIntoTokens(customString, ' ', false);
+  if (entries.size() != 16)
+  {
+    LOG_ERROR("Transform " << name.GetTransformName() << " is ill-defined. Aborting.");
     return IGSIO_FAIL;
   }
 
   std::istringstream transformFieldValue(customString);
   double item;
-  int i = 0;
-  while (transformFieldValue >> item)
+  for (int i = 0; i < 4; ++i)
   {
-    transformMatrix[i++] = item;
+    for (int j = 0; j < 4; ++j)
+    {
+      transformFieldValue >> item;
+      if (!transformFieldValue.good())
+      {
+        LOG_ERROR("Unable to parse number in " << name.GetTransformName());
+        return IGSIO_FAIL;
+      }
+      outMatrix.SetElement(i, j, item);
+    }
   }
 
   return IGSIO_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
-void vtkIGSIOTrackedFrameList::SetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix)
+igsioStatus vtkIGSIOTrackedFrameList::GetTransform(const igsioTransformName& name, double* outMatrix) const
 {
-  double transform[16];
-  for (int i = 0; i < 4; i++)
+  vtkNew<vtkMatrix4x4> mat;
+  if (this->GetTransform(name, *mat) != IGSIO_SUCCESS)
   {
-    for (int j = 0; j < 4; j++)
-    {
-      transform[i * 4 + j] = transformMatrix->GetElement(i, j);
-    }
+    LOG_ERROR("Unable to retrieve transform " << name.GetTransformName());
+    return IGSIO_FAIL;
+  }
+  if (outMatrix == nullptr)
+  {
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
   }
 
-  this->SetCustomTransform(frameTransformName, transform);
+  memcpy(outMatrix, mat->GetData(), sizeof(double) * 16);
+  return IGSIO_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
-void vtkIGSIOTrackedFrameList::SetCustomTransform(const char* frameTransformName, double* transformMatrix)
+igsioStatus vtkIGSIOTrackedFrameList::SetCustomTransform(const char* frameTransformName, vtkMatrix4x4* transformMatrix)
 {
-  std::ostringstream transform;
+  if (frameTransformName == NULL)
+  {
+    LOG_ERROR("Invalid frame transform name");
+    return IGSIO_FAIL;
+  }
+  if (transformMatrix == nullptr)
+  {
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
+  }
 
-  transform  << transformMatrix[0]  << " " << transformMatrix[1]  << " " << transformMatrix[2]  << " " << transformMatrix[3]  << " "
-             << transformMatrix[4]  << " " << transformMatrix[5]  << " " << transformMatrix[6]  << " " << transformMatrix[7]  << " "
-             << transformMatrix[8]  << " " << transformMatrix[9]  << " " << transformMatrix[10] << " " << transformMatrix[11] << " "
-             << transformMatrix[12] << " " << transformMatrix[13] << " " << transformMatrix[14] << " " << transformMatrix[15] << " ";
-
-  this->SetCustomString(frameTransformName, transform.str().c_str());
+  return this->SetTransform(igsioTransformName(frameTransformName), transformMatrix->GetData());
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const char* fieldName, const char* fieldValue)
+igsioStatus vtkIGSIOTrackedFrameList::SetCustomTransform(const char* frameTransformName, double* transformMatrix)
+{
+  if (frameTransformName == NULL)
+  {
+    LOG_ERROR("Invalid frame transform name");
+    return IGSIO_FAIL;
+  }
+  if (transformMatrix == nullptr)
+  {
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
+  }
+
+  return this->SetTransform(igsioTransformName(frameTransformName), transformMatrix);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::SetTransform(const igsioTransformName& frameTransformName, const vtkMatrix4x4& transformMatrix)
+{
+  if (frameTransformName.GetTransformName().empty())
+  {
+    LOG_ERROR("Invalid transform name.");
+    return IGSIO_FAIL;
+  }
+  double elements[16];
+  memcpy(elements, const_cast<vtkMatrix4x4*>(&transformMatrix)->GetData(), sizeof(double) * 16); // ew, but memcpy will preserve const concept of incoming argument
+  return this->SetTransform(igsioTransformName(frameTransformName), elements);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::SetTransform(const igsioTransformName& frameTransformName, double* transformMatrix)
+{
+  if (frameTransformName.GetTransformName().empty())
+  {
+    LOG_ERROR("Invalid transform name.");
+    return IGSIO_FAIL;
+  }
+  if (transformMatrix == nullptr)
+  {
+    LOG_ERROR("Invalid call to vtkIGSIOTrackedFrameList::GetCustomTransform. Cannot continue.");
+    return IGSIO_FAIL;
+  }
+
+  std::ostringstream transform;
+  transform << transformMatrix[0] << " " << transformMatrix[1] << " " << transformMatrix[2] << " " << transformMatrix[3] << " "
+            << transformMatrix[4] << " " << transformMatrix[5] << " " << transformMatrix[6] << " " << transformMatrix[7] << " "
+            << transformMatrix[8] << " " << transformMatrix[9] << " " << transformMatrix[10] << " " << transformMatrix[11] << " "
+            << transformMatrix[12] << " " << transformMatrix[13] << " " << transformMatrix[14] << " " << transformMatrix[15] << " ";
+  return this->SetFrameField(frameTransformName.GetTransformName(), transform.str(), FRAMEFIELD_NONE);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const char* fieldName, const char* fieldValue, igsioFrameFieldFlags flags)
 {
   if (fieldName == NULL)
   {
@@ -683,12 +811,17 @@ igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const char* fieldName, con
     this->CustomFields.erase(fieldName);
     return IGSIO_SUCCESS;
   }
-  this->CustomFields[fieldName] = fieldValue;
-  return IGSIO_SUCCESS;
+  return this->SetFrameField(fieldName, fieldValue, flags);
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const std::string& fieldName, const std::string& fieldValue)
+igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags)
+{
+  return this->SetFrameField(fieldName, fieldValue, flags);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOTrackedFrameList::SetFrameField(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags)
 {
   if (fieldName.empty())
   {
@@ -700,7 +833,8 @@ igsioStatus vtkIGSIOTrackedFrameList::SetCustomString(const std::string& fieldNa
     this->CustomFields.erase(fieldName);
     return IGSIO_SUCCESS;
   }
-  this->CustomFields[fieldName] = fieldValue;
+  this->CustomFields[fieldName].first = flags;
+  this->CustomFields[fieldName].second = fieldValue;
   return IGSIO_SUCCESS;
 }
 
@@ -785,13 +919,13 @@ igsioStatus vtkIGSIOTrackedFrameList::SetGlobalTransform(vtkMatrix4x4* globalTra
   strOffset << globalTransform->GetElement(0, 3)
             << " " << globalTransform->GetElement(1, 3)
             << " " << globalTransform->GetElement(2, 3);
-  SetCustomString("Offset", strOffset.str().c_str());
+  this->SetFrameField("Offset", strOffset.str(), igsioFrameFieldFlags::FRAMEFIELD_NONE);
 
   std::ostringstream strTransform;
   strTransform << globalTransform->GetElement(0, 0) << " " << globalTransform->GetElement(0, 1) << " " << globalTransform->GetElement(0, 2) << " ";
   strTransform << globalTransform->GetElement(1, 0) << " " << globalTransform->GetElement(1, 1) << " " << globalTransform->GetElement(1, 2) << " ";
   strTransform << globalTransform->GetElement(2, 0) << " " << globalTransform->GetElement(2, 1) << " " << globalTransform->GetElement(2, 2);
-  SetCustomString("TransformMatrix", strTransform.str().c_str());
+  this->SetFrameField("TransformMatrix", strTransform.str(), igsioFrameFieldFlags::FRAMEFIELD_NONE);
 
   return IGSIO_SUCCESS;
 }

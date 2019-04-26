@@ -179,18 +179,22 @@ protected:
 
   /*! Set a custom string field value for a specific frame */
   igsioStatus SetFrameString(int frameNumber, const char* fieldName,  const char* fieldValue);
+  igsioStatus SetFrameString(int frameNumber, const std::string& fieldName, const std::string& fieldValue);
 
   /*! Delete frame field from tracked frame */
   igsioStatus DeleteFrameString(int frameNumber, const char* fieldName);
+  igsioStatus DeleteFrameString(int frameNumber, const std::string& fieldName);
 
   /*! Get a custom string field value for a specific frame */
-  bool SetCustomString(const char* fieldName, const char* fieldValue);
-  bool SetCustomString(const std::string& fieldName, const std::string& fieldValue);
-  bool SetCustomString(const std::string& fieldName, int fieldValue);
+  igsioStatus SetCustomString(const char* fieldName, const char* fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
+  igsioStatus SetCustomString(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
+  igsioStatus SetCustomString(const std::string& fieldName, int fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
+  igsioStatus SetFrameField(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags = FRAMEFIELD_NONE);
 
   /*! Get a custom string field value (global, not for a specific frame) */
   const char* GetCustomString(const char* fieldName);
   std::string GetCustomString(const std::string& fieldName);
+  std::string GetFrameField(const std::string& fieldName);
 
   /*!
     Convenience function that extends the tracked frame list (if needed) to make sure

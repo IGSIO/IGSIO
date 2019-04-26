@@ -303,6 +303,12 @@ void igsioTrackedFrame::SetImageData(const igsioVideoFrame& value)
 }
 
 //----------------------------------------------------------------------------
+igsioVideoFrame* igsioTrackedFrame::GetImageData()
+{
+  return &(this->ImageData);
+}
+
+//----------------------------------------------------------------------------
 void igsioTrackedFrame::SetTimestamp(double value)
 {
   this->Timestamp = value;
@@ -310,6 +316,12 @@ void igsioTrackedFrame::SetTimestamp(double value)
   strTimestamp << std::setprecision(FLOATING_POINT_PRECISION) << this->Timestamp;
   this->FrameFields["Timestamp"].first = FRAMEFIELD_NONE;
   this->FrameFields["Timestamp"].second = strTimestamp.str();
+}
+
+//----------------------------------------------------------------------------
+double igsioTrackedFrame::GetTimestamp()
+{
+  return this->Timestamp;
 }
 
 //----------------------------------------------------------------------------
@@ -358,6 +370,12 @@ void igsioTrackedFrame::SetFiducialPointsCoordinatePx(vtkPoints* fiducialPoints)
       tempFiducialPoints->UnRegister(NULL);
     }
   }
+}
+
+//----------------------------------------------------------------------------
+vtkPoints* igsioTrackedFrame::GetFiducialPointsCoordinatePx()
+{
+  return this->FiducialPointsCoordinatePx;
 }
 
 //----------------------------------------------------------------------------
@@ -641,6 +659,12 @@ std::string igsioTrackedFrame::ConvertFieldStatusToString(TrackedFrameFieldStatu
 }
 
 //----------------------------------------------------------------------------
+const igsioFieldMapType& igsioTrackedFrame::GetCustomFields()
+{
+  return this->FrameFields;
+}
+
+//----------------------------------------------------------------------------
 void igsioTrackedFrame::GetFrameFieldNameList(std::vector<std::string>& fieldNames) const
 {
   fieldNames.clear();
@@ -663,6 +687,12 @@ void igsioTrackedFrame::GetFrameTransformNameList(std::vector<igsioTransformName
       transformNames.push_back(trName);
     }
   }
+}
+
+//----------------------------------------------------------------------------
+igsioFieldMapType igsioTrackedFrame::GetFrameFields() const
+{
+  return this->FrameFields;
 }
 
 //----------------------------------------------------------------------------

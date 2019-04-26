@@ -18,7 +18,7 @@ See License.txt for details.
     // Version helpers is only available in Windows SDK 8.1 (v120) or newer
     #include <VersionHelpers.h>
   #endif
-#include "windows.h"
+  #include "windows.h"
 #endif
 
 //----------------------------------------------------------------------------
@@ -86,6 +86,25 @@ igsioStatus vtkIGSIOSequenceIOBase::Read()
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOSequenceIOBase::DeleteFrameString(int frameNumber, const char* fieldName)
 {
+  if (fieldName == nullptr)
+  {
+    LOG_ERROR("No field name specified.");
+    return IGSIO_FAIL;
+  }
+
+  igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
+  if (trackedFrame == NULL)
+  {
+    LOG_ERROR("Cannot access frame " << frameNumber);
+    return IGSIO_FAIL;
+  }
+
+  return trackedFrame->DeleteFrameField(std::string(fieldName));
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOSequenceIOBase::DeleteFrameString(int frameNumber, const std::string& fieldName)
+{
   igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
   if (trackedFrame == NULL)
   {
@@ -104,6 +123,12 @@ igsioStatus vtkIGSIOSequenceIOBase::SetFrameString(int frameNumber, const char* 
     LOG_ERROR("Invalid field name or value");
     return IGSIO_FAIL;
   }
+  return this->SetFrameString(frameNumber, std::string(fieldName), std::string(fieldValue));
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOSequenceIOBase::SetFrameString(int frameNumber, const std::string& fieldName, const std::string& fieldValue)
+{
   this->CreateTrackedFrameIfNonExisting(frameNumber);
   igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
   if (trackedFrame == NULL)
@@ -116,31 +141,29 @@ igsioStatus vtkIGSIOSequenceIOBase::SetFrameString(int frameNumber, const char* 
 }
 
 //----------------------------------------------------------------------------
-bool vtkIGSIOSequenceIOBase::SetCustomString(const char* fieldName, const char* fieldValue)
+igsioStatus vtkIGSIOSequenceIOBase::SetCustomString(const char* fieldName, const char* fieldValue, igsioFrameFieldFlags flags)
 {
   if (fieldName == NULL)
   {
     LOG_ERROR("Invalid field name");
     return IGSIO_FAIL;
   }
-  this->TrackedFrameList->SetCustomString(fieldName, fieldValue);
-  return IGSIO_SUCCESS;
+  return this->SetFrameField(fieldName, fieldValue, flags);
 }
 
 //----------------------------------------------------------------------------
-bool vtkIGSIOSequenceIOBase::SetCustomString(const std::string& fieldName, const std::string& fieldValue)
+igsioStatus vtkIGSIOSequenceIOBase::SetCustomString(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags)
 {
   if (fieldName.empty())
   {
     LOG_ERROR("Invalid field name");
     return IGSIO_FAIL;
   }
-  this->TrackedFrameList->SetCustomString(fieldName, fieldValue);
-  return IGSIO_SUCCESS;
+  return this->SetFrameField(fieldName, fieldValue, flags);
 }
 
 //----------------------------------------------------------------------------
-bool vtkIGSIOSequenceIOBase::SetCustomString(const std::string& fieldName, int fieldValue)
+igsioStatus vtkIGSIOSequenceIOBase::SetCustomString(const std::string& fieldName, int fieldValue, igsioFrameFieldFlags flags)
 {
   if (fieldName.empty())
   {
@@ -149,8 +172,18 @@ bool vtkIGSIOSequenceIOBase::SetCustomString(const std::string& fieldName, int f
   }
   std::stringstream ss;
   ss << fieldValue;
-  this->TrackedFrameList->SetCustomString(fieldName, ss.str());
-  return IGSIO_SUCCESS;
+  return this->SetFrameField(fieldName, ss.str(), flags);
+}
+
+//----------------------------------------------------------------------------
+igsioStatus vtkIGSIOSequenceIOBase::SetFrameField(const std::string& fieldName, const std::string& fieldValue, igsioFrameFieldFlags flags)
+{
+  if (fieldName.empty())
+  {
+    LOG_ERROR("Invalid field name");
+    return IGSIO_FAIL;
+  }
+  return this->TrackedFrameList->SetFrameField(fieldName, fieldValue, flags);
 }
 
 //----------------------------------------------------------------------------
@@ -161,13 +194,19 @@ const char* vtkIGSIOSequenceIOBase::GetCustomString(const char* fieldName)
     LOG_ERROR("Invalid field name or value");
     return NULL;
   }
-  return this->TrackedFrameList->GetCustomString(fieldName);
+  return this->GetFrameField(fieldName).c_str();
 }
 
 //----------------------------------------------------------------------------
 std::string vtkIGSIOSequenceIOBase::GetCustomString(const std::string& fieldName)
 {
-  return this->TrackedFrameList->GetCustomString(fieldName);
+  return this->GetFrameField(fieldName);
+}
+
+//----------------------------------------------------------------------------
+std::string vtkIGSIOSequenceIOBase::GetFrameField(const std::string& fieldName)
+{
+  return this->TrackedFrameList->GetFrameField(fieldName);
 }
 
 //----------------------------------------------------------------------------
@@ -366,7 +405,7 @@ igsioStatus vtkIGSIOSequenceIOBase::WriteImages()
 
         size_t writtenSize = 0;
         igsioStatus status = igsioCommon::RobustFwrite(this->OutputImageFileHandle, videoFrame->GetScalarPointer(),
-                            videoFrame->GetFrameSizeInBytes(), writtenSize);
+                             videoFrame->GetFrameSizeInBytes(), writtenSize);
         if (status == IGSIO_FAIL)
         {
           LOG_ERROR("Unable to write entire frame to file. Frame size: " << videoFrame->GetFrameSizeInBytes()
