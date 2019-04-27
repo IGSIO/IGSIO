@@ -11,11 +11,12 @@
 #include "vtkIGSIOTransformRepository.h"
 
 // VTK includes
-#include "vtkImageData.h"
-#include "vtkMatrix4x4.h"
-#include "vtkObjectFactory.h"
-#include "vtksys/SystemTools.hxx"
-#include "vtkXMLUtilities.h"
+#include <vtkImageData.h>
+#include <vtkMatrix4x4.h>
+#include <vtkNew.h>
+#include <vtkObjectFactory.h>
+#include <vtkXMLUtilities.h>
+#include <vtksys/SystemTools.hxx>
 
 // STD includes
 #include <algorithm>
