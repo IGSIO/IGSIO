@@ -194,7 +194,9 @@ const char* vtkIGSIOSequenceIOBase::GetCustomString(const char* fieldName)
     LOG_ERROR("Invalid field name or value");
     return NULL;
   }
-  return this->GetFrameField(fieldName).c_str();
+  // Can't return this->GetFrameField(fieldName).c_str(), since the string object would be deleted,
+  // leaving a dangling char* pointer. 
+  return this->TrackedFrameList->GetCustomString(fieldName);
 }
 
 //----------------------------------------------------------------------------

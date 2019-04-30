@@ -450,7 +450,7 @@ namespace igsioCommon
     std::stringstream ss;
     ss << string;
     ss >> result;
-    if (!ss.good())
+    if (ss.fail())
     {
       return IGSIO_FAIL;
     }

@@ -236,9 +236,9 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
   // Only check image related settings if dimensions are not 0 0 0
   if (this->Dimensions[0] != 0 && this->Dimensions[1] != 0 && this->Dimensions[2] != 0)
   {
-    this->ImageOrientationInFile = igsioVideoFrame::GetUsImageOrientationFromString(GetCustomString(SEQMETA_FIELD_US_IMG_ORIENT));
+    this->ImageOrientationInFile = igsioVideoFrame::GetUsImageOrientationFromString(this->GetCustomString(SEQMETA_FIELD_US_IMG_ORIENT));
 
-    const char* imgTypeStr = GetCustomString(SEQMETA_FIELD_US_IMG_TYPE);
+    const char* imgTypeStr = this->GetCustomString(SEQMETA_FIELD_US_IMG_TYPE);
     if (imgTypeStr == NULL)
     {
       // if the image type is not defined then assume that it is B-mode image
@@ -275,11 +275,11 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
     if (this->TrackedFrameList->GetCustomString("CompressedData") != NULL
         && STRCASECMP(this->TrackedFrameList->GetCustomString("CompressedData"), "true") == 0)
     {
-      SetUseCompression(true);
+      this->SetUseCompression(true);
     }
     else
     {
-      SetUseCompression(false);
+      this->SetUseCompression(false);
     }
 
     if (this->TrackedFrameList->GetCustomString("ElementNumberOfChannels") != NULL)

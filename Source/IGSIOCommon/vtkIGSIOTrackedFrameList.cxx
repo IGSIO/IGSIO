@@ -610,11 +610,15 @@ igsioStatus vtkIGSIOTrackedFrameList::GetEncodingFourCC(std::string& encoding)
 //----------------------------------------------------------------------------
 const char* vtkIGSIOTrackedFrameList::GetCustomString(const char* fieldName)
 {
-  if (fieldName == nullptr)
+  FieldMapType::iterator fieldIterator;
+  fieldIterator = this->CustomFields.find(fieldName);
+  if (fieldIterator != this->CustomFields.end())
   {
-    return nullptr;
+    return fieldIterator->second.second.c_str();
   }
-  return this->GetFrameField(fieldName).c_str();
+  // Can't use/return this->GetFrameField(fieldName).c_str(), since the string object would be deleted,
+  // leaving a dangling char* pointer. 
+  return NULL;
 }
 
 
