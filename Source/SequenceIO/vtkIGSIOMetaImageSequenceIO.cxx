@@ -618,7 +618,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   else
   {
     this->SetFrameField("CompressedData", "False");
-    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, (const char*)(NULL));
+    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, "");
   }
 
   FrameSizeType frameSize = {0, 0, 0};
