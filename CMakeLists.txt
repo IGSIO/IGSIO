@@ -75,6 +75,7 @@ IF(BUILD_TESTING)
 ENDIF()
 
 OPTION(IGSIO_BUILD_SEQUENCEIO "Build classes for reading/writing sequence files" ON)
+OPTION(IGSIO_BUILD_VOLUMERECONSTRUCTION "Build classes for volume reconstruction" OFF)
 OPTION(IGSIO_SEQUENCEIO_ENABLE_MKV "Enable MKV reading/writing" OFF)
 OPTION(IGSIO_BUILD_CODECS "Build classes for Video codecs" OFF)
 OPTION(IGSIO_USE_VP9 "Enable VP9 codec" OFF)
@@ -123,6 +124,9 @@ ELSE()
   ADD_SUBDIRECTORY(Source/IGSIOCommon)
   IF(IGSIO_BUILD_SEQUENCEIO)
     ADD_SUBDIRECTORY(Source/SequenceIO)
+  ENDIF()
+  IF (IGSIO_BUILD_VOLUMERECONSTRUCTION)
+    ADD_SUBDIRECTORY(Source/VolumeReconstruction)
   ENDIF()
 
   #-----------------------------------------------------------------------------

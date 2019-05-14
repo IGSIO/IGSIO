@@ -30,6 +30,7 @@ SET(${PROJECT_NAME}_SRCS
   vtkIGSIOTrackedFrameList.cxx
   vtkIGSIOTransformRepository.cxx
   vtkIGSIORecursiveCriticalSection.cxx
+  vtkIGSIOConfig.cxx
   )
 
 SET(${PROJECT_NAME}_HDRS
@@ -46,6 +47,7 @@ SET(${PROJECT_NAME}_HDRS
   vtkIGSIOTrackedFrameList.h
   vtkIGSIOTransformRepository.h
   vtkIGSIORecursiveCriticalSection.h
+  vtkIGSIOConfig.h
   )
 
 SET(${PROJECT_NAME}_LIBS
