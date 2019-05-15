@@ -682,7 +682,7 @@ igsioStatus vtkIGSIOTrackedFrameList::GetTransform(const igsioTransformName& nam
     return IGSIO_FAIL;
   }
 
-  std::string customString = this->GetFrameField(name.GetTransformName());
+  std::string customString = this->GetFrameField(name.GetTransformName() + "Transform");
   if (customString.empty())
   {
     LOG_ERROR("Cannot find frame transform " << name.GetTransformName());
@@ -703,7 +703,7 @@ igsioStatus vtkIGSIOTrackedFrameList::GetTransform(const igsioTransformName& nam
     for (int j = 0; j < 4; ++j)
     {
       transformFieldValue >> item;
-      if (!transformFieldValue.good())
+      if (transformFieldValue.fail())
       {
         LOG_ERROR("Unable to parse number in " << name.GetTransformName());
         return IGSIO_FAIL;
