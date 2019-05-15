@@ -40,7 +40,7 @@ POSSIBILITY OF SUCH DAMAGES.
 
 =========================================================================*/
 
-#include "IGSIOConfigure.h"
+#include "igsioConfigure.h"
 #include "IGSIOMath.h"
 
 #include "vtkIGSIOFillHolesInVolume.h"

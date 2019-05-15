@@ -5,7 +5,7 @@
 =========================================================IGSIO=header=end*/
 
 // Local includes
-#include "IGSIOConfigure.h"
+#include "igsioConfigure.h"
 #include "igsioTrackedFrame.h"
 #include "vtkIGSIOFanAngleDetectorAlgo.h"
 #include "vtkIGSIOFillHolesInVolume.h"

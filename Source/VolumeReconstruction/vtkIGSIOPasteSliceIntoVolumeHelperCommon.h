@@ -86,7 +86,7 @@ afterward. This resulted in unwanted and clearly-wrong artifacts.
 #ifndef __vtkIGSIOPasteSliceIntoVolumeHelperCommon_h
 #define __vtkIGSIOPasteSliceIntoVolumeHelperCommon_h
 
-#include "IGSIOConfigure.h"
+#include "igsioConfigure.h"
 
 #include "igsioMath.h"
 #include "fixed.h"

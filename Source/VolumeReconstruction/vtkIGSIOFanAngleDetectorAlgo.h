@@ -7,7 +7,7 @@
 #ifndef __vtkIGSIOFanAngleDetectorAlgo_h
 #define __vtkIGSIOFanAngleDetectorAlgo_h
 
-#include "IGSIOConfigure.h"
+#include "igsioConfigure.h"
 #include "vtkvolumereconstruction_export.h"
 
 #include "vtkImageData.h"

@@ -4,7 +4,7 @@
   See License.txt for details.
 =========================================================IGSIO=header=end*/
 
-#include "IGSIOConfigure.h"
+#include "igsioConfigure.h"
 
 #include "vtkIGSIOFanAngleDetectorAlgo.h"
 
