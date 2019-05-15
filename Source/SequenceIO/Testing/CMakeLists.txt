@@ -12,17 +12,17 @@ ADD_TEST(vtkMetaImageSequenceIOTest
   )
 SET_TESTS_PROPERTIES(vtkMetaImageSequenceIOTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
 
-IF (SEQUENCEIO_ENABLE_MKV)
+IF (IGSIO_SEQUENCEIO_ENABLE_MKV)
 
-#*************************** vtkMkvSequenceIOTest ***************************
-ADD_EXECUTABLE(vtkMkvSequenceIOTest vtkMkvSequenceIOTest.cxx)
-SET_TARGET_PROPERTIES(vtkMkvSequenceIOTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(vtkMkvSequenceIOTest vtkSequenceIO)
-ADD_TEST(vtkMkvSequenceIOTest 
-  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkMkvSequenceIOTest
-    --input-filename=${SEQUENCEIO_TEST_DATA_DIR}/uncompressedRV24.mkv
-    --output-filename=mkvWriterTest1.mkv
-  )
-SET_TESTS_PROPERTIES(vtkMkvSequenceIOTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
+  #*************************** vtkMkvSequenceIOTest ***************************
+  ADD_EXECUTABLE(vtkMkvSequenceIOTest vtkMkvSequenceIOTest.cxx)
+  SET_TARGET_PROPERTIES(vtkMkvSequenceIOTest PROPERTIES FOLDER Tests)
+  TARGET_LINK_LIBRARIES(vtkMkvSequenceIOTest vtkSequenceIO)
+  ADD_TEST(vtkMkvSequenceIOTest 
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkMkvSequenceIOTest
+      --input-filename=${SEQUENCEIO_TEST_DATA_DIR}/uncompressedRV24.mkv
+      --output-filename=mkvWriterTest1.mkv
+    )
+  SET_TESTS_PROPERTIES(vtkMkvSequenceIOTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
 
 ENDIF()
