@@ -337,7 +337,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
     return IGSIO_FAIL;
   }
 
-  std::string trackName = this->TrackedFrameList->GetCustomString("TrackName");
+  std::string trackName = this->TrackedFrameList->GetFrameField("TrackName");
   if (trackName.empty())
   {
     trackName = "Video";
