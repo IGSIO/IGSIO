@@ -47,6 +47,13 @@ IF(NOT DEFINED BUILD_SHARED_LIBS)
 ENDIF()
 OPTION(BUILD_SHARED_LIBS "Build shared libraries" ${BUILD_SHARED_LIBS})
 
+SET(IGSIO_EXECUTABLE_OUTPUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
+  SET(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Release/Output")
+ELSE()
+  SET(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Output")
+ENDIF()
+
 OPTION(COPY_EXTERNAL_LIBS "Copy external libraries to output directory." OFF)
 
 #-----------------------------------------------------------------------------

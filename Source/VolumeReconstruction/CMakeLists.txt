@@ -113,5 +113,5 @@ ENDIF()
 # Testing
 #
 IF(BUILD_TESTING)
-  SUBDIRS(Testing)
+  ADD_SUBDIRECTORY(Testing)
 ENDIF()

@@ -650,6 +650,7 @@ namespace igsioCommon
 
   //---------------------------------------------------
   VTKIGSIOCOMMON_EXPORT std::string GetAbsolutePath(const std::string& aPath, const std::string& aBasePath);
+  VTKIGSIOCOMMON_EXPORT igsioStatus FindImagePath(const std::string& aImagePath, std::string& aFoundAbsolutePath);
 };
 
 /*!
@@ -766,7 +767,7 @@ private:
     } \
   }
 
-//#include "igsioXmlUtils.h"
+#include "igsioXmlUtils.h"
 #include "igsioCommon.txx"
 
 #endif //__igsioCommon_h
