@@ -1,0 +1,24 @@
+<PlusConfiguration version="2.3" PlusRevision="Plus-2.5.0.4934 (debug build) - Win32">
+ <CoordinateDefinitions>
+    <Transform From="Image" To="Encoders"
+      Matrix="
+        0.0303	0	0	-10.605
+        0	0.0283	0	-9.056
+        0.002	0	0.2	0
+        0	0	0	1" />
+  </CoordinateDefinitions>
+  <VolumeReconstruction
+    FanOriginPixel="350 -655"
+    FanRadiusStartPixel="795"
+    FanRadiusStopPixel="1295"
+    FanAnglesDeg="-14.9 14.9"
+    ClipRectangleOrigin="15 110"
+    ClipRectangleSize="670 530"
+
+    OutputSpacing="0.1 0.1 0.2"
+    Interpolation="NEAREST_NEIGHBOR"
+    Optimization="Full"
+    NumberOfThreads="1"
+    CompoundingMode="Importance_Mask"
+  />
+</PlusConfiguration>

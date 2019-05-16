@@ -15,7 +15,6 @@
 #include "vtkIGSIOTransformRepository.h"
 #include "vtkIGSIOVolumeReconstructor.h"
 #include "igsioCommon.h"
-#include "vtkIGSIOConfig.h"
 
 // STL includes
 #include <limits>
@@ -175,7 +174,16 @@ igsioStatus vtkIGSIOVolumeReconstructor::ReadConfiguration(vtkXMLDataElement* co
 
   if (this->Reconstructor->GetCompoundingMode() == vtkIGSIOPasteSliceIntoVolume::IMPORTANCE_MASK_COMPOUNDING_MODE)
   {
-    XML_READ_STRING_ATTRIBUTE_REQUIRED(ImportanceMaskFilename, reconConfig);
+    if (this->ImportanceMaskFilename.empty())
+    {
+      XML_READ_STRING_ATTRIBUTE_REQUIRED(ImportanceMaskFilename, reconConfig);
+    }
+    else
+    {
+      // Importance mask has already been specified by other means, it is no longer required
+      XML_READ_STRING_ATTRIBUTE_OPTIONAL(ImportanceMaskFilename, reconConfig);
+    }
+
     if (UpdateImportanceMask() == IGSIO_FAIL)
     {
       LOG_ERROR("Failed to set up importance mask");
@@ -926,7 +934,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::UpdateImportanceMask()
   if (!this->ImportanceMaskFilename.empty())
   {
     std::string importanceMaskFilePath;
-    if (vtkIGSIOConfig::GetInstance()->FindImagePath(this->ImportanceMaskFilename, importanceMaskFilePath) == IGSIO_FAIL) //TODO
+    if (igsioCommon::FindImagePath(this->ImportanceMaskFilename, importanceMaskFilePath) == IGSIO_FAIL) //TODO
     {
       LOG_ERROR("Cannot get importance mask from file: " << this->ImportanceMaskFilename);
       return IGSIO_FAIL;

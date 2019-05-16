@@ -1032,3 +1032,23 @@ std::string igsioCommon::GetAbsolutePath(const std::string& path, const std::str
   // relative to the ProgramDirectory
   return  vtksys::SystemTools::CollapseFullPath(filename.c_str(), path.c_str());
 }
+
+//-----------------------------------------------------------------------------
+igsioStatus igsioCommon::FindImagePath(const std::string& aImagePath, std::string& aFoundAbsolutePath)
+{
+  aFoundAbsolutePath = aImagePath;
+  if (vtksys::SystemTools::FileExists(aImagePath.c_str()))
+  {
+    return IGSIO_SUCCESS;
+  }
+
+  // Check file relative to the current working directory
+  aFoundAbsolutePath = vtksys::SystemTools::CollapseFullPath(aImagePath.c_str(), vtksys::SystemTools::GetCurrentWorkingDirectory().c_str());
+  if (vtksys::SystemTools::FileExists(aFoundAbsolutePath.c_str()))
+  {
+    return IGSIO_SUCCESS;
+  }
+
+  aFoundAbsolutePath = "";
+  return IGSIO_FAIL;
+}
