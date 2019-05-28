@@ -10,16 +10,16 @@ ELSE()
   SET(IGSIO_VP9_DIR "${CMAKE_BINARY_DIR}/VP9")
 
   # VP9 has not been built yet, so download and build it as an external project
-  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows") 
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
     INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
     IF(NOT YASM_FOUND)
       LIST(APPEND ${proj}_DEPENDENCIES YASM)
     ENDIF()
 
     SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
-    SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)                 
+    SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
 
-    MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")  
+    MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")
     ExternalProject_Add(VP9
       PREFIX "${CMAKE_BINARY_DIR}/VP9-prefix"
       GIT_REPOSITORY https://github.com/webmproject/libvpx/
@@ -33,33 +33,26 @@ ELSE()
       TEST_COMMAND      ""
       DEPENDS ${VP9_DEPENDENCIES}
     )
-
   else()
-    if( ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64" ) OR
-        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64" ) OR
-        ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017") OR ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017 Win64" )
-          )
+    if( ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v120") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v140") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v141"))
       SET (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
       SET (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.7.0/libvpx_v1.7.0_")
-      if("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017" )
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc15.zip")
-      elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 15 2017 Win64" )
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc15.zip")
-      elseif ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015")
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc14.zip")
-      elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 14 2015 Win64" )
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc14.zip")
-      elseif ("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013")
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc12.zip")
-      elseif("${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64" )
-        SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
-        SET (BinaryURL "${BinaryURL}msvc12.zip")
-      endif()
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
+    else()
+      SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
+    endif()
+
+    if("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v120")
+      SET (BinaryURL "${BinaryURL}msvc12.zip")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v140")
+      SET (BinaryURL "${BinaryURL}msvc14.zip")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v141")
+      SET (BinaryURL "${BinaryURL}msvc15.zip")
+    endif()
 
       MESSAGE(STATUS "Downloading VP9 from ${BinaryURL}")
       ExternalProject_Add(VP9
