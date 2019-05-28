@@ -46,7 +46,12 @@ FOREACH(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
 ENDFOREACH()
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${IGSIOLIB_INCLUDE_INSTALL}>)
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${${PROJECT_NAME}_LIBS})
-#IGSIOLibAddVersionInfo(${PROJECT_NAME} "Library for performing volume reconstruction of image series. Part of the IGSIO toolkit." ${PROJECT_NAME} ${PROJECT_NAME})
+
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+  RUNTIME DESTINATION ${IGSIO_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
+  LIBRARY DESTINATION ${IGSIO_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
+  ARCHIVE DESTINATION ${IGSIO_INSTALL_LIB_DIR} COMPONENT Development)
+
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 SET_PROPERTY(GLOBAL APPEND PROPERTY IGSIO_TARGETS ${PROJECT_NAME})
 
@@ -103,11 +108,6 @@ IF(IGSIOBUILD_BUILD_IGSIOLib_TOOLS)
     COMPONENT RuntimeExecutables
     )
 ENDIF()
-
-# --------------------------------------------------------------------------
-# Install
-#
-#IGSIOLibInstallLibrary(${PROJECT_NAME} ${PROJECT_NAME})
 
 # --------------------------------------------------------------------------
 # Testing
