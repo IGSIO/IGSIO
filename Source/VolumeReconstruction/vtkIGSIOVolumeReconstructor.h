@@ -100,8 +100,8 @@ public:
     \accumulation True if accumulation buffer needs to be saved, false if gray levels (default)
     \useCompression True if compression is turned on (default), false otherwise
   */
-  igsioStatus SaveReconstructedVolumeToFile(const std::string& filename, bool accumulation = false, bool useCompression = true);
-  igsioStatus SaveReconstructedVolumeToMetafile(const std::string& filename, bool accumulation = false, bool useCompression = true) { return SaveReconstructedVolumeToFile(filename, accumulation, useCompression); }
+  virtual igsioStatus SaveReconstructedVolumeToFile(const std::string& filename, bool accumulation = false, bool useCompression = true);
+  virtual igsioStatus SaveReconstructedVolumeToMetafile(const std::string& filename, bool accumulation = false, bool useCompression = true) { return SaveReconstructedVolumeToFile(filename, accumulation, useCompression); }
 
   /*!
     Save reconstructed volume to file
@@ -200,7 +200,7 @@ public:
     Volume reconstructor reads the importance mask automatically once, so calling this method
     is only needed if the file is changed since it is last used by the reconstructor.
   */
-  igsioStatus UpdateImportanceMask();
+  virtual igsioStatus UpdateImportanceMask();
 
 protected:
   vtkIGSIOVolumeReconstructor();
