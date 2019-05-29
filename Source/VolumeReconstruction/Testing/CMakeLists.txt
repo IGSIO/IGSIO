@@ -1,9 +1,9 @@
 SET( TestDataDir ${CMAKE_CURRENT_SOURCE_DIR}/Data )
 SET( TestConfigDir ${CMAKE_CURRENT_SOURCE_DIR}/Config )
 
-ADD_EXECUTABLE(vtkVolumeReconstructorTest vtkVolumeReconstructorTest.cxx)
-SET_TARGET_PROPERTIES(vtkVolumeReconstructorTest PROPERTIES FOLDER Tools)
-TARGET_LINK_LIBRARIES(vtkVolumeReconstructorTest
+ADD_EXECUTABLE(VolumeReconstructorTest VolumeReconstructorTest.cxx)
+SET_TARGET_PROPERTIES(VolumeReconstructorTest PROPERTIES FOLDER Tools)
+TARGET_LINK_LIBRARIES(VolumeReconstructorTest
   vtkIGSIOCommon
   vtkSequenceIO
   vtkVolumeReconstruction
@@ -11,16 +11,16 @@ TARGET_LINK_LIBRARIES(vtkVolumeReconstructorTest
 FILE(MAKE_DIRECTORY ${TEST_OUTPUT_PATH})
 
 function(VolRecRegressionTest TestName ConfigFileNameFragment InputSeqFile OutNameFragment)
-  ADD_TEST(vtkVolumeReconstructorTestRun${TestName}
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkVolumeReconstructorTest
+  ADD_TEST(VolumeReconstructorTestRun${TestName}
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/VolumeReconstructorTest
     --config-file=${TestConfigDir}/Config_VolumeReconstruction_${ConfigFileNameFragment}.xml
     --source-seq-file=${TestDataDir}/${InputSeqFile}.igs.mha
-    --output-volume-file=${TEST_OUTPUT_PATH}/vtkVolumeReconstructorTest${OutNameFragment}volume.mha
+    --output-volume-file=${TEST_OUTPUT_PATH}/VolumeReconstructorTest${OutNameFragment}volume.mha
     --image-to-reference-transform=ImageToReference
     --importance-mask-file=${TestDataDir}/ImportanceMask.png
     --disable-compression
     )
-  SET_TESTS_PROPERTIES( vtkVolumeReconstructorTestRun${TestName} PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING" )
+  SET_TESTS_PROPERTIES( VolumeReconstructorTestRun${TestName} PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING" )
 
   # If expected filename is specified in a platform-specific directory then use that
   IF(WIN32)
@@ -28,20 +28,20 @@ function(VolRecRegressionTest TestName ConfigFileNameFragment InputSeqFile OutNa
   ELSE()
     SET(PLATFORM "Linux")
   ENDIF()
-  SET(CommonExpectedVolumeFileName "${TestDataDir}/vtkVolumeReconstructorTest${OutNameFragment}volumeRef.mha")
-  SET(PlatformSpecificExpectedVolumeFileName "${TestDataDir}/${PLATFORM}/vtkVolumeReconstructorTest${OutNameFragment}volumeRef.mha")
+  SET(CommonExpectedVolumeFileName "${TestDataDir}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
+  SET(PlatformSpecificExpectedVolumeFileName "${TestDataDir}/${PLATFORM}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
   if(EXISTS "${PlatformSpecificExpectedVolumeFileName}")
     SET(ExpectedVolumeFileName ${PlatformSpecificExpectedVolumeFileName})
   ELSE()
     SET(ExpectedVolumeFileName ${CommonExpectedVolumeFileName})
   endif()
 
-  ADD_TEST(vtkVolumeReconstructorTestCompare${TestName}
+  ADD_TEST(VolumeReconstructorTestCompare${TestName}
     ${CMAKE_COMMAND} -E compare_files
     ${ExpectedVolumeFileName}
-    ${TEST_OUTPUT_PATH}/vtkVolumeReconstructorTest${OutNameFragment}volume.mha
+    ${TEST_OUTPUT_PATH}/VolumeReconstructorTest${OutNameFragment}volume.mha
     )
-  SET_TESTS_PROPERTIES(vtkVolumeReconstructorTestCompare${TestName} PROPERTIES DEPENDS vtkVolumeReconstructorTestRun${TestName})
+  SET_TESTS_PROPERTIES(VolumeReconstructorTestCompare${TestName} PROPERTIES DEPENDS VolumeReconstructorTestRun${TestName})
 endfunction()
 
 VolRecRegressionTest(NearLateUChar SonixRP_TRUS_D70mm_NN_LATE SpinePhantomFreehand NNLATE)
