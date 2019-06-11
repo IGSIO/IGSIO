@@ -24,9 +24,6 @@
 #include <vtkImageData.h>
 #include <vtkImageExtractComponents.h>
 #include <vtkImageFlip.h>
-#include <vtkImageImport.h>
-#include <vtkImageImport.h>
-#include <vtkImageViewer.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkPNGReader.h>

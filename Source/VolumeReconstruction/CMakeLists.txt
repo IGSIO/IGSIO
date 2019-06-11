@@ -34,10 +34,6 @@ SET(${PROJECT_NAME}_INCLUDE_DIRS
 SET(${PROJECT_NAME}_LIBS
   vtkIGSIOCommon
   vtkSequenceIO
-  vtkInteractionStyle
-  vtkRenderingFreeType
-  vtkRendering${VTK_RENDERING_BACKEND}
-  vtkRenderingVolume${VTK_RENDERING_BACKEND}
   )
 
 ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
