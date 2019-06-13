@@ -15,6 +15,12 @@ vtkStandardNewMacro(vtkIGSIOFrameConverter);
 
 //----------------------------------------------------------------------------
 vtkIGSIOFrameConverter::vtkIGSIOFrameConverter()
+  : EnableCache(false)
+  , RequestKeyFrame(false)
+  , CacheLastInputFrame(nullptr)
+  , CacheLastOutputFrame(nullptr)
+  , CacheLastInputImage(nullptr)
+  , CacheLastOutputImage(nullptr)
 {
 }
 
@@ -29,7 +35,7 @@ void vtkIGSIOFrameConverter::PrintSelf(std::ostream& os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsioVideoFrame* frame)
+vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetImageData(igsioVideoFrame* frame)
 {
   vtkSmartPointer<vtkImageData> uncompressedImage = NULL;
   if (!frame->IsFrameEncoded())
@@ -76,9 +82,9 @@ vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsio
 }
 
 //----------------------------------------------------------------------------
-vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFrame(igsioVideoFrame* frame, std::string codecFourCC, std::map<std::string, std::string> parameters)
+vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetEncodedFrame(igsioVideoFrame* frame, std::string codecFourCC, std::map<std::string, std::string> parameters)
 {
-  vtkSmartPointer<vtkStreamingVolumeFrame> compressedFrame = nullptr;
+  vtkSmartPointer<vtkStreamingVolumeFrame> encodedFrame = nullptr;
   vtkSmartPointer<vtkStreamingVolumeCodec> codec = nullptr;
   if (!frame->IsFrameEncoded())
   {
@@ -86,6 +92,15 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
     if (!image)
     {
       return nullptr;
+    }
+
+    if (this->EnableCache)
+    {
+      if (this->CacheLastInputImage == image)
+      {
+        return this->CacheLastOutputFrame;
+      }
+      this->CacheLastInputImage = image;
     }
 
     CodecList::iterator codecIt = this->Codecs.find(codecFourCC);
@@ -108,19 +123,32 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
       return nullptr;
     }
 
-    compressedFrame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
+    encodedFrame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
     codec->SetParameters(parameters);
-    codec->EncodeImageData(image, compressedFrame);
+    codec->EncodeImageData(image, encodedFrame, this->GetRequestKeyFrame());
+    if (encodedFrame->IsKeyFrame())
+    {
+      this->SetRequestKeyFrame(false);
+    }
   }
   else
   {
     vtkStreamingVolumeFrame* encodedFrame = frame->GetEncodedFrame();
     if (encodedFrame != nullptr)
     {
+      if (this->GetEnableCache())
+      {
+        if (this->CacheLastInputFrame == encodedFrame)
+        {
+          return this->CacheLastOutputFrame;
+        }
+        this->CacheLastInputFrame = encodedFrame;
+      }
+
       std::string encodingFourCC = encodedFrame->GetCodecFourCC();
       if (encodingFourCC == codecFourCC)
       {
-        compressedFrame = encodedFrame;
+        encodedFrame = encodedFrame;
       }
       else
       {
@@ -129,5 +157,9 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
     }
   }
 
-  return compressedFrame;
+  if (this->GetEnableCache())
+  {
+    this->CacheLastOutputFrame = encodedFrame;
+  }
+  return encodedFrame;
 }
