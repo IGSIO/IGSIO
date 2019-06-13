@@ -1,9 +1,8 @@
-/*=Plus=header=begin======================================================
-Program: Plus
+/*=IGSIO=header=begin======================================================
+Program: IGSIO
 Copyright (c) Laboratory for Percutaneous Surgery. All rights reserved.
 See License.txt for details.
-=========================================================Plus=header=end*/
-
+=========================================================IGSIO=header=end*/
 
 #ifndef __vtkIGSIOFrameConverter_h
 #define __vtkIGSIOFrameConverter_h

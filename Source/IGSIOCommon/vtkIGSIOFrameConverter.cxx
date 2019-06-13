@@ -1,5 +1,13 @@
+/*=IGSIO=header=begin======================================================
+Program: IGSIO
+Copyright (c) Laboratory for Percutaneous Surgery. All rights reserved.
+See License.txt for details.
+=========================================================IGSIO=header=end*/
 
-#include <vtkIGSIOFrameConverter.h>
+// IGSIO includes
+#include "vtkIGSIOFrameConverter.h"
+
+// vtkAddon includes
 #include <vtkStreamingVolumeCodec.h>
 #include <vtkStreamingVolumeCodecFactory.h>
 
@@ -20,6 +28,7 @@ void vtkIGSIOFrameConverter::PrintSelf(std::ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os, indent);
 }
 
+//----------------------------------------------------------------------------
 vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsioVideoFrame* frame)
 {
   vtkSmartPointer<vtkImageData> uncompressedImage = NULL;
@@ -30,7 +39,7 @@ vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsio
   else
   {
     vtkStreamingVolumeFrame* compressedFrame = frame->GetEncodedFrame();
-    vtkSmartPointer<vtkStreamingVolumeCodec> codec = NULL;
+    vtkSmartPointer<vtkStreamingVolumeCodec> codec = nullptr;
     if (compressedFrame)
     {
       std::string fourCC = compressedFrame->GetCodecFourCC();
@@ -52,7 +61,7 @@ vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsio
 
     if (codec == nullptr)
     {
-      return NULL;
+      return nullptr;
     }
 
     if (compressedFrame && codec)
@@ -69,14 +78,14 @@ vtkSmartPointer<vtkImageData> vtkIGSIOFrameConverter::GetUncompressedImage(igsio
 //----------------------------------------------------------------------------
 vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFrame(igsioVideoFrame* frame, std::string codecFourCC, std::map<std::string, std::string> parameters)
 {
-  vtkSmartPointer<vtkStreamingVolumeFrame> compressedFrame = NULL;
-  vtkSmartPointer<vtkStreamingVolumeCodec> codec = NULL;
+  vtkSmartPointer<vtkStreamingVolumeFrame> compressedFrame = nullptr;
+  vtkSmartPointer<vtkStreamingVolumeCodec> codec = nullptr;
   if (!frame->IsFrameEncoded())
   {
     vtkSmartPointer<vtkImageData> image = frame->GetImage();
     if (!image)
     {
-      return NULL;
+      return nullptr;
     }
 
     CodecList::iterator codecIt = this->Codecs.find(codecFourCC);
@@ -96,7 +105,7 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
 
     if (codec == nullptr)
     {
-      return NULL;
+      return nullptr;
     }
 
     compressedFrame = vtkSmartPointer<vtkStreamingVolumeFrame>::New();
@@ -106,7 +115,7 @@ vtkSmartPointer<vtkStreamingVolumeFrame> vtkIGSIOFrameConverter::GetCompressedFr
   else
   {
     vtkStreamingVolumeFrame* encodedFrame = frame->GetEncodedFrame();
-    if (encodedFrame != NULL)
+    if (encodedFrame != nullptr)
     {
       std::string encodingFourCC = encodedFrame->GetCodecFourCC();
       if (encodingFourCC == codecFourCC)
