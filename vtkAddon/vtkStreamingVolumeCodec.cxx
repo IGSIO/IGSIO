@@ -34,14 +34,13 @@ Care Ontario.
 
 //---------------------------------------------------------------------------
 vtkStreamingVolumeCodec::vtkStreamingVolumeCodec()
-  : LastDecodedFrame(NULL)
+  : LastDecodedFrame(nullptr)
 {
 }
 
 //---------------------------------------------------------------------------
 vtkStreamingVolumeCodec::~vtkStreamingVolumeCodec()
-{
-}
+= default;
 
 //---------------------------------------------------------------------------
 bool vtkStreamingVolumeCodec::DecodeFrame(vtkStreamingVolumeFrame* streamingFrame, vtkImageData* outputImageData)

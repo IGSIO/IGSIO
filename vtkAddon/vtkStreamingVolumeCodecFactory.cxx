@@ -68,7 +68,7 @@ vtkStreamingVolumeCodecFactoryInitialize::~vtkStreamingVolumeCodecFactoryInitial
 vtkStreamingVolumeCodecFactory* vtkStreamingVolumeCodecFactory::New()
 {
   vtkStreamingVolumeCodecFactory* ret = vtkStreamingVolumeCodecFactory::GetInstance();
-  ret->Register(NULL);
+  ret->Register(nullptr);
   return ret;
 }
 
@@ -95,13 +95,11 @@ vtkStreamingVolumeCodecFactory* vtkStreamingVolumeCodecFactory::GetInstance()
 
 //----------------------------------------------------------------------------
 vtkStreamingVolumeCodecFactory::vtkStreamingVolumeCodecFactory()
-{
-}
+= default;
 
 //----------------------------------------------------------------------------
 vtkStreamingVolumeCodecFactory::~vtkStreamingVolumeCodecFactory()
-{
-}
+= default;
 
 //----------------------------------------------------------------------------
 void vtkStreamingVolumeCodecFactory::PrintSelf(ostream& os, vtkIndent indent)
@@ -122,7 +120,7 @@ void vtkStreamingVolumeCodecFactory::classInitialize()
 void vtkStreamingVolumeCodecFactory::classFinalize()
 {
   vtkStreamingVolumeCodecFactoryInstance->Delete();
-  vtkStreamingVolumeCodecFactoryInstance = 0;
+  vtkStreamingVolumeCodecFactoryInstance = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -169,7 +167,7 @@ bool vtkStreamingVolumeCodecFactory::UnRegisterStreamingCodecByClassName(const s
       return codec->CreateCodecInstance();
       }
     }
-  return NULL;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -184,7 +182,7 @@ vtkStreamingVolumeCodec* vtkStreamingVolumeCodecFactory::CreateCodecByFourCC(con
       return codec->CreateCodecInstance();
       }
     }
-  return NULL;
+  return nullptr;
 }
 
 //----------------------------------------------------------------------------

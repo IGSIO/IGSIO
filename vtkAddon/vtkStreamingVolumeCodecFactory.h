@@ -42,7 +42,7 @@ class VTK_ADDON_EXPORT vtkStreamingVolumeCodecFactory : public vtkObject
 public:
 
   vtkTypeMacro(vtkStreamingVolumeCodecFactory, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /// Registers a new video compression codec
   /// \param newCodecPointer Function pointer to the codec type new function (e.g. (PointerToCodecBaseNew)&vtkStreamingVolumeCodec::New )
@@ -54,15 +54,15 @@ public:
   /// Returns true if the codec is successfully unregistered
   bool UnRegisterStreamingCodecByClassName(const std::string& codecClassName);
 
-  /// Get pointer to codec new function, or NULL if the codec type not registered
+  /// Get pointer to codec new function, or nullptr if the codec type not registered
   /// Usage: vtkSmartPointer<vtkStreamingVolumeCodec> codec = GetVolumeCodecNewPointerByType("igtlioVideoDevice")();
-  /// Returns NULL if no matching codec can be found
+  /// Returns nullptr if no matching codec can be found
   vtkStreamingVolumeCodec* CreateCodecByClassName(const std::string& codecClassName);
 
   /// Creates a new codec that matches the specified FourCC code
   /// \param codecFourCC FourCC representing the encoding method
   /// See https://www.fourcc.org/codecs.php for an incomplete list
-  /// Returns NULL if no matching codec can be found
+  /// Returns nullptr if no matching codec can be found
   vtkStreamingVolumeCodec* CreateCodecByFourCC(const std::string codecFourCC);
 
   /// Returns a list of all registered Codecs
@@ -84,7 +84,7 @@ public:
 
 protected:
   vtkStreamingVolumeCodecFactory();
-  ~vtkStreamingVolumeCodecFactory();
+  ~vtkStreamingVolumeCodecFactory() override;
   vtkStreamingVolumeCodecFactory(const vtkStreamingVolumeCodecFactory&);
   void operator=(const vtkStreamingVolumeCodecFactory&);
 

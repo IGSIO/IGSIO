@@ -48,7 +48,7 @@ class VTK_ADDON_EXPORT vtkStreamingVolumeCodec : public vtkObject
 {
 public:
   vtkTypeMacro(vtkStreamingVolumeCodec, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  void PrintSelf(ostream& os, vtkIndent indent) override;
 
   /// Returns the FourCC code representing the codec
   /// See https://www.fourcc.org/codecs.php for an incomplete list
@@ -125,7 +125,7 @@ public:
   std::string GetParameterPresetName(const std::string& presetValue) const;
 
   /// Get the number of parameter presets
-  int GetNumberOfParameterPresets() const { return this->ParameterPresets.size(); };
+  int GetNumberOfParameterPresets() const { return static_cast<int>(this->ParameterPresets.size()); };
 
   struct ParameterPreset
   {
@@ -176,11 +176,11 @@ protected:
 
 protected:
   vtkStreamingVolumeCodec();
-  ~vtkStreamingVolumeCodec();
+  ~vtkStreamingVolumeCodec() override;
 
 private:
-  vtkStreamingVolumeCodec(const vtkStreamingVolumeCodec&);
-  void operator=(const vtkStreamingVolumeCodec&);
+  vtkStreamingVolumeCodec(const vtkStreamingVolumeCodec&) = delete;
+  void operator=(const vtkStreamingVolumeCodec&) = delete;
 
 protected:
   std::vector<std::string>                  AvailiableParameterNames;
