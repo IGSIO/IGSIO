@@ -264,7 +264,7 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
   }
 
-  // Test metafile writting with different sized images
+  // Test metafile writing with different sized images
   igsioTrackedFrame differentSizeFrame;
   FrameSizeType frameSizeSmaller = {150, 150, 1};
   differentSizeFrame.GetImageData()->AllocateFrame(frameSizeSmaller, VTK_UNSIGNED_CHAR, 1);

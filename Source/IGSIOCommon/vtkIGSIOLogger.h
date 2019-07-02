@@ -46,7 +46,7 @@ class vtkIGSIOConsoleOutputWindow : public vtkOutputWindow
 public:
   /*!
     The new method of vtkOutputWindow would create a vtkWin32OutputWindow.cxx
-    isntance, which displays logs in a pop-up window. Instead, we directly call
+    instance, which displays logs in a pop-up window. Instead, we directly call
     the constructor of vtkOutputWindow, which forces to create a vtkOutputWindow instance
     that writes log messages on the console.
   */

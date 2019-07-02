@@ -402,7 +402,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
   }
 
   // All tracks have to be initialized before starting
-  // All desired custom frame field names must be availiable starting from frame 0
+  // All desired custom frame field names must be available starting from frame 0
   for (unsigned int frameNumber = 0; frameNumber < this->TrackedFrameList->GetNumberOfTrackedFrames(); frameNumber++)
   {
     igsioTrackedFrame* trackedFrame(NULL);

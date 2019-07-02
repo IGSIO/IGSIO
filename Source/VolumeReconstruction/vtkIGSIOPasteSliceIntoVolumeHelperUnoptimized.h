@@ -336,7 +336,7 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
     interpolate = &vtkTrilinearInterpolation;
     break;
   default:
-    LOG_ERROR("Unkown interpolation mode: "<<interpolationMode);
+    LOG_ERROR("Unknown interpolation mode: "<<interpolationMode);
     return;
   }
 

@@ -112,7 +112,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
       if (!dataFileEntryFound)
       {
         // pixel data stored locally
-        // this->PixelDataFileName is already empty string unless overriden by data file: field
+        // this->PixelDataFileName is already empty string unless overridden by data file: field
         this->PixelDataFileOffset = FTELL(stream);
       }
       // this is the last element of the header

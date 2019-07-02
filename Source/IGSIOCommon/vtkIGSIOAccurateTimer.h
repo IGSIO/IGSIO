@@ -120,7 +120,7 @@ public:
   static std::string GetDateAndTimeString();
 
   /*!
-    Get current date with time ans ms in string
+    Get current date with time and ms in string
     \return Format: MMDDYY_HHMMSS.MS
    */
   static std::string GetDateAndTimeMSecString();

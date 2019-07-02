@@ -546,7 +546,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]); // removed cast to unsigned short because it might cause loss in larger numbers
@@ -607,7 +607,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]); // removed cast to unsigned short because it might cause loss in larger numbers
@@ -679,7 +679,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]); // removed cast to unsigned short because it might cause loss in larger numbers
@@ -725,7 +725,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]); // removed cast to unsigned short because it might cause loss in larger numbers
@@ -810,7 +810,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]);
@@ -875,7 +875,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]);
@@ -949,7 +949,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]);
@@ -998,7 +998,7 @@ static inline void vtkFreehand2OptimizedNNHelper(int xIntersectionPixStart,
 
       int inc = outIdX*outInc[0] + outIdY*outInc[1] + outIdZ*outInc[2];
       T *outPtr1 = outPtr + inc;
-      // divide by outInc[0] to accomodate for the difference
+      // divide by outInc[0] to accommodate for the difference
       // in the number of scalar pointers between the output
       // and the accumulation buffer
       unsigned short *accPtr1 = accPtr + (inc/outInc[0]);

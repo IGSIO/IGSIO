@@ -51,10 +51,10 @@ static const int MAX_RESUME_ATTEMPTS = 100;
   thus one may want to reserve to using only decrement counter as in the original timer example, relying on the fact that timer
   callback gets called every 1msec by the multimedia timers.
   Extra half msec was added purely from my experimental results - to provide higher precision level, you may wish to take it out
-  if you are not happy or dont understand why it is there.
+  if you are not happy or don't understand why it is there.
   Setting process and thread priority is needed here because NT schedule doesnt deal quite right with the processes that run in
   the background when threads get suspended and resumed. It gives very high precision results when run in the foreground but
-  causes delays when run in trhe background unless priority is adjusted. Priority does not cause any problems unless your
+  causes delays when run in the background unless priority is adjusted. Priority does not cause any problems unless your
   process monopolises all available CPU - timer code by itself consumes pretty much 0%.
 
 \ingroup vtkIGSIOCommon

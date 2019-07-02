@@ -47,9 +47,9 @@ public:
   enum InvalidFrameAction
   {
     ADD_INVALID_FRAME_AND_REPORT_ERROR = 0, /*!< Add invalid frame to the list and report an error */
-    ADD_INVALID_FRAME, /*!< Add invalid frame to the list wihout notification */
+    ADD_INVALID_FRAME, /*!< Add invalid frame to the list without notification */
     SKIP_INVALID_FRAME_AND_REPORT_ERROR, /*!< Skip invalid frame and report an error */
-    SKIP_INVALID_FRAME /*!< Skip invalid frame wihout notification */
+    SKIP_INVALID_FRAME /*!< Skip invalid frame without notification */
   };
 
   /*! Add tracked frame to container. If the frame is invalid then it may not actually add it to the list. */
