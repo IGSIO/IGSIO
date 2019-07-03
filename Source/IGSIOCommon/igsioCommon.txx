@@ -4,6 +4,9 @@ Copyright (c) Laboratory for Percutaneous Surgery. All rights reserved.
 See License.txt for details.
 =========================================================IGSIO=header=end*/
 
+#ifndef __igsioCommon_txx
+#define __igsioCommon_txx
+
 namespace igsioCommon
 {
   namespace XML
@@ -26,7 +29,8 @@ namespace igsioCommon
       element.GetScalarAttribute(attributeName.c_str(), value);
       return IGSIO_SUCCESS;
     }
-  }
+
+  } // end namespace XML
 
   //----------------------------------------------------------------------------
   template<typename ElemType>
@@ -47,4 +51,7 @@ namespace igsioCommon
 
     output = ss.str();
   }
-}
+
+} // end namespace igsioCommon
+
+#endif // __igsioCommon_txx

@@ -12,13 +12,13 @@ See License.txt for details.
 #include "igsioTrackedFrame.h"
 
 #if _WIN32
-  #include <errno.h>
+#include <errno.h>
+#include "windows.h"
 
-  #if defined(_MSC_PLATFORM_TOOLSET_v120) || defined(_MSC_PLATFORM_TOOLSET_v140)
-    // Version helpers is only available in Windows SDK 8.1 (v120) or newer
-    #include <VersionHelpers.h>
-  #endif
-  #include "windows.h"
+#if _MSC_VER  > 1800
+  // Version helpers is only available in Windows SDK 8.1 (v120) or newer
+#include <VersionHelpers.h>
+#endif
 #endif
 
 //----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ igsioStatus vtkIGSIOSequenceIOBase::DeleteFrameString(int frameNumber, const std
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIOBase::SetFrameString(int frameNumber, const char* fieldName,  const char* fieldValue)
+igsioStatus vtkIGSIOSequenceIOBase::SetFrameString(int frameNumber, const char* fieldName, const char* fieldValue)
 {
   if (fieldName == NULL || fieldValue == NULL)
   {
@@ -407,11 +407,11 @@ igsioStatus vtkIGSIOSequenceIOBase::WriteImages()
 
         size_t writtenSize = 0;
         igsioStatus status = igsioCommon::RobustFwrite(this->OutputImageFileHandle, videoFrame->GetScalarPointer(),
-                             videoFrame->GetFrameSizeInBytes(), writtenSize);
+          videoFrame->GetFrameSizeInBytes(), writtenSize);
         if (status == IGSIO_FAIL)
         {
           LOG_ERROR("Unable to write entire frame to file. Frame size: " << videoFrame->GetFrameSizeInBytes()
-                    << ", successfully written: " << writtenSize << " bytes");
+            << ", successfully written: " << writtenSize << " bytes");
         }
         this->TotalBytesWritten += writtenSize;
       }
@@ -460,7 +460,7 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
       SetFileAttributes(newname, attrs & ~FILE_ATTRIBUTE_READONLY);
     }
 
-#if defined(_MSC_PLATFORM_TOOLSET_v120) || defined(_MSC_PLATFORM_TOOLSET_v140)
+#if _MSC_VER > 1800
     if (!IsWindowsVistaOrGreater() && IsWindowsXPOrGreater())
 #else
     // Check the windows version number.
@@ -590,9 +590,9 @@ igsioStatus vtkIGSIOSequenceIOBase::AppendFile(const std::string& sourceFilename
 {
 #if _WIN32
   FILE* in;
-  errno_t inErr = fopen_s(&in, sourceFilename.c_str(), "rb") ;
+  errno_t inErr = fopen_s(&in, sourceFilename.c_str(), "rb");
 #else
-  FILE* in = fopen(sourceFilename.c_str(), "rb") ;
+  FILE* in = fopen(sourceFilename.c_str(), "rb");
 #endif
 
 #if _WIN32
@@ -609,11 +609,11 @@ igsioStatus vtkIGSIOSequenceIOBase::AppendFile(const std::string& sourceFilename
     char outErrStr[3000];
     strerror_s(inErrStr, inErr);
     strerror_s(outErrStr, outErr);
-    LOG_ERROR("An error occurred while appending data from " << sourceFilename << " to " << destFilename << ": " << inErrStr << "::" << outErrStr) ;
+    LOG_ERROR("An error occurred while appending data from " << sourceFilename << " to " << destFilename << ": " << inErrStr << "::" << outErrStr);
 #else
   if (in == NULL || out == NULL)
   {
-    LOG_ERROR("An error occurred while appending data from " << sourceFilename << " to " << destFilename) ;
+    LOG_ERROR("An error occurred while appending data from " << sourceFilename << " to " << destFilename);
 #endif
     return IGSIO_FAIL;
   }
@@ -621,10 +621,10 @@ igsioStatus vtkIGSIOSequenceIOBase::AppendFile(const std::string& sourceFilename
   {
     const int BUFFER_SIZE = 32000;
     char* buffer = new char[BUFFER_SIZE];
-    size_t len = 0 ;
+    size_t len = 0;
     while ((len = fread(buffer, 1, BUFFER_SIZE, in)) > 0)
     {
-      fwrite(buffer, 1, len, out) ;
+      fwrite(buffer, 1, len, out);
       memset(buffer, 0, BUFFER_SIZE);
     }
     fclose(in);

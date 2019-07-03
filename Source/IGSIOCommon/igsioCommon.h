@@ -593,7 +593,7 @@ namespace igsioCommon
   VTKIGSIOCOMMON_EXPORT void SplitStringIntoTokens(const std::string& s, char delim, std::vector<std::string>& elems, bool keepEmptyParts = true);
   VTKIGSIOCOMMON_EXPORT std::vector<std::string> SplitStringIntoTokens(const std::string& s, char delim, bool keepEmptyParts = true);
   template<typename ElemType>
-  VTKIGSIOCOMMON_EXPORT void JoinTokensIntoString(const std::vector<ElemType>& elems, std::string& output, char separator = ' ');
+  void JoinTokensIntoString(const std::vector<ElemType>& elems, std::string& output, char separator = ' ');
 
   VTKIGSIOCOMMON_EXPORT igsioStatus CreateTemporaryFilename(std::string& aString, const std::string& anOutputDirectory);
 
@@ -638,8 +638,8 @@ namespace igsioCommon
 
     VTKIGSIOCOMMON_EXPORT igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::string& attributeName, std::string& value);
     VTKIGSIOCOMMON_EXPORT igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::wstring& attributeName, std::string& value);
-    template<typename T> VTKIGSIOCOMMON_EXPORT igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::string& attributeName, T& value);
-    template<typename T> VTKIGSIOCOMMON_EXPORT igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::wstring& attributeName, T& value);
+    template<typename T> igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::string& attributeName, T& value);
+    template<typename T> igsioStatus SafeGetAttributeValueInsensitive(vtkXMLDataElement& element, const std::wstring& attributeName, T& value);
   }
 
   //--------------- Tool Details ----------------------
