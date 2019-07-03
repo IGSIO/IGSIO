@@ -14,8 +14,8 @@ See License.txt for details.
 #if _WIN32
 #include <errno.h>
 #include "windows.h"
-#if defined(_MSC_PLATFORM_TOOLSET_v120) || defined(_MSC_PLATFORM_TOOLSET_v140)
 // Version helpers is only available in Windows SDK 8.1 (v120) or newer
+#ifdef IGSIO_USE_VERSION_HELPER
 #include <VersionHelpers.h>
 #endif
 #endif
@@ -459,7 +459,7 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
       SetFileAttributes(newname, attrs & ~FILE_ATTRIBUTE_READONLY);
     }
 
-#if defined(_MSC_PLATFORM_TOOLSET_v120) || defined(_MSC_PLATFORM_TOOLSET_v140)
+#ifdef IGSIO_USE_VERSION_HELPER
     if (!IsWindowsVistaOrGreater() && IsWindowsXPOrGreater())
 #else
     // Check the windows version number.
