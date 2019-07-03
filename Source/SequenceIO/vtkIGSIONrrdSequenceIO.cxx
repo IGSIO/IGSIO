@@ -909,7 +909,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteCompressedImagePixelsToFile(int& compre
       }
     }
 
-    size_t numberOfBytesReadyForWriting = videoFrame->GetFrameSizeInBytes();
+    unsigned int numberOfBytesReadyForWriting = static_cast<unsigned int>(videoFrame->GetFrameSizeInBytes());
     if (gzwrite(this->CompressionStream, (Bytef*)videoFrame->GetScalarPointer(), numberOfBytesReadyForWriting) != numberOfBytesReadyForWriting)
     {
       LOG_ERROR("Error writing compressed data into file");
@@ -924,7 +924,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteCompressedImagePixelsToFile(int& compre
       gzclose(this->CompressionStream);
       return IGSIO_FAIL;
     }
-    compressedDataSize += numberOfBytesReadyForWriting;
+    compressedDataSize += static_cast<int>(numberOfBytesReadyForWriting);
   }
 
   LOG_DEBUG("Writing compressed pixel data into file completed");
@@ -1218,7 +1218,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateFieldInImageHeader(const char* fieldNa
       newLineStr << name << ":" << (isKeyValue ? "=" : " ") << GetCustomString(name.c_str());
 
       // need to add padding whitespace characters to fully replace the old line
-      int paddingCharactersNeeded = line.length() - newLineStr.str().size();
+      size_t paddingCharactersNeeded = line.length() - newLineStr.str().size();
       if (paddingCharactersNeeded < 0)
       {
         LOG_ERROR("Cannot update line in image header (the new string '" << newLineStr.str() << "' is longer than the current string '" << line << "')");
@@ -1348,7 +1348,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateDimensionsCustomStrings(int numberOfFr
     std::stringstream ss;
     ss << this->Dimensions[lastDimension];
     // strlen(SEQUENCE_FIELD_SIZES) + 2 for "sizes: "
-    int numchars = sizesStr.str().length() + ss.str().length() + strlen(SEQUENCE_FIELD_SIZES) + 2;
+    size_t numchars = sizesStr.str().length() + ss.str().length() + strlen(SEQUENCE_FIELD_SIZES) + 2;
     for (int i = 0; i < SEQUENCE_FIELD_PADDED_LINE_LENGTH - numchars; ++i)
     {
       sizesStr << " ";
@@ -1357,7 +1357,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::UpdateDimensionsCustomStrings(int numberOfFr
   }
 
   // strlen(SEQUENCE_FIELD_SIZES) + 2 for "kinds: "
-  int numchars = kindStr.str().length() + lastKind.length() + strlen(SEQUENCE_FIELD_KINDS) + 2;
+  size_t numchars = kindStr.str().length() + lastKind.length() + strlen(SEQUENCE_FIELD_KINDS) + 2;
   for (int i = 0; i < SEQUENCE_FIELD_PADDED_LINE_LENGTH - numchars; ++i)
   {
     kindStr << " ";

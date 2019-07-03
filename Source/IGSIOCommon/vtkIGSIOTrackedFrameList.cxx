@@ -138,7 +138,7 @@ unsigned int vtkIGSIOTrackedFrameList::GetNumberOfTrackedFrames()
 //----------------------------------------------------------------------------
 unsigned int vtkIGSIOTrackedFrameList::Size()
 {
-  return this->TrackedFrameList.size();
+  return static_cast<unsigned int>(this->TrackedFrameList.size());
 }
 
 //----------------------------------------------------------------------------
@@ -308,7 +308,7 @@ bool vtkIGSIOTrackedFrameList::ValidateTimestamp(igsioTrackedFrame* trackedFrame
 bool vtkIGSIOTrackedFrameList::ValidateEncoderPosition(igsioTrackedFrame* trackedFrame)
 {
   TrackedFrameListType::iterator searchIndex;
-  const int containerSize = this->TrackedFrameList.size();
+  const size_t containerSize = this->TrackedFrameList.size();
   if (containerSize < this->NumberOfUniqueFrames)
   {
     searchIndex = this->TrackedFrameList.begin();
@@ -332,7 +332,7 @@ bool vtkIGSIOTrackedFrameList::ValidateEncoderPosition(igsioTrackedFrame* tracke
 bool vtkIGSIOTrackedFrameList::ValidateTransform(igsioTrackedFrame* trackedFrame)
 {
   TrackedFrameListType::iterator searchIndex;
-  const int containerSize = this->TrackedFrameList.size();
+  const size_t containerSize = this->TrackedFrameList.size();
   if (containerSize < this->NumberOfUniqueFrames)
   {
     searchIndex = this->TrackedFrameList.begin();

@@ -607,7 +607,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   if (GetUseCompression())
   {
     this->SetFrameField("CompressedData", "True");
-    int paddingCharacters = SEQMETA_FIELD_PADDED_LINE_LENGTH - strlen(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) - 4;
+    size_t paddingCharacters = SEQMETA_FIELD_PADDED_LINE_LENGTH - strlen(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) - 4;
     std::string compDataSize("0");
     for (int i = 0; i < paddingCharacters; ++i)
     {
@@ -1023,7 +1023,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteCompressedImagePixelsToFile(int& c
         deflateEnd(&strm);   // clean up
         return IGSIO_FAIL;
       }
-      compressedDataSize += numberOfBytesWritten;
+      compressedDataSize += static_cast<int>(numberOfBytesWritten);
 
     }
     while (strm.avail_out == 0);
@@ -1269,7 +1269,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateFieldInImageHeader(const char* fi
       newLineStr << name << " = " << GetCustomString(name.c_str());
 
       // need to add padding whitespace characters to fully replace the old line
-      int paddingCharactersNeeded = line.length() - newLineStr.str().size();
+      size_t paddingCharactersNeeded = line.length() - newLineStr.str().size();
       if (paddingCharactersNeeded < 0)
       {
         LOG_ERROR("Cannot update line in image header (the new string '" << newLineStr.str() << "' is longer than the current string '" << line << "')");
@@ -1434,7 +1434,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateDimensionsCustomStrings(int numbe
     std::stringstream ss;
     ss << this->Dimensions[lastDimension];
     // strlen(SEQUENCE_FIELD_SIZES) + 2 for "DimSize = "
-    int numchars = sizesStr.str().length() + ss.str().length() + strlen(SEQMETA_FIELD_DIMSIZE) + 3;
+    size_t numchars = sizesStr.str().length() + ss.str().length() + strlen(SEQMETA_FIELD_DIMSIZE) + 3;
     for (int i = 0; i < SEQMETA_FIELD_PADDED_LINE_LENGTH - numchars; ++i)
     {
       sizesStr << " ";
@@ -1443,7 +1443,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateDimensionsCustomStrings(int numbe
   }
 
   // strlen(SEQUENCE_FIELD_SIZES) + 3 for "Kinds = "
-  int numchars = kindStr.str().length() + lastKind.length() + strlen(SEQMETA_FIELD_KINDS) + 3;
+  size_t numchars = kindStr.str().length() + lastKind.length() + strlen(SEQMETA_FIELD_KINDS) + 3;
   for (int i = 0; i < SEQMETA_FIELD_PADDED_LINE_LENGTH - numchars; ++i)
   {
     kindStr << " ";
