@@ -101,7 +101,7 @@ void vtkIGSIOFanAngleDetectorAlgo::Update()
   double numberOfAveragedSamples  = this->FilterRadiusPixel * 2; // moving average filter size
   for ( std::vector<BandInfo>::iterator bandIt = bands.begin(); bandIt != bands.end(); ++bandIt )
   {
-    int nTheta = bandIt->TestThetaRad.size();
+    size_t nTheta = bandIt->TestThetaRad.size();
     for ( int j = numberOfAveragedSamples; j < nTheta; j++ )
     {
       double testCount = 0;
