@@ -17,6 +17,14 @@ SET(CMAKE_MODULE_PATH
   )
 
 # --------------------------------------------------------------------------
+# System Settings
+IF(WIN32)
+  # This method adds the necessary compiler flag
+  SET(RUNTIME_MINIMUM_WINDOWS_VERSION "0x0602")
+  ADD_DEFINITIONS(-D_MSC_PLATFORM_TOOLSET_$(PlatformToolset))
+ENDIF()
+
+# --------------------------------------------------------------------------
 # Configure output paths for libraries and executables.
 IF(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
