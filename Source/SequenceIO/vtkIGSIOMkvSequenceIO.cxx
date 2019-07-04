@@ -559,7 +559,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::WriteHeader()
 
   if (!this->MKVWriter->Open(fileFullPath.c_str()))
   {
-    LOG_ERROR("Could not open file " << this->External->FileName << " for writing: " << strerror(errno));
+    LOG_ERROR("Could not open file " << this->External->FileName << " for writing!");
     return false;
   }
 
