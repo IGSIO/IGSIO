@@ -92,6 +92,7 @@ void vtkIGSIOTrackedFrameList::Clear()
     }
   }
   this->TrackedFrameList.clear();
+  this->CustomFields.clear();
 }
 
 //----------------------------------------------------------------------------
