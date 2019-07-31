@@ -34,9 +34,9 @@ ELSE()
       DEPENDS ${VP9_DEPENDENCIES}
     )
   else()
-    if( ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v120") OR
-        ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v140") OR
-        ("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v141"))
+    if( ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v120*") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v140*") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*"))
       SET (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
       SET (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.7.0/libvpx_v1.7.0_")
 
@@ -46,11 +46,11 @@ ELSE()
       SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
     endif()
 
-    if("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v120")
+    if("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v120*")
       SET (BinaryURL "${BinaryURL}msvc12.zip")
-    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v140")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v140*")
       SET (BinaryURL "${BinaryURL}msvc14.zip")
-    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" STREQUAL "v141")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*")
       SET (BinaryURL "${BinaryURL}msvc15.zip")
     endif()
 
@@ -65,7 +65,7 @@ ELSE()
         TEST_COMMAND      ""
       )
     else()
-      message(ERROR "Unsupported version of Visual Studio for VP9. Supported versions are: MSVC12, MSVC14, MSVC15")
+      message(FATAL_ERROR "Unsupported version of Visual Studio for VP9. Supported versions are: MSVC12, MSVC14, MSVC15")
     endif()
   endif()
 ENDIF()
