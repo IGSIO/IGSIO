@@ -7,6 +7,8 @@ A collection of tools and algorithms for image guided systems
 - C++ compiler
   - Windows
     - Visual Studio >= 2015
+  - Linux
+  - MacOSX
 
 - VTK >= 8
 
