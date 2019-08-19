@@ -36,7 +36,7 @@ extern "C" {
 #endif
   typedef struct VpxCodecInterface
   {
-    vpx_codec_iface_t *(*const codec_interface)();
+    vpx_codec_iface_t* (*const codec_interface)();
   } VpxCodecInterface;
 #ifdef __cplusplus
 } /* extern "C" */
@@ -46,7 +46,7 @@ extern "C" {
 extern "C" {
 #endif
   typedef struct VpxInterfaceEncoder {
-    vpx_codec_iface_t *(*const codec_interface)();
+    vpx_codec_iface_t* (*const codec_interface)();
   } VpxInterfaceEncoder;
 
 #ifdef __cplusplus
@@ -80,8 +80,8 @@ public:
   vpx_codec_ctx_t* VPXEncodeContext;
   vpx_image_t* VPXEncodeImage;
   vpx_codec_iter_t VPXEncodeIter;
-  vpx_fixed_buf_t *VPXEncodeBuffer;
-  const vpx_codec_cx_pkt_t *VPXEncodePacket;
+  vpx_fixed_buf_t* VPXEncodeBuffer;
+  const vpx_codec_cx_pkt_t* VPXEncodePacket;
 
   // Encoder parameters
   bool Lossless;
@@ -93,22 +93,22 @@ public:
   int RateControl;
 
   // Common functions
-  int vpx_img_plane_width(const vpx_image_t *img, int plane);
-  int vpx_img_plane_height(const vpx_image_t *img, int plane);
-  void error_output(vpx_codec_ctx_t *ctx, const char *s);
+  int vpx_img_plane_width(const vpx_image_t* img, int plane);
+  int vpx_img_plane_height(const vpx_image_t* img, int plane);
+  void error_output(vpx_codec_ctx_t* ctx, const char* s);
   bool ConvertRGBToYUV(unsigned char* RGBFrame, unsigned char* YUVFrame, int width, int height);
 
   // Decoder functions
   bool InitializeDecoder();
   bool DecodeFrame(vtkStreamingVolumeFrame* inputFrame, vtkImageData* outputImageData, bool saveDecodedImage);
-  void ComposeByteSteam(unsigned char** inputData, int dimension[2], int iStride[3], unsigned char* outputFrame);
+  void ComposeByteSteam(unsigned char** inputData, int dimension[2], int iStride[3], unsigned char* outputFrame, bool grayScale);
   bool ConvertYUVToRGB(unsigned char* YUVFrame, unsigned char* RGBFrame, int width, int height);
 
   // Encoder functions
   bool EncoderInitialized;
   bool InitializeEncoder();
   bool EncodeFrame(vtkImageData* inputImageData, vtkStreamingVolumeFrame* outputFrame, bool forceKeyFrame);
-  bool ConvertToLocalImageFormat(vtkImageData* imageData);
+  bool ConvertToLocalImageFormat(vtkImageData* imageData, bool grayScale);
 
   bool SetSpeed(int speed);
 
@@ -202,20 +202,20 @@ bool vtkVP9VolumeCodec::SetParametersFromPresetValue(const std::string& presetVa
   if (presetValue == "VP90_LL_KF_10_50")
   {
     success = this->SetParameter(this->GetLosslessEncodingParameter(), "1") &&
-              this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "10") &&
-              this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "50");
+      this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "10") &&
+      this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "50");
   }
   else if (presetValue == "VP90_LO_KF_10_50")
   {
     success = this->SetParameter(this->GetLosslessEncodingParameter(), "0") &&
-              this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "10") &&
-              this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "50");
+      this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "10") &&
+      this->SetParameter(this->GetMinimumKeyFrameDistanceParameter(), "50");
   }
   else if (presetValue == "VP90_LO_S8_RCQ")
   {
     success = this->SetParameter(this->GetLosslessEncodingParameter(), "0") &&
-              this->SetParameter(this->GetSpeedParameter(), "8") &&
-              this->SetParameter(this->GetRateControlParameter(), "Q");
+      this->SetParameter(this->GetSpeedParameter(), "8") &&
+      this->SetParameter(this->GetRateControlParameter(), "Q");
   }
   else
   {
@@ -469,7 +469,7 @@ vtkVP9VolumeCodec::vtkInternal::~vtkInternal()
 // TODO(dkovalev): move this function to vpx_image.{c, h}, so it will be part
 // of vpx_image_t support, this section will be removed when it is moved to vpx_image
 //---------------------------------------------------------------------------
-int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_width(const vpx_image_t *img, int plane) {
+int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_width(const vpx_image_t* img, int plane) {
   if (plane > 0 && img->x_chroma_shift > 0)
     return (img->d_w + 1) >> img->x_chroma_shift;
   else
@@ -477,7 +477,7 @@ int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_width(const vpx_image_t *img, 
 }
 
 //---------------------------------------------------------------------------
-int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_height(const vpx_image_t *img, int plane) {
+int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_height(const vpx_image_t* img, int plane) {
   if (plane > 0 && img->y_chroma_shift > 0)
     return (img->d_h + 1) >> img->y_chroma_shift;
   else
@@ -488,7 +488,7 @@ int vtkVP9VolumeCodec::vtkInternal::vpx_img_plane_height(const vpx_image_t *img,
 bool vtkVP9VolumeCodec::vtkInternal::InitializeEncoder()
 {
   if (this->ImageWidth != this->VPXEncodeConfiguration.g_w ||
-      this->ImageHeight != this->VPXEncodeConfiguration.g_h)
+    this->ImageHeight != this->VPXEncodeConfiguration.g_h)
   {
     this->EncoderInitialized = false;
   }
@@ -611,11 +611,9 @@ bool vtkVP9VolumeCodec::vtkInternal::DecodeFrame(vtkStreamingVolumeFrame* inputF
   }
 
   int numberOfComponents = inputFrame->GetNumberOfComponents();
-  //if (numberOfComponents != 1 && numberOfComponents != 3) //TODO: For now, only support colour video
-  if (numberOfComponents != 3)
+  if (numberOfComponents != 1 && numberOfComponents != 3) //TODO: For now, only support colour video
   {
-    //vtkErrorWithObjectMacro(this->External, "Number of components must be 1 or 3");
-    vtkErrorWithObjectMacro(this->External, "Number of components must be 3");
+    vtkErrorWithObjectMacro(this->External, "Number of components must be 1 or 3");
     return false;
   }
 
@@ -635,26 +633,24 @@ bool vtkVP9VolumeCodec::vtkInternal::DecodeFrame(vtkStreamingVolumeFrame* inputF
     vtkErrorWithObjectMacro(this->External, "Frame data missing!");
     return false;
   }
-  void* framePointer = frameData->GetPointer(0);
 
-  void* yuvPointer = NULL;
-  void* imagePointer = outputImageData->GetScalarPointer();
+  if (!this->YUVImage)
+  {
+    this->YUVImage = vtkSmartPointer<vtkImageData>::New();
+  }
   if (numberOfComponents == 1)
   {
-    yuvPointer = imagePointer;
+    this->YUVImage->SetDimensions(dimensions[0], dimensions[1], 1);
   }
   else if (numberOfComponents == 3)
   {
-    if (!this->YUVImage)
-    {
-      this->YUVImage = vtkSmartPointer<vtkImageData>::New();
-    }
     this->YUVImage->SetDimensions(dimensions[0], dimensions[1] * 3 / 2, 1);
-    this->YUVImage->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
-    yuvPointer = this->YUVImage->GetScalarPointer();
   }
+  this->YUVImage->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
+  void* yuvPointer = this->YUVImage->GetScalarPointer();
 
   // Convert compressed frame to YUV image
+  void* framePointer = frameData->GetPointer(0);
   unsigned int size = frameData->GetSize() * frameData->GetElementComponentSize();
   if (!vpx_codec_decode(&this->VPXDecodeContext, (unsigned char*)framePointer, (unsigned int)size, NULL, 0))
   {
@@ -664,12 +660,13 @@ bool vtkVP9VolumeCodec::vtkInternal::DecodeFrame(vtkStreamingVolumeFrame* inputF
     }
 
     this->VPXDecodeIter = NULL;
-    if ((this->VPXDecodeImage = vpx_codec_get_frame(&this->VPXDecodeContext, &this->VPXDecodeIter)) != NULL)
+    this->VPXDecodeImage = vpx_codec_get_frame(&this->VPXDecodeContext, &this->VPXDecodeIter);
+    if (this->VPXDecodeImage != NULL)
     {
       int stride[3] = { this->VPXDecodeImage->stride[0], this->VPXDecodeImage->stride[1], this->VPXDecodeImage->stride[2] };
       int convertedDimensions[2] = { this->vpx_img_plane_width(this->VPXDecodeImage, 0) *
         ((this->VPXDecodeImage->fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 2 : 1), this->vpx_img_plane_height(this->VPXDecodeImage, 0) };
-      this->ComposeByteSteam(this->VPXDecodeImage->planes, convertedDimensions, stride, (unsigned char*)yuvPointer);
+      this->ComposeByteSteam(this->VPXDecodeImage->planes, convertedDimensions, stride, (unsigned char*)yuvPointer, numberOfComponents == 1);
     }
   }
   else
@@ -682,11 +679,15 @@ bool vtkVP9VolumeCodec::vtkInternal::DecodeFrame(vtkStreamingVolumeFrame* inputF
   // Convert YUV image to RGB image
   if (saveDecodedImage)
   {
-    if (numberOfComponents == 3)
+    if (numberOfComponents == 1)
     {
+      outputImageData->DeepCopy(this->YUVImage);
+    }
+    else
+    {
+      void* imagePointer = outputImageData->GetScalarPointer();
       this->ConvertYUVToRGB((unsigned char*)yuvPointer, (unsigned char*)imagePointer, dimensions[0], dimensions[1]);
     }
-
   }
 
   return true;
@@ -695,7 +696,7 @@ bool vtkVP9VolumeCodec::vtkInternal::DecodeFrame(vtkStreamingVolumeFrame* inputF
 //---------------------------------------------------------------------------
 bool vtkVP9VolumeCodec::vtkInternal::ConvertYUVToRGB(unsigned char* yuvFrame, unsigned char* rgbFrame, int width, int height)
 {
-  int componentLength = height*width;
+  int componentLength = height * width;
   const unsigned char* srcY = yuvFrame;
   const unsigned char* srcU = yuvFrame + componentLength;
   const unsigned char* srcV = yuvFrame + componentLength * 5 / 4;
@@ -713,11 +714,11 @@ bool vtkVP9VolumeCodec::vtkInternal::ConvertYUVToRGB(unsigned char* yuvFrame, un
   {
     for (int x = 0; x < halfWidth; x++)
     {
-      dstU[2 * x + 2 * y*width] = dstU[2 * x + 1 + 2 * y*width] = srcU[x + y*width / 2];
-      dstV[2 * x + 2 * y*width] = dstV[2 * x + 1 + 2 * y*width] = srcV[x + y*width / 2];
+      dstU[2 * x + 2 * y * width] = dstU[2 * x + 1 + 2 * y * width] = srcU[x + y * width / 2];
+      dstV[2 * x + 2 * y * width] = dstV[2 * x + 1 + 2 * y * width] = srcV[x + y * width / 2];
     }
-    memcpy(&dstU[(2 * y + 1)*width], &dstU[(2 * y)*width], width);
-    memcpy(&dstV[(2 * y + 1)*width], &dstV[(2 * y)*width], width);
+    memcpy(&dstU[(2 * y + 1) * width], &dstU[(2 * y) * width], width);
+    memcpy(&dstV[(2 * y + 1) * width], &dstV[(2 * y) * width], width);
   }
 
 
@@ -731,7 +732,7 @@ bool vtkVP9VolumeCodec::vtkInternal::ConvertYUVToRGB(unsigned char* yuvFrame, un
   buMult = 517;
 
   static unsigned char clp_buf[384 + 256 + 384];
-  static unsigned char *clip_buf = clp_buf + 384;
+  static unsigned char* clip_buf = clp_buf + 384;
 
   // initialize clipping table
   memset(clp_buf, 0, 384);
@@ -812,25 +813,29 @@ bool vtkVP9VolumeCodec::vtkInternal::ConvertRGBToYUV(unsigned char* rgbFrame, un
 }
 
 //---------------------------------------------------------------------------
-void vtkVP9VolumeCodec::vtkInternal::ComposeByteSteam(unsigned char** inputData, int dimension[2], int iStride[3], unsigned char* outputFrame)
+void vtkVP9VolumeCodec::vtkInternal::ComposeByteSteam(unsigned char** inputData, int dimension[2], int iStride[3], unsigned char* outputFrame, bool grayscale)
 {
-  int plane;
   int dimensionW[3] = { dimension[0],dimension[0] / 2,dimension[0] / 2 };
   int dimensionH[3] = { dimension[1],dimension[1] / 2,dimension[1] / 2 };
   int shift = 0;
-  for (plane = 0; plane < 3; ++plane)
+  int numberOfPlanes = 3;
+  if (grayscale)
   {
-    const unsigned char *buf = inputData[plane];
+    numberOfPlanes = 1;
+  }
+  for (int plane = 0; plane < numberOfPlanes; ++plane)
+  {
+    const unsigned char* buf = inputData[plane];
     const int stride = iStride[plane];
     int w = dimensionW[plane];
     int h = dimensionH[plane];
     int y;
     for (y = 0; y < h; ++y)
     {
-      memcpy(outputFrame + shift + w*y, buf, w);
+      memcpy(outputFrame + shift + w * y, buf, w);
       buf += stride;
     }
-    shift += w*h;
+    shift += w * h;
   }
 }
 
@@ -844,13 +849,12 @@ bool vtkVP9VolumeCodec::vtkInternal::EncodeFrame(vtkImageData* inputImageData, v
   }
 
   int numberOfScalarComponents = inputImageData->GetNumberOfScalarComponents();
-  //if (numberOfScalarComponents != 1 && numberOfScalarComponents != 3)
-  if (numberOfScalarComponents != 3)
-  {
-    vtkErrorWithObjectMacro(this->External, "Number of components must be 3");
-    //vtkErrorWithObjectMacro(this->External, "Number of components must be 1 or 3");
-    return false;
-  }
+  if (numberOfScalarComponents != 1 && numberOfScalarComponents != 3)
+    if (numberOfScalarComponents != 3)
+    {
+      vtkErrorWithObjectMacro(this->External, "Number of components must be 1 or 3");
+      return false;
+    }
 
   int dimensions[3] = { 0,0,0 };
   inputImageData->GetDimensions(dimensions);
@@ -862,25 +866,24 @@ bool vtkVP9VolumeCodec::vtkInternal::EncodeFrame(vtkImageData* inputImageData, v
     return false;
   }
 
+  if (!this->YUVImage)
+  {
+    this->YUVImage = vtkSmartPointer<vtkImageData>::New();
+  }
+
   if (numberOfScalarComponents == 3)
   {
-    if (!this->YUVImage)
-    {
-      this->YUVImage = vtkSmartPointer<vtkImageData>::New();
-    }
     this->YUVImage->SetDimensions(dimensions[0], dimensions[1] * 3 / 2, 1); //TODO: ONLY VALID UNLESS GREYSCALE
     this->YUVImage->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
     unsigned char* imagePointer = (unsigned char*)inputImageData->GetScalarPointer();
     unsigned char* yuvPointer = (unsigned char*)this->YUVImage->GetScalarPointer();
     this->ConvertRGBToYUV(imagePointer, yuvPointer, this->ImageWidth, this->ImageHeight);
-    this->ConvertToLocalImageFormat(this->YUVImage);
   }
   else if (numberOfScalarComponents == 1)
   {
-    this->YUVImage->SetDimensions(dimensions[0], dimensions[1], 1); //TODO: ONLY VALID UNLESS GREYSCALE
-    this->YUVImage->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
-    this->ConvertToLocalImageFormat(inputImageData);
+    this->YUVImage->DeepCopy(inputImageData);
   }
+  this->ConvertToLocalImageFormat(this->YUVImage, numberOfScalarComponents == 1);
 
   static int timestamp = 0;
 
@@ -925,8 +928,8 @@ bool vtkVP9VolumeCodec::vtkInternal::EncodeFrame(vtkImageData* inputImageData, v
       vtkSmartPointer<vtkUnsignedCharArray> frameData = vtkSmartPointer<vtkUnsignedCharArray>::New();
       frameData->Allocate(this->VPXEncodePacket->data.frame.sz);
       memcpy(frameData->GetPointer(0),
-             this->VPXEncodePacket->data.frame.buf,
-             this->VPXEncodePacket->data.frame.sz);
+        this->VPXEncodePacket->data.frame.buf,
+        this->VPXEncodePacket->data.frame.sz);
       outputFrame->SetFrameData(frameData);
     }
   }
@@ -940,33 +943,38 @@ bool vtkVP9VolumeCodec::vtkInternal::EncodeFrame(vtkImageData* inputImageData, v
 }
 
 //---------------------------------------------------------------------------
-bool vtkVP9VolumeCodec::vtkInternal::ConvertToLocalImageFormat(vtkImageData* imageData)
+bool vtkVP9VolumeCodec::vtkInternal::ConvertToLocalImageFormat(vtkImageData* imageData, bool grayScale)
 {
   unsigned char* imagePointer = (unsigned char*)imageData->GetScalarPointer();
-  int plane;
-  for (plane = 0; plane < 3; ++plane)
+  int numberOfPlanes = 3;
+  if (grayScale)
+  {
+    numberOfPlanes = 1;
+  }
+
+  for (int plane = 0; plane < numberOfPlanes; ++plane)
   {
     if (plane == 1)
     {
-      imagePointer += (this->ImageWidth*this->ImageHeight);
+      imagePointer += (this->ImageWidth * this->ImageHeight);
     }
     else if (plane == 2)
     {
-      imagePointer += (this->ImageWidth*this->ImageHeight) >> 2;
+      imagePointer += (this->ImageWidth * this->ImageHeight) >> 2;
     }
-    unsigned char *buffer = this->VPXEncodeImage->planes[plane];
+    unsigned char* buffer = this->VPXEncodeImage->planes[plane];
     const int w = vpx_img_plane_width(this->VPXEncodeImage, plane) *
       ((this->VPXEncodeImage->fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 2 : 1);
     const int h = vpx_img_plane_height(this->VPXEncodeImage, plane);
-    memcpy(buffer, imagePointer, w*h);
+    memcpy(buffer, imagePointer, w * h);
   }
 
   return true;
 }
 
 //---------------------------------------------------------------------------
-void vtkVP9VolumeCodec::vtkInternal::error_output(vpx_codec_ctx_t *ctx, const char *s) {
-  const char *detail = vpx_codec_error_detail(ctx);
+void vtkVP9VolumeCodec::vtkInternal::error_output(vpx_codec_ctx_t* ctx, const char* s) {
+  const char* detail = vpx_codec_error_detail(ctx);
 
   printf("%s: %s\n", s, vpx_codec_error(ctx));
   if (detail)
