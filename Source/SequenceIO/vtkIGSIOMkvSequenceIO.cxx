@@ -68,14 +68,13 @@ typedef std::vector<FrameInfo> FrameInfoList;
 struct VideoTrackInfo
 {
   VideoTrackInfo() {}
-  VideoTrackInfo(std::string name, std::string encoding, std::string colourSpace, unsigned long width, unsigned long height, double frameRate, bool isGreyScale)
+  VideoTrackInfo(std::string name, std::string encoding, std::string colourSpace, unsigned long width, unsigned long height, double frameRate)
     : Name(name)
     , Encoding(encoding)
     , ColourSpace(colourSpace)
     , Width(width)
     , Height(height)
     , FrameRate(frameRate)
-    , IsGreyScale(isGreyScale)
   {}
   ~VideoTrackInfo() {}
   std::string Name;
@@ -84,7 +83,6 @@ struct VideoTrackInfo
   unsigned long Width;
   unsigned long Height;
   double FrameRate;
-  bool IsGreyScale;
 };
 typedef std::map <int, VideoTrackInfo> VideoTrackMap;
 
@@ -196,7 +194,7 @@ public:
   //--------------------------------------
   // Writing methods
   //
-  virtual int AddVideoTrack(std::string name, std::string encodingFourCC, int width, int height, std::string language = "und");
+  virtual int AddVideoTrack(std::string name, std::string encodingFourCC, int width, int height, std::string colourSpace, std::string language = "und");
   //
   virtual int AddMetadataTrack(std::string name, std::string language = "und");
   //
@@ -357,8 +355,10 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
     return IGSIO_FAIL;
   }
 
+  unsigned int numberOfComponents = 0;
   FrameSizeType frameSize = frame->GetFrameSize();
   std::string encodingFourCC = "";
+  std::string colourSpace = "";
   if (!videoFrame->IsFrameEncoded())
   {
     vtkImageData* image = videoFrame->GetImage();
@@ -367,26 +367,33 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
       LOG_ERROR("Only supported image type is unsigned char");
       return IGSIO_FAIL;
     }
-
-    int numberOfComponents = image->GetNumberOfScalarComponents();
-
-
+    encodingFourCC = VTKSEQUENCEIO_MKV_UNCOMPRESSED_CODECID;
+    numberOfComponents = image->GetNumberOfScalarComponents();
     if (numberOfComponents == 1)
     {
-      encodingFourCC = VTKSEQUENCEIO_GRAYSCALE8_FOURCC;
+      colourSpace = VTKSEQUENCEIO_GRAYSCALE8_FOURCC;
     }
     else if (numberOfComponents == 3)
     {
-      encodingFourCC = VTKSEQUENCEIO_RV24_FOURCC;
+      colourSpace = VTKSEQUENCEIO_RV24_FOURCC;
     }
     else
     {
-      LOG_ERROR("Number of components in image must be 1 or 2");
+      LOG_ERROR("Number of components in image must be 1 or 3");
     }
   }
   else
   {
     encodingFourCC = frame->GetEncodingFourCC();
+    frame->GetNumberOfScalarComponents(numberOfComponents);
+    if (numberOfComponents == 1)
+    {
+      colourSpace = VTKSEQUENCEIO_GRAYSCALE8_FOURCC;
+    }
+    else if (numberOfComponents == 3)
+    {
+      colourSpace = VTKSEQUENCEIO_RV24_FOURCC;
+    }
   }
 
   if (!this->Internal->WriteHeader())
@@ -394,7 +401,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteInitialImageHeader()
     LOG_ERROR("Could not write MKV header!");
   }
 
-  this->Internal->VideoTrackNumber = this->Internal->AddVideoTrack(trackName, encodingFourCC, frameSize[0], frameSize[1]);
+  this->Internal->VideoTrackNumber = this->Internal->AddVideoTrack(trackName, encodingFourCC, frameSize[0], frameSize[1], colourSpace, "und");
   if (this->Internal->VideoTrackNumber < 1)
   {
     LOG_ERROR("Could not create video track!");
@@ -583,7 +590,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::WriteHeader()
 }
 
 //----------------------------------------------------------------------------
-int vtkIGSIOMkvSequenceIO::vtkInternal::AddVideoTrack(std::string name, std::string encodingFourCC, int width, int height, std::string language/*="und"*/)
+int vtkIGSIOMkvSequenceIO::vtkInternal::AddVideoTrack(std::string name, std::string encodingFourCC, int width, int height, std::string colourSpace, std::string language/*="und"*/)
 {
   if (!this->MKVWriteSegment)
   {
@@ -609,11 +616,7 @@ int vtkIGSIOMkvSequenceIO::vtkInternal::AddVideoTrack(std::string name, std::str
   videoTrack->set_codec_id(codecId.c_str());
   videoTrack->set_name(name.c_str());
   videoTrack->set_language(language.c_str());
-
-  if (codecId == VTKSEQUENCEIO_MKV_UNCOMPRESSED_CODECID)
-  {
-    videoTrack->set_colour_space(encodingFourCC.c_str());
-  }
+  videoTrack->set_colour_space(colourSpace.c_str());
 
   this->MKVWriteSegment->CuesTrack(trackNumber);
 
@@ -755,8 +758,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadHeader()
       unsigned long width = videoTrack->GetWidth();
       unsigned long height = videoTrack->GetHeight();
       double frameRate = videoTrack->GetFrameRate();
-      bool isGreyScale = false;
-      VideoTrackInfo videoTrackInfo(trackName, encodingFourCC, colourSpace, width, height, frameRate, isGreyScale);
+      VideoTrackInfo videoTrackInfo(trackName, encodingFourCC, colourSpace, width, height, frameRate);
       this->VideoTracks[trackNumber] = videoTrackInfo;
       this->External->TrackedFrameList->SetFrameField("TrackName", trackName);
     }
@@ -850,9 +852,15 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadVideoData()
           trackedFrame->GetImageData()->SetImageType(US_IMG_RGB_COLOR);
           trackedFrame->SetTimestamp(timestampSeconds);
           FrameSizeType frameSize = { static_cast<unsigned int>(videoTrack->Width), static_cast<unsigned int>(videoTrack->Height), 1 };
+          int numberOfComponents = 3;
+          if (videoTrack->ColourSpace == VTKSEQUENCEIO_GRAYSCALE8_FOURCC)
+          {
+            numberOfComponents = 1;
+          }
+
           if (videoTrack->Encoding.empty())
           {
-            trackedFrame->GetImageData()->AllocateFrame(frameSize, VTK_UNSIGNED_CHAR, 3);
+            trackedFrame->GetImageData()->AllocateFrame(frameSize, VTK_UNSIGNED_CHAR, numberOfComponents);
             frame.Read(this->MKVReader, (unsigned char*)trackedFrame->GetImageData()->GetImage()->GetScalarPointer());
           }
           else
@@ -861,6 +869,7 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadVideoData()
             encodedFrame->SetFrameType(block->IsKey() ? vtkStreamingVolumeFrame::IFrame : vtkStreamingVolumeFrame::PFrame);
             encodedFrame->SetCodecFourCC(videoTrack->Encoding);
             encodedFrame->SetDimensions(videoTrack->Width, videoTrack->Height, 1);
+            encodedFrame->SetNumberOfComponents(numberOfComponents);
 
             if (!encodedFrame->IsKeyFrame())
             {
@@ -930,8 +939,6 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadMetadata()
       const int trackType = track->GetType();
       if (trackType == mkvparser::Track::kMetadata || trackType == mkvparser::Track::kSubtitle)
       {
-
-
         const int frameCount = block->GetFrameCount();
         for (int i = 0; i < frameCount; ++i)
         {
