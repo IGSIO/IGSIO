@@ -236,7 +236,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
   // Only check image related settings if dimensions are not 0 0 0
   if (this->Dimensions[0] != 0 && this->Dimensions[1] != 0 && this->Dimensions[2] != 0)
   {
-    this->ImageOrientationInFile = igsioVideoFrame::GetUsImageOrientationFromString(this->GetCustomString(SEQMETA_FIELD_US_IMG_ORIENT));
+    this->ImageOrientationInFile = igsioCommon::GetUsImageOrientationFromString(this->GetCustomString(SEQMETA_FIELD_US_IMG_ORIENT));
 
     const char* imgTypeStr = this->GetCustomString(SEQMETA_FIELD_US_IMG_TYPE);
     if (imgTypeStr == NULL)
@@ -246,7 +246,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImageHeader()
     }
     else
     {
-      this->ImageType = igsioVideoFrame::GetUsImageTypeFromString(imgTypeStr);
+      this->ImageType = igsioCommon::GetUsImageTypeFromString(imgTypeStr);
     }
 
     const char* binaryDataFieldValue = this->TrackedFrameList->GetCustomString("BinaryData");
@@ -443,8 +443,8 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImagePixels()
     igsioVideoFrame::FlipInfoType flipInfo;
     if (igsioVideoFrame::GetFlipAxes(this->ImageOrientationInFile, this->ImageType, this->ImageOrientationInMemory, flipInfo) != IGSIO_SUCCESS)
     {
-      LOG_ERROR("Failed to convert image data to the requested orientation, from " << igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInFile) <<
-                " to " << igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInMemory));
+      LOG_ERROR("Failed to convert image data to the requested orientation, from " << igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile) <<
+                " to " << igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInMemory));
       return IGSIO_FAIL;
     }
 
@@ -684,18 +684,18 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
     this->SetFrameField("ElementNumberOfChannels", igsioCommon::ToString<int>(this->NumberOfScalarComponents));
   }
 
-  this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, igsioVideoFrame::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF));
+  this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, igsioCommon::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF));
   // Image orientation
   if (this->EnableImageDataWrite)
   {
-    std::string orientationStr = igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInFile);
+    std::string orientationStr = igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile);
     this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, orientationStr);
   }
 
   // Image type
   if (this->EnableImageDataWrite)
   {
-    std::string typeStr = igsioVideoFrame::GetStringFromUsImageType(this->ImageType);
+    std::string typeStr = igsioCommon::GetStringFromUsImageType(this->ImageType);
     this->SetFrameField(SEQMETA_FIELD_US_IMG_TYPE, typeStr);
   }
 

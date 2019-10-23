@@ -275,10 +275,10 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
     }
     else
     {
-      imgOrientStr = igsioVideoFrame::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF);
+      imgOrientStr = igsioCommon::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF);
       LOG_WARNING(SEQUENCE_FIELD_US_IMG_ORIENT << " field not found in header. Defaulting to " << imgOrientStr << ".");
     }
-    this->ImageOrientationInFile = igsioVideoFrame::GetUsImageOrientationFromString(imgOrientStr.c_str());
+    this->ImageOrientationInFile = igsioCommon::GetUsImageOrientationFromString(imgOrientStr.c_str());
 
     // TODO: handle detection of image orientation in file from space/space dimensions, space origin and space directions
     // handle only orthogonal rotations
@@ -292,7 +292,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImageHeader()
     }
     else
     {
-      this->ImageType = igsioVideoFrame::GetUsImageTypeFromString(imgTypeStr);
+      this->ImageType = igsioCommon::GetUsImageTypeFromString(imgTypeStr);
     }
 
     // If no specific image orientation is requested then determine it automatically from the image type
@@ -472,8 +472,8 @@ igsioStatus vtkIGSIONrrdSequenceIO::ReadImagePixels()
     igsioVideoFrame::FlipInfoType flipInfo;
     if (igsioVideoFrame::GetFlipAxes(this->ImageOrientationInFile, this->ImageType, this->ImageOrientationInMemory, flipInfo) != IGSIO_SUCCESS)
     {
-      LOG_ERROR("Failed to convert image data to the requested orientation, from " << igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInFile) <<
-                " to " << igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInMemory));
+      LOG_ERROR("Failed to convert image data to the requested orientation, from " << igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile) <<
+                " to " << igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInMemory));
       return IGSIO_FAIL;
     }
 
@@ -762,7 +762,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   // Image orientation
   if (this->EnableImageDataWrite)
   {
-    std::string orientationStr = SEQUENCE_FIELD_US_IMG_ORIENT + ":=" + igsioVideoFrame::GetStringFromUsImageOrientation(this->ImageOrientationInFile) + "\n";
+    std::string orientationStr = SEQUENCE_FIELD_US_IMG_ORIENT + ":=" + igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile) + "\n";
     fputs(orientationStr.c_str(), stream);
     this->TotalBytesWritten += orientationStr.length();
   }
@@ -770,7 +770,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   // Image type
   if (this->EnableImageDataWrite)
   {
-    std::string orientationStr = SEQUENCE_FIELD_US_IMG_TYPE + ":=" + igsioVideoFrame::GetStringFromUsImageType(this->ImageType) + "\n";
+    std::string orientationStr = SEQUENCE_FIELD_US_IMG_TYPE + ":=" + igsioCommon::GetStringFromUsImageType(this->ImageType) + "\n";
     fputs(orientationStr.c_str(), stream);
     this->TotalBytesWritten += orientationStr.length();
   }

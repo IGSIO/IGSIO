@@ -415,6 +415,58 @@ virtual void Set##name (type _arg) \
 class vtkIGSIOTrackedFrameList;
 class vtkXMLDataElement;
 
+/*!
+\enum US_IMAGE_ORIENTATION
+\brief Defines constant values for ultrasound image orientation
+The ultrasound image axes are defined as follows:
+\li x axis: points towards the x coordinate increase direction
+\li y axis: points towards the y coordinate increase direction
+\li z axis: points towards the z coordinate increase direction
+The image orientation can be defined by specifying which transducer axis corresponds to the x, y and z image axes, respectively.
+\ingroup igsioCommon
+*/
+enum US_IMAGE_ORIENTATION
+{
+  US_IMG_ORIENT_XX,  /*!< undefined */
+  US_IMG_ORIENT_UF, /*!< image x axis = unmarked transducer axis, image y axis = far transducer axis */
+  US_IMG_ORIENT_UFD = US_IMG_ORIENT_UF, /*!< image x axis = unmarked transducer axis, image y axis = far transducer axis, image z axis = descending transducer axis */
+  US_IMG_ORIENT_UFA, /*!< image x axis = unmarked transducer axis, image y axis = far transducer axis, image z axis = ascending transducer axis */
+  US_IMG_ORIENT_UN, /*!< image x axis = unmarked transducer axis, image y axis = near transducer axis */
+  US_IMG_ORIENT_UNA = US_IMG_ORIENT_UN, /*!< image x axis = unmarked transducer axis, image y axis = near transducer axis, image z axis = ascending transducer axis */
+  US_IMG_ORIENT_UND, /*!< image x axis = unmarked transducer axis, image y axis = near transducer axis, image z axis = descending transducer axis */
+  US_IMG_ORIENT_MF, /*!< image x axis = marked transducer axis, image y axis = far transducer axis */
+  US_IMG_ORIENT_MFA = US_IMG_ORIENT_MF, /*!< image x axis = marked transducer axis, image y axis = far transducer axis, image z axis = ascending transducer axis */
+  US_IMG_ORIENT_MFD, /*!< image x axis = marked transducer axis, image y axis = far transducer axis, image z axis = descending transducer axis */
+  US_IMG_ORIENT_AMF,
+  US_IMG_ORIENT_MN, /*!< image x axis = marked transducer axis, image y axis = near transducer axis */
+  US_IMG_ORIENT_MND = US_IMG_ORIENT_MN, /*!< image x axis = marked transducer axis, image y axis = near transducer axis, image z axis = descending transducer axis */
+  US_IMG_ORIENT_MNA, /*!< image x axis = marked transducer axis, image y axis = near transducer axis, image z axis = ascending transducer axis */
+  US_IMG_ORIENT_FU, /*!< image x axis = far transducer axis, image y axis = unmarked transducer axis (usually for RF frames)*/
+  US_IMG_ORIENT_NU, /*!< image x axis = near transducer axis, image y axis = unmarked transducer axis (usually for RF frames)*/
+  US_IMG_ORIENT_FM, /*!< image x axis = far transducer axis, image y axis = marked transducer axis (usually for RF frames)*/
+  US_IMG_ORIENT_NM, /*!< image x axis = near transducer axis, image y axis = marked transducer axis (usually for RF frames)*/
+  US_IMG_ORIENT_AUF,
+  US_IMG_ORIENT_AMN,
+  US_IMG_ORIENT_AUN,
+  US_IMG_ORIENT_LAST   /*!< just a placeholder for range checking, this must be the last defined orientation item */
+};
+
+/*!
+\enum US_IMAGE_TYPE
+\brief Defines constant values for ultrasound image type
+\ingroup igsioCommon
+*/
+enum US_IMAGE_TYPE
+{
+  US_IMG_TYPE_XX,    /*!< undefined */
+  US_IMG_BRIGHTNESS, /*!< B-mode image */
+  US_IMG_RF_REAL,    /*!< RF-mode image, signal is stored as a series of real values */
+  US_IMG_RF_IQ_LINE, /*!< RF-mode image, signal is stored as a series of I and Q samples in a line (I1, Q1, I2, Q2, ...) */
+  US_IMG_RF_I_LINE_Q_LINE, /*!< RF-mode image, signal is stored as a series of I samples in a line, then Q samples in the next line (I1, I2, ..., Q1, Q2, ...) */
+  US_IMG_RGB_COLOR, /*!< RGB24 color image */
+  US_IMG_TYPE_LAST   /*!< just a placeholder for range checking, this must be the last defined image type */
+};
+
 namespace igsioCommon
 {
   typedef int VTKScalarPixelType;
@@ -537,6 +589,16 @@ namespace igsioCommon
     ALPHA_BEHAVIOR_SOURCE,
     ALPHA_BEHAVIOR_OPAQUE
   };
+
+  //----------------------------------------------------------------------------
+
+  VTKIGSIOCOMMON_EXPORT US_IMAGE_ORIENTATION HorizontalFlip(US_IMAGE_ORIENTATION input);
+  VTKIGSIOCOMMON_EXPORT US_IMAGE_ORIENTATION VerticalFlip(US_IMAGE_ORIENTATION input);
+
+  VTKIGSIOCOMMON_EXPORT US_IMAGE_ORIENTATION GetUsImageOrientationFromString(const std::string& imgOrientationStr);
+  VTKIGSIOCOMMON_EXPORT std::string GetStringFromUsImageOrientation(US_IMAGE_ORIENTATION imgOrientation);
+  VTKIGSIOCOMMON_EXPORT US_IMAGE_TYPE GetUsImageTypeFromString(const std::string& imgTypeStr);
+  VTKIGSIOCOMMON_EXPORT std::string GetStringFromUsImageType(US_IMAGE_TYPE imgType);
 
   //----------------------------------------------------------------------------
   VTKIGSIOCOMMON_EXPORT igsioStatus DrawLine(vtkImageData& imageData,

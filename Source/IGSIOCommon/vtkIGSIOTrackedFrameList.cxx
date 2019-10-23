@@ -947,17 +947,17 @@ igsioStatus vtkIGSIOTrackedFrameList::VerifyProperties(vtkIGSIOTrackedFrameList*
   if (trackedFrameList->GetImageOrientation() != expectedOrientation)
   {
     LOG_ERROR("vtkIGSIOTrackedFrameList::VerifyProperties failed: expected image orientation is "
-              << igsioVideoFrame::GetStringFromUsImageOrientation(expectedOrientation)
+              << igsioCommon::GetStringFromUsImageOrientation(expectedOrientation)
               << ", actual orientation is "
-              << igsioVideoFrame::GetStringFromUsImageOrientation(trackedFrameList->GetImageOrientation()));
+              << igsioCommon::GetStringFromUsImageOrientation(trackedFrameList->GetImageOrientation()));
     return IGSIO_FAIL;
   }
   if (trackedFrameList->GetImageType() != expectedType)
   {
     LOG_ERROR("vtkIGSIOTrackedFrameList::VerifyProperties failed: expected image type is "
-              << igsioVideoFrame::GetStringFromUsImageType(expectedType)
+              << igsioCommon::GetStringFromUsImageType(expectedType)
               << ", actual type is "
-              << igsioVideoFrame::GetStringFromUsImageType(trackedFrameList->GetImageType()));
+              << igsioCommon::GetStringFromUsImageType(trackedFrameList->GetImageType()));
     return IGSIO_FAIL;
   }
 

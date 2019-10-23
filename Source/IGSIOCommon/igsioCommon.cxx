@@ -580,6 +580,281 @@ VTKIGSIOCOMMON_EXPORT std::vector<std::string> igsioCommon::SplitStringIntoToken
 }
 
 //----------------------------------------------------------------------------
+VTKIGSIOCOMMON_EXPORT US_IMAGE_ORIENTATION igsioCommon::HorizontalFlip(US_IMAGE_ORIENTATION input)
+{
+  switch (input)
+  {
+    case US_IMG_ORIENT_XX:
+      return US_IMG_ORIENT_XX;
+    case US_IMG_ORIENT_UF:
+      return US_IMG_ORIENT_MF;
+    case US_IMG_ORIENT_UFA:
+      return US_IMG_ORIENT_MFA;
+    case US_IMG_ORIENT_UN:
+      return US_IMG_ORIENT_MN;
+    case US_IMG_ORIENT_UND:
+      return US_IMG_ORIENT_MND;
+    case US_IMG_ORIENT_MF:
+      return US_IMG_ORIENT_UF;
+    case US_IMG_ORIENT_MFD:
+      return US_IMG_ORIENT_UFD;
+    case US_IMG_ORIENT_AMF:
+      return US_IMG_ORIENT_AUF;
+    case US_IMG_ORIENT_MN:
+      return US_IMG_ORIENT_UN;
+    case US_IMG_ORIENT_MNA:
+      return US_IMG_ORIENT_UNA;
+    case US_IMG_ORIENT_FU:
+      return US_IMG_ORIENT_FM;
+    case US_IMG_ORIENT_NU:
+      return US_IMG_ORIENT_NM;
+    case US_IMG_ORIENT_FM:
+      return US_IMG_ORIENT_FU;
+    case US_IMG_ORIENT_NM:
+      return US_IMG_ORIENT_NU;
+    case US_IMG_ORIENT_AUF:
+      return US_IMG_ORIENT_AMF;
+    case US_IMG_ORIENT_AUN:
+      return US_IMG_ORIENT_AMN;
+    case US_IMG_ORIENT_AMN:
+      return US_IMG_ORIENT_AUN;
+  }
+
+  return US_IMG_ORIENT_XX;
+}
+
+//----------------------------------------------------------------------------
+VTKIGSIOCOMMON_EXPORT US_IMAGE_ORIENTATION igsioCommon::VerticalFlip(US_IMAGE_ORIENTATION input)
+{
+  switch (input)
+  {
+    case US_IMG_ORIENT_XX:
+      return US_IMG_ORIENT_XX;
+    case US_IMG_ORIENT_UF:
+      return US_IMG_ORIENT_UN;
+    case US_IMG_ORIENT_UFA:
+      return US_IMG_ORIENT_UNA;
+    case US_IMG_ORIENT_UN:
+      return US_IMG_ORIENT_UF;
+    case US_IMG_ORIENT_UND:
+      return US_IMG_ORIENT_UFD;
+    case US_IMG_ORIENT_MF:
+      return US_IMG_ORIENT_MN;
+    case US_IMG_ORIENT_MFD:
+      return US_IMG_ORIENT_MND;
+    case US_IMG_ORIENT_AMF:
+      return US_IMG_ORIENT_AMN;
+    case US_IMG_ORIENT_MN:
+      return US_IMG_ORIENT_MF;
+    case US_IMG_ORIENT_MNA:
+      return US_IMG_ORIENT_MFA;
+    case US_IMG_ORIENT_FU:
+      return US_IMG_ORIENT_NU;
+    case US_IMG_ORIENT_NU:
+      return US_IMG_ORIENT_FU;
+    case US_IMG_ORIENT_FM:
+      return US_IMG_ORIENT_NM;
+    case US_IMG_ORIENT_NM:
+      return US_IMG_ORIENT_FM;
+    case US_IMG_ORIENT_AUF:
+      return US_IMG_ORIENT_AUN;
+    case US_IMG_ORIENT_AMN:
+      return US_IMG_ORIENT_AMF;
+    case US_IMG_ORIENT_AUN:
+      return US_IMG_ORIENT_AUF;
+  }
+
+  return US_IMG_ORIENT_XX;
+}
+
+//----------------------------------------------------------------------------
+US_IMAGE_ORIENTATION igsioCommon::GetUsImageOrientationFromString(const std::string& imgOrientationStr)
+{
+  std::string imgOrientation = imgOrientationStr;
+  US_IMAGE_ORIENTATION orient = US_IMG_ORIENT_XX;
+  if (imgOrientation.find("US_IMG_ORIENT_") != std::string::npos)
+  {
+    imgOrientation.erase(imgOrientation.find("US_IMG_ORIENT_"), std::string("US_IMG_ORIENT_").length());
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UF"))
+  {
+    orient = US_IMG_ORIENT_UF;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UN"))
+  {
+    orient = US_IMG_ORIENT_UN;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MF"))
+  {
+    orient = US_IMG_ORIENT_MF;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MN"))
+  {
+    orient = US_IMG_ORIENT_MN;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UFA"))
+  {
+    orient = US_IMG_ORIENT_UFA;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UNA"))
+  {
+    orient = US_IMG_ORIENT_UNA;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MFA"))
+  {
+    orient = US_IMG_ORIENT_MFA;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MNA"))
+  {
+    orient = US_IMG_ORIENT_MNA;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UFD"))
+  {
+    orient = US_IMG_ORIENT_UFD;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "UND"))
+  {
+    orient = US_IMG_ORIENT_UND;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MFD"))
+  {
+    orient = US_IMG_ORIENT_MFD;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "MND"))
+  {
+    orient = US_IMG_ORIENT_MND;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "FU"))
+  {
+    orient = US_IMG_ORIENT_FU;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "NU"))
+  {
+    orient = US_IMG_ORIENT_NU;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "FM"))
+  {
+    orient = US_IMG_ORIENT_FM;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "NM"))
+  {
+    orient = US_IMG_ORIENT_NM;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "AMF"))
+  {
+    orient = US_IMG_ORIENT_AMF;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "AUF"))
+  {
+    orient = US_IMG_ORIENT_AUF;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "AMN"))
+  {
+    orient = US_IMG_ORIENT_AMN;
+  }
+  else if (igsioCommon::IsEqualInsensitive(imgOrientation, "AUN"))
+  {
+    orient = US_IMG_ORIENT_AUN;
+  }
+
+  return orient;
+}
+
+//----------------------------------------------------------------------------
+std::string igsioCommon::GetStringFromUsImageOrientation(US_IMAGE_ORIENTATION imgOrientation)
+{
+  switch (imgOrientation)
+  {
+    case US_IMG_ORIENT_FM:
+      return "FM";
+    case US_IMG_ORIENT_NM:
+      return "NM";
+    case US_IMG_ORIENT_FU:
+      return "FU";
+    case US_IMG_ORIENT_NU:
+      return "NU";
+    case US_IMG_ORIENT_UFA:
+      return "UFA";
+    case US_IMG_ORIENT_UNA:
+      return "UNA";
+    case US_IMG_ORIENT_MFA:
+      return "MFA";
+    case US_IMG_ORIENT_MNA:
+      return "MNA";
+    case US_IMG_ORIENT_UFD:
+      return "UFD";
+    case US_IMG_ORIENT_UND:
+      return "UND";
+    case US_IMG_ORIENT_MFD:
+      return "MFD";
+    case US_IMG_ORIENT_MND:
+      return "MND";
+    case US_IMG_ORIENT_AMF:
+      return "AMF";
+    case US_IMG_ORIENT_AUF:
+      return "AUF";
+    case US_IMG_ORIENT_AMN:
+      return "AMN";
+    case US_IMG_ORIENT_AUN:
+      return "AUN";
+    default:
+      return "XX";
+  }
+}
+
+//----------------------------------------------------------------------------
+US_IMAGE_TYPE igsioCommon::GetUsImageTypeFromString(const std::string& imgType)
+{
+  std::string _imgType = imgType;
+  if (_imgType.find("US_IMG_") != std::string::npos)
+  {
+    _imgType.erase(_imgType.find("US_IMG_"), std::string("US_IMG_").length());
+  }
+  US_IMAGE_TYPE type = US_IMG_TYPE_XX;
+  if (igsioCommon::IsEqualInsensitive(_imgType, "BRIGHTNESS"))
+  {
+    type = US_IMG_BRIGHTNESS;
+  }
+  else if (igsioCommon::IsEqualInsensitive(_imgType, "RF_REAL"))
+  {
+    type = US_IMG_RF_REAL;
+  }
+  else if (igsioCommon::IsEqualInsensitive(_imgType, "RF_IQ_LINE"))
+  {
+    type = US_IMG_RF_IQ_LINE;
+  }
+  else if (igsioCommon::IsEqualInsensitive(_imgType, "RF_I_LINE_Q_LINE"))
+  {
+    type = US_IMG_RF_I_LINE_Q_LINE;
+  }
+  else if (igsioCommon::IsEqualInsensitive(_imgType, "RGB_COLOR"))
+  {
+    type = US_IMG_RGB_COLOR;
+  }
+  return type;
+}
+
+//----------------------------------------------------------------------------
+std::string igsioCommon::GetStringFromUsImageType(US_IMAGE_TYPE imgType)
+{
+  switch (imgType)
+  {
+    case US_IMG_BRIGHTNESS:
+      return "BRIGHTNESS";
+    case US_IMG_RF_REAL:
+      return "RF_REAL";
+    case US_IMG_RF_IQ_LINE:
+      return "RF_IQ_LINE";
+    case US_IMG_RF_I_LINE_Q_LINE:
+      return "RF_I_LINE_Q_LINE";
+    case US_IMG_RGB_COLOR:
+      return "RGB_COLOR";
+    default:
+      return "XX";
+  }
+}
+
+//----------------------------------------------------------------------------
 igsioStatus igsioCommon::DrawLine(vtkImageData& imageData, const std::array<float, 3>& colour, LINE_STYLE style,
                                   const std::array<int, 3>& startPixel, const std::array<int, 3>& endPixel,
                                   unsigned int numberOfPoints, ALPHA_BEHAVIOR alphaBehavior /*= ALPHA_BEHAVIOR_OPAQUE */)
