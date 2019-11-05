@@ -635,7 +635,7 @@ int vtkIGSIOMkvSequenceIO::vtkInternal::AddMetadataTrack(std::string name, std::
   if (!track)
   {
     LOG_ERROR("Could not create metadata track!");
-    return false;
+    return -1;
   }
 
   track->set_name(name.c_str());
