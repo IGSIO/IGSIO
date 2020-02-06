@@ -122,6 +122,8 @@ ELSE()
   SET(IGSIO_ZLIB_INCLUDE_DIR "")
 ENDIF()
 
+FIND_PACKAGE(OpenCL REQUIRED)
+
 #-----------------------------------------------------------------------------
 # Run superbuild script instead of library script
 IF (${CMAKE_VERSION} VERSION_GREATER 3.4)
