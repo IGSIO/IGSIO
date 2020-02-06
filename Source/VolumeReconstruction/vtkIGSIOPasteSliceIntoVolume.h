@@ -84,7 +84,8 @@ public:
   {
     NO_OPTIMIZATION,
     PARTIAL_OPTIMIZATION,
-    FULL_OPTIMIZATION
+    FULL_OPTIMIZATION,
+    GPU_ACCELERATION_OPENCL
   };
 
   enum CompoundingType

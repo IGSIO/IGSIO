@@ -55,6 +55,7 @@ POSSIBILITY OF SUCH DAMAGES.
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperUnoptimized.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOptimized.h"
+#include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
 
 vtkStandardNewMacro( vtkIGSIOPasteSliceIntoVolume );
 
@@ -622,6 +623,45 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
         LOG_ERROR( "OptimizedInsertSlice: Unknown input ScalarType" );
       }
     }
+    else if (str->Optimization == GPU_ACCELERATION_OPENCL)
+    {
+      // GPU acceleration using OpenCL
+      switch (inData->GetScalarType())
+      {
+      case VTK_SHORT:
+        vtkOpenCLInsertSlice<double, short>(&insertionParams);
+        break;
+      case VTK_UNSIGNED_SHORT:
+        vtkOpenCLInsertSlice<double, unsigned short>(&insertionParams);
+        break;
+      case VTK_CHAR:
+        vtkOpenCLInsertSlice<double, char>(&insertionParams);
+        break;
+      case VTK_UNSIGNED_CHAR:
+        vtkOpenCLInsertSlice<double, unsigned char>(&insertionParams);
+        break;
+      case VTK_FLOAT:
+        vtkOpenCLInsertSlice<double, float>(&insertionParams);
+        break;
+      case VTK_DOUBLE:
+        vtkOpenCLInsertSlice<double, double>(&insertionParams);
+        break;
+      case VTK_INT:
+        vtkOpenCLInsertSlice<double, int>(&insertionParams);
+        break;
+      case VTK_UNSIGNED_INT:
+        vtkOpenCLInsertSlice<double, unsigned int>(&insertionParams);
+        break;
+      case VTK_LONG:
+        vtkOpenCLInsertSlice<double, long>(&insertionParams);
+        break;
+      case VTK_UNSIGNED_LONG:
+        vtkOpenCLInsertSlice<double, unsigned long>(&insertionParams);
+        break;
+      default:
+        LOG_ERROR("UnoptimizedInsertSlice: Unknown input ScalarType");
+      }
+    }
     else
     {
       // no optimization
@@ -818,6 +858,8 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString( Optimizat
 {
   switch ( type )
   {
+  case GPU_ACCELERATION_OPENCL:
+    return "OPENCL";
   case FULL_OPTIMIZATION:
     return "FULL";
   case PARTIAL_OPTIMIZATION:
