@@ -318,18 +318,26 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  region[i] = (inExt[2 * i + 1] - inExt[2 * i]) * sizeof(T);
   }
 
-  context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, origin, origin, region,
+  cl_int err = CL_SUCCESS;
+
+  err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, origin, origin, region,
 	  (inExt[1] - inExt[0]) * sizeof(T), (inExt[1] - inExt[0]) * (inExt[3] - inExt[2]) * sizeof(T),
 	  inIncY * sizeof(T), inIncZ * sizeof(T), inPtr);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Write input slice buffer: " << err);
+  }
 
   cl::size_t<3> out_region;
   for (int i = 0; i < 3; ++i) {
 	  region[i] = (outExt[2 * i + 1] - outExt[2 * i]) * sizeof(T);
   }
 
-  context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, origin, origin, out_region,
+  err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, origin, origin, out_region,
 	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
 	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Write output volume buffer: " << err);
+  }
 
 
   cl::NDRange slice_range(inExt[1] - inExt[0], inExt[3] - inExt[2], inExt[5] - inExt[4]);
@@ -347,92 +355,18 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  args.matrix[i] = matrix[i];
   }
   paste_slice_kernel.setArg(2, args);
-  context->Queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
+  err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Launch OpenCL kernel: " << err);
+  }
+
 
   // Wait for the execution to finish by issuing a BLOCKING read of the output buffer
-  context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, origin, origin, out_region,
+  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, origin, origin, out_region,
 	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
 	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
-
-  return;
-
-  // Loop through  slice pixels in the input extent and put them into the output volume
-  // the resulting point in the output volume (outPoint) from a point in the input slice
-  // (inpoint)
-  double outPoint[4];
-  double inPoint[4]; 
-  inPoint[3] = 1;
-  bool fanClippingEnabled = (fanLinePixelRatioLeft != 0 || fanLinePixelRatioRight != 0);
-  for (int idZ = inExt[4]; idZ <= inExt[5]; idZ++, inPtr += inIncZ, importancePtr += impIncZ)
-  {
-    for (int idY = inExt[2]; idY <= inExt[3]; idY++, inPtr += inIncY, importancePtr += impIncY)
-    {
-      for (int idX = inExt[0]; idX <= inExt[1]; idX++, inPtr += numscalars, importancePtr += 1)
-      {
-        // check if we are within the current clip extent
-        if (idX < clipExt[0] || idX > clipExt[1] || idY < clipExt[2] || idY > clipExt[3])
-        {
-          // outside the clipping rectangle
-          continue;
-        }
-
-        if (pixelRejectionEnabled)
-        {
-          double inPixelSumAllComponents = 0;
-          for (int i = numscalars-1; i>=0; i--)
-          {
-            inPixelSumAllComponents+=inPtr[i];
-          }
-          if (inPixelSumAllComponents<pixelRejectionThresholdSumAllComponents)
-          {
-            // too dark, skip this pixel
-            continue;
-          }
-        }        
-
-        // check if we are within the clipping fan
-        if ( fanClippingEnabled )
-        {
-          // x and y are the current pixel coordinates in fan coordinate system (in pixels)
-          double x = (idX-fanOriginInPixels[0]);
-          double y = (idY-fanOriginInPixels[1]);
-          if (y<0 || (x/y<fanLinePixelRatioLeft) || (x/y>fanLinePixelRatioRight))
-          {
-            // outside the fan triangle
-            continue;
-          }
-          double squaredDistanceFromFanOrigin = x*x*inSpacingSquare[0]+y*y*inSpacingSquare[1];
-          if (squaredDistanceFromFanOrigin<squaredFanRadiusStart || squaredDistanceFromFanOrigin>squaredFanRadiusStop)
-          {
-            // too close or too far from the fan origin
-            continue;
-          }
-        }
-
-        inPoint[0] = idX;
-        inPoint[1] = idY;
-        inPoint[2] = idZ;
-
-        // matrix multiplication - input -> output
-        for (int i = 0; i < 4; i++)
-        {
-          int rowindex = i << 2;
-          outPoint[i] = matrix[rowindex  ] * inPoint[0] + 
-                        matrix[rowindex+1] * inPoint[1] + 
-                        matrix[rowindex+2] * inPoint[2] + 
-                        matrix[rowindex+3] * inPoint[3] ;
-        }
-
-        // deal with w (homogeneous transform) if the transform was a perspective transform
-        outPoint[0] /= outPoint[3]; 
-        outPoint[1] /= outPoint[3]; 
-        outPoint[2] /= outPoint[3];
-        outPoint[3] = 1;
-
-        // interpolation functions return 1 if the interpolation was successful, 0 otherwise
-        interpolate(outPoint, inPtr, outPtr, accPtr, importancePtr, numscalars, compoundingMode, outExt, outInc, accOverflowCount);
-      }
-    }
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Read output volume buffer: " << err);
   }
 }
 
