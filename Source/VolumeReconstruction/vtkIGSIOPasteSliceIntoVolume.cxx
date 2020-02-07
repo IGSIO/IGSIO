@@ -57,6 +57,8 @@ POSSIBILITY OF SUCH DAMAGES.
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOptimized.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
 
+#include <chrono>
+
 vtkStandardNewMacro( vtkIGSIOPasteSliceIntoVolume );
 
 struct InsertSliceThreadFunctionInfoStruct
@@ -78,6 +80,7 @@ struct InsertSliceThreadFunctionInfoStruct
   double FanRadiusStart;
   double FanRadiusStop;
   std::vector<unsigned int> AccumulationBufferSaturationErrors;
+  vtkOpenCLContext** OpenCLContext;
 };
 
 //----------------------------------------------------------------------------
@@ -132,6 +135,8 @@ vtkIGSIOPasteSliceIntoVolume::vtkIGSIOPasteSliceIntoVolume()
   // deprecated reconstruction options
   this->Compounding = -1;
   this->Calculation = UNDEFINED_CALCULATION;
+
+  this->OpenCLContext = NULL;
 
   SetPixelRejectionDisabled();
 }
@@ -356,6 +361,7 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
   {
     str.AccumulationBufferSaturationErrors.push_back( 0 );
   }
+  str.OpenCLContext = &this->OpenCLContext;
 
   this->Threader->SetSingleMethod( InsertSliceThreadFunction, &str );
   this->Threader->SingleMethodExecute();
@@ -512,6 +518,8 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
   insertionParams.pixelRejectionThreshold = str->PixelRejectionThreshold;
   // the matrix will be set once we know more about the optimization level
 
+  auto start_time = std::chrono::steady_clock::now();
+
   if ( str->Optimization == FULL_OPTIMIZATION )
   {
     // use fixed-point math
@@ -629,34 +637,34 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
       switch (inData->GetScalarType())
       {
       case VTK_SHORT:
-        vtkOpenCLInsertSlice<double, short>(&insertionParams);
+        vtkOpenCLInsertSlice<double, short>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_UNSIGNED_SHORT:
-        vtkOpenCLInsertSlice<double, unsigned short>(&insertionParams);
+        vtkOpenCLInsertSlice<double, unsigned short>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_CHAR:
-        vtkOpenCLInsertSlice<double, char>(&insertionParams);
+        vtkOpenCLInsertSlice<double, char>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_UNSIGNED_CHAR:
-        vtkOpenCLInsertSlice<double, unsigned char>(&insertionParams);
+        vtkOpenCLInsertSlice<double, unsigned char>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_FLOAT:
-        vtkOpenCLInsertSlice<double, float>(&insertionParams);
+        vtkOpenCLInsertSlice<double, float>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_DOUBLE:
-        vtkOpenCLInsertSlice<double, double>(&insertionParams);
+        vtkOpenCLInsertSlice<double, double>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_INT:
-        vtkOpenCLInsertSlice<double, int>(&insertionParams);
+        vtkOpenCLInsertSlice<double, int>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_UNSIGNED_INT:
-        vtkOpenCLInsertSlice<double, unsigned int>(&insertionParams);
+        vtkOpenCLInsertSlice<double, unsigned int>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_LONG:
-        vtkOpenCLInsertSlice<double, long>(&insertionParams);
+        vtkOpenCLInsertSlice<double, long>(&insertionParams, str->OpenCLContext);
         break;
       case VTK_UNSIGNED_LONG:
-        vtkOpenCLInsertSlice<double, unsigned long>(&insertionParams);
+        vtkOpenCLInsertSlice<double, unsigned long>(&insertionParams, str->OpenCLContext);
         break;
       default:
         LOG_ERROR("UnoptimizedInsertSlice: Unknown input ScalarType");
@@ -702,6 +710,10 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
       }
     }
   }
+
+  auto end_time = std::chrono::steady_clock::now();
+
+  LOG_ERROR("Inserted Slice: " << vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString(str->Optimization) << ", " << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << " us" << std::endl);
 
   return VTK_THREAD_RETURN_VALUE;
 }

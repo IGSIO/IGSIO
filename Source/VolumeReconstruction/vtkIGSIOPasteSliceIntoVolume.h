@@ -49,6 +49,7 @@ class vtkXMLDataElement;
 class vtkMultiThreader;
 class vtkImageData;
 class vtkMatrix4x4;
+class vtkOpenCLContext;
 
 // IGSIOCommon includes
 #include "igsioCommon.h"
@@ -265,7 +266,7 @@ public:
   /*! Get the current optimization method */
   vtkGetMacro(Optimization,OptimizationType);
   /*! Get the name of an optimization method from a type id */
-  const char* GetOptimizationModeAsString(OptimizationType type);
+  static const char* GetOptimizationModeAsString(OptimizationType type);
 
   /*!
     Set the interpolation mode
@@ -376,6 +377,8 @@ protected:
   int NumberOfThreads;
   
   double PixelRejectionThreshold;
+
+  vtkOpenCLContext *OpenCLContext;
   
 private:
   vtkIGSIOPasteSliceIntoVolume(const vtkIGSIOPasteSliceIntoVolume&);

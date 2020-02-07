@@ -57,6 +57,132 @@ POSSIBILITY OF SUCH DAMAGES.
 
 #include <CL/cl.hpp>
 
+#include <mutex>
+
+struct PasteSliceArgs {
+	cl_int numscalars;
+	cl_int inIncX;
+	cl_int inIncY;
+	cl_int inIncZ;
+	cl_int outExt[6];
+	cl_int outInc[3];
+	cl_float matrix[16];
+};
+
+/*!
+  Stores the OpenCL resources that do not change between slices.
+
+  This class is only used internally inside IGSIO, so it does not have to be exported.
+*/
+class vtkOpenCLContext
+{
+public:
+	vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_size);
+	~vtkOpenCLContext();
+
+public:
+	cl::Device Device;
+	cl::Context Context;
+	cl::Buffer SliceBuffer;
+	cl::Buffer VolumeBuffer;
+	cl::Program Program;
+	cl::CommandQueue Queue;
+};
+
+vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_size)
+{
+	// OpenCL initialization
+	std::vector<cl::Platform> all_platforms;
+	cl::Platform::get(&all_platforms);
+
+	std::vector<cl::Device> all_devices;
+	for (const auto& platform : all_platforms) {
+		std::vector<cl::Device> platform_devices;
+		platform.getDevices(CL_DEVICE_TYPE_GPU, &platform_devices);
+		all_devices.insert(all_devices.end(), platform_devices.begin(), platform_devices.end());
+	}
+
+	this->Device = all_devices[0];
+
+	LOG_ERROR("Using OpenCL platform device " << this->Device.getInfo<CL_DEVICE_NAME>());
+
+	this->Context = cl::Context({ this->Device });
+
+	cl::Program::Sources sources;
+
+	std::string kernel_source =
+		"struct PasteSliceArgs {\n"
+		"	int numscalars;\n"
+		" int inIncX;\n"
+		" int inIncY;\n"
+		" int inIncZ;\n"
+		" int outExt[6];\n"
+		" int outInc[3];\n"
+		" float matrix[16];\n"
+		"};\n"
+		"\n"
+		"kernel void paste_slice(const global float* Slice, global float* Volume, struct PasteSliceArgs args)\n"
+		"{\n"
+		"    size_t idX = get_global_id(0);\n"
+		"    size_t idY = get_global_id(1);\n"
+		"    size_t idZ = get_global_id(2);\n"
+		"    const global float* inPtr = Slice + args.numscalars * (idZ * args.inIncZ + idY * args.inIncY + idX * args.inIncX);\n"
+		"    // matrix multiplication - input -> output\n"
+		"    float inPoint[4] = {idX, idY, idZ, 1.0};\n"
+		"    float outPoint[4];"
+		"    for (int i = 0; i < 4; i++) {\n"
+		"        int rowindex = i << 2;\n"
+		"        outPoint[i] = args.matrix[rowindex] * inPoint[0] + \n"
+		"		   args.matrix[rowindex + 1] * inPoint[1] +\n"
+		"        args.matrix[rowindex + 2] * inPoint[2] +\n"
+		"        args.matrix[rowindex + 3] * inPoint[3];\n"
+		"    }\n"
+
+		"    // deal with w (homogeneous transform) if the transform was a perspective transform\n"
+		"    outPoint[0] /= outPoint[3];\n"
+		"    outPoint[1] /= outPoint[3];\n"
+		"    outPoint[2] /= outPoint[3];\n"
+		"    outPoint[3] = 1;\n"
+		"    \n"
+		"    // The nearest neighbor interpolation occurs here\n"
+		"    // The output point is the closest point to the input point - rounding\n"
+		"    // to get closest point\n"
+		"    int outIdX = round(outPoint[0]) - args.outExt[0];\n"
+		"    int outIdY = round(outPoint[1]) - args.outExt[2];\n"
+		"    int outIdZ = round(outPoint[2]) - args.outExt[4];\n"
+
+		"    // fancy way of checking bounds\n"
+		"    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
+		"    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
+		"    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
+		"        global float* outPtr = Volume + args.numscalars * (outIdX * args.outInc[0] + outIdY * args.outInc[1] + outIdZ * args.outInc[2]);\n"
+		"        for (int i = 0; i < args.numscalars; i++) {\n"
+		"            if (*inPtr > *outPtr) {\n"
+		"                *outPtr = *inPtr;\n"
+		"            }\n"
+		"        }\n"
+		"    }\n"
+		"}\n";
+
+	sources.push_back({ kernel_source.c_str(), kernel_source.length() });
+
+	cl::Program program(this->Context, sources);
+	if (program.build({ this->Device }) != CL_SUCCESS) {
+		LOG_ERROR(" Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(this->Device));
+	}
+	else {
+		LOG_ERROR(" Success building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(this->Device));
+		this->Program = program;
+	}
+
+	this->SliceBuffer = cl::Buffer(this->Context, CL_MEM_READ_ONLY, scalar_size * (inExt[5] - inExt[4]) * (inExt[3] - inExt[2]) * (inExt[1] - inExt[0]));
+	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, scalar_size * (outExt[5] - outExt[4]) * (outExt[3] - outExt[2]) * (outExt[1] - outExt[0]));
+
+	this->Queue = cl::CommandQueue(this->Context, this->Device);
+}
+
+
+
 //----------------------------------------------------------------------------
 /*!
   Actually inserts the slice - executes the filter for any type of data, without optimization
@@ -65,7 +191,7 @@ POSSIBILITY OF SUCH DAMAGES.
   (this one function is pretty much the be-all and end-all of the filter)
 */
 template <class F, class T>
-static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams)
+static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, vtkOpenCLContext **opencl_context)
 {
   // information on the volume
   vtkImageData* outData = insertionParams->outData;
@@ -177,110 +303,22 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
     pixelRejectionThresholdSumAllComponents = insertionParams->pixelRejectionThreshold * numscalars;
   }
 
-  // OpenCL initialization
-  std::vector<cl::Platform> all_platforms;
-  cl::Platform::get(&all_platforms);
-
-  std::vector<cl::Device> all_devices;
-  for (const auto& platform : all_platforms) {
-	  std::vector<cl::Device> platform_devices;
-	  platform.getDevices(CL_DEVICE_TYPE_GPU, &platform_devices);
-	  all_devices.insert(all_devices.end(), platform_devices.begin(), platform_devices.end());
+  if (*opencl_context == NULL) {
+	  static std::mutex contextInitMutex;
+	  std::lock_guard<std::mutex> lock(contextInitMutex);
+	  if (*opencl_context == NULL) {
+		  *opencl_context = new vtkOpenCLContext(inExt, outExt, sizeof(T) * numscalars);
+	  }
   }
+  vtkOpenCLContext* context = *opencl_context;
 
-  cl::Device device = all_devices[0];
-
-  LOG_ERROR("Using OpenCL platform device " << device.getInfo<CL_DEVICE_NAME>());
-
-  cl::Context context({ device });
-
-  cl::Program::Sources sources;
-
-  struct PasteSliceArgs {
-	  cl_int numscalars;
-	  cl_int inIncX;
-	  cl_int inIncY;
-	  cl_int inIncZ;
-	  cl_int outExt[6];
-	  cl_int outInc[3];
-	  cl_float matrix[16];
-  };
-
-  std::string kernel_source =
-	  "struct PasteSliceArgs {\n"
-	  "	int numscalars;\n"
-	  " int inIncX;\n"
-	  " int inIncY;\n"
-	  " int inIncZ;\n"
-	  " int outExt[6];\n"
-	  " int outInc[3];\n"
-	  " float matrix[16];\n"
-	  "};\n"
-	  "\n"
-	  "kernel void paste_slice(const global float* Slice, global float* Volume, struct PasteSliceArgs args)\n"
-	  "{\n"
-	  "    size_t idX = get_global_id(0);\n"
-	  "    size_t idY = get_global_id(1);\n"
-	  "    size_t idZ = get_global_id(2);\n"
-	  "    const global float* inPtr = Slice + args.numscalars * (idZ * args.inIncZ + idY * args.inIncY + idX * args.inIncX);\n"
-	  "    // matrix multiplication - input -> output\n"
-	  "    float inPoint[4] = {idX, idY, idZ, 1.0};\n"
-	  "    float outPoint[4];"
-	  "    for (int i = 0; i < 4; i++) {\n"
-	  "        int rowindex = i << 2;\n"
-	  "        outPoint[i] = args.matrix[rowindex] * inPoint[0] + \n"
-	  "		   args.matrix[rowindex + 1] * inPoint[1] +\n"
-	  "        args.matrix[rowindex + 2] * inPoint[2] +\n"
-	  "        args.matrix[rowindex + 3] * inPoint[3];\n"
-	  "    }\n"
-
-	  "    // deal with w (homogeneous transform) if the transform was a perspective transform\n"
-	  "    outPoint[0] /= outPoint[3];\n"
-	  "    outPoint[1] /= outPoint[3];\n"
-	  "    outPoint[2] /= outPoint[3];\n"
-	  "    outPoint[3] = 1;\n"
-	  "    \n"
-	  "    // The nearest neighbor interpolation occurs here\n"
-	  "    // The output point is the closest point to the input point - rounding\n"
-	  "    // to get closest point\n"
-	  "    int outIdX = round(outPoint[0]) - args.outExt[0];\n"
-	  "    int outIdY = round(outPoint[1]) - args.outExt[2];\n"
-	  "    int outIdZ = round(outPoint[2]) - args.outExt[4];\n"
-
-	  "    // fancy way of checking bounds\n"
-	  "    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
-	  "    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
-	  "    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
-	  "        global float* outPtr = Volume + args.numscalars * (outIdX * args.outInc[0] + outIdY * args.outInc[1] + outIdZ * args.outInc[2]);\n"
-	  "        for (int i = 0; i < args.numscalars; i++) {\n"
-	  "            if (*inPtr > *outPtr) {\n"
-	  "                *outPtr = *inPtr;\n"
-	  "            }\n"
-	  "        }\n"
-	  "    }\n"
-	  "}\n";
-
-  sources.push_back({ kernel_source.c_str(), kernel_source.length() });
-
-  cl::Program program(context, sources);
-  if (program.build({ device }) != CL_SUCCESS) {
-	  LOG_ERROR(" Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-  }
-  else {
-	  LOG_ERROR(" Success building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-  }
-
-  cl::Buffer d_Slice(context, CL_MEM_READ_ONLY, sizeof(T) * (inExt[5] - inExt[4]) * (inExt[3] - inExt[2]) * (inExt[1] - inExt[0]));
-  cl::Buffer d_Volume(context, CL_MEM_READ_WRITE, sizeof(T) * (outExt[5] - outExt[4]) * (outExt[3] - outExt[2]) * (outExt[1] - outExt[0]));
-
-  cl::CommandQueue queue(context, device);
   cl::size_t<3> origin;
   cl::size_t<3> region;
   for (int i = 0; i < 3; ++i) {
 	  region[i] = (inExt[2 * i + 1] - inExt[2 * i]) * sizeof(T);
   }
 
-  queue.enqueueWriteBufferRect(d_Slice, CL_NON_BLOCKING, origin, origin, region,
+  context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, origin, origin, region,
 	  (inExt[1] - inExt[0]) * sizeof(T), (inExt[1] - inExt[0]) * (inExt[3] - inExt[2]) * sizeof(T),
 	  inIncY * sizeof(T), inIncZ * sizeof(T), inPtr);
 
@@ -289,15 +327,15 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  region[i] = (outExt[2 * i + 1] - outExt[2 * i]) * sizeof(T);
   }
 
-  queue.enqueueWriteBufferRect(d_Volume, CL_NON_BLOCKING, origin, origin, out_region,
+  context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, origin, origin, out_region,
 	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
 	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
 
 
   cl::NDRange slice_range(inExt[1] - inExt[0], inExt[3] - inExt[2], inExt[5] - inExt[4]);
-  cl::Kernel paste_slice_kernel(program, "paste_slice");
-  paste_slice_kernel.setArg(0, d_Slice);
-  paste_slice_kernel.setArg(1, d_Volume);
+  cl::Kernel paste_slice_kernel(context->Program, "paste_slice");
+  paste_slice_kernel.setArg(0, context->SliceBuffer);
+  paste_slice_kernel.setArg(1, context->VolumeBuffer);
   PasteSliceArgs args;
   args.numscalars = numscalars;
   args.inIncX = inIncX;
@@ -309,9 +347,10 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  args.matrix[i] = matrix[i];
   }
   paste_slice_kernel.setArg(2, args);
-  queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
+  context->Queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
 
-  queue.enqueueReadBufferRect(d_Volume, CL_BLOCKING, origin, origin, out_region,
+  // Wait for the execution to finish by issuing a BLOCKING read of the output buffer
+  context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, origin, origin, out_region,
 	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
 	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
 
