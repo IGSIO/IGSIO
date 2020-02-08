@@ -122,7 +122,13 @@ ELSE()
   SET(IGSIO_ZLIB_INCLUDE_DIR "")
 ENDIF()
 
-FIND_PACKAGE(OpenCL REQUIRED)
+# Enable GPU support. Requires OpenCL to be installed
+option(IGSIO_USE_GPU "GPU acceleration via OpenCL" OFF)
+mark_as_advanced(IGSIO_USE_GPU)
+
+if(IGSIO_USE_GPU)
+  FIND_PACKAGE(OpenCL REQUIRED)
+endif()
 
 #-----------------------------------------------------------------------------
 # Run superbuild script instead of library script

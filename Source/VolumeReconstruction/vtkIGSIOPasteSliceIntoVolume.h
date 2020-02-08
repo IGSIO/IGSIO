@@ -331,6 +331,8 @@ public:
   vtkGetMacro(PixelRejectionThreshold, double);
   bool IsPixelRejectionEnabled();
   void SetPixelRejectionDisabled();
+
+  static bool IsGpuAccelerationSupported();
   
 protected:
   vtkIGSIOPasteSliceIntoVolume();

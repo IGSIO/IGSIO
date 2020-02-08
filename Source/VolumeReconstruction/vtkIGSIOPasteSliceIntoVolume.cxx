@@ -55,7 +55,9 @@ POSSIBILITY OF SUCH DAMAGES.
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperUnoptimized.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOptimized.h"
-#include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
+#ifdef IGSIO_USE_OPENCL
+#  include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
+#endif
 
 #include <chrono>
 
@@ -631,6 +633,7 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
         LOG_ERROR( "OptimizedInsertSlice: Unknown input ScalarType" );
       }
     }
+#ifdef IGSIO_USE_OPENCL
     else if (str->Optimization == GPU_ACCELERATION_OPENCL)
     {
       // GPU acceleration using OpenCL
@@ -670,6 +673,7 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
         LOG_ERROR("UnoptimizedInsertSlice: Unknown input ScalarType");
       }
     }
+#endif
     else
     {
       // no optimization
@@ -899,5 +903,16 @@ bool vtkIGSIOPasteSliceIntoVolume::IsPixelRejectionEnabled()
 //----------------------------------------------------------------------------
 void vtkIGSIOPasteSliceIntoVolume::SetPixelRejectionDisabled()
 {
-  this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
+	this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
 }
+
+//----------------------------------------------------------------------------
+bool vtkIGSIOPasteSliceIntoVolume::IsGpuAccelerationSupported()
+{
+#ifdef IGSIO_USE_OPENCL
+  return vtkOpenCLHasGPU();
+#else
+  return false;
+#endif
+}
+

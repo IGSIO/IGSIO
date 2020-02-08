@@ -69,6 +69,24 @@ struct PasteSliceArgs {
 	cl_float matrix[16];
 };
 
+bool vtkOpenCLHasGPU()
+{
+	// OpenCL initialization
+	std::vector<cl::Platform> all_platforms;
+	cl::Platform::get(&all_platforms);
+
+	std::vector<cl::Device> all_devices;
+	for (const auto& platform : all_platforms) {
+		std::vector<cl::Device> platform_devices;
+		platform.getDevices(CL_DEVICE_TYPE_GPU, &platform_devices);
+		if (!platform_devices.empty()) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /*!
   Stores the OpenCL resources that do not change between slices.
 
