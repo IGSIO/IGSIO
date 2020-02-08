@@ -58,6 +58,7 @@ POSSIBILITY OF SUCH DAMAGES.
 #include <CL/cl.hpp>
 
 #include <mutex>
+#include <sstream>
 
 struct PasteSliceArgs {
 	cl_int numscalars;
@@ -87,6 +88,31 @@ bool vtkOpenCLHasGPU()
 	return false;
 }
 
+struct vtkOpenCLContextParameters
+{
+	int inExt[6];
+	int outExt[6];
+	size_t scalar_size;
+	std::string matrix_type_name;
+	std::string data_type_name;
+};
+
+bool operator==(const vtkOpenCLContextParameters& one, const vtkOpenCLContextParameters& two)
+{
+	return
+		memcmp(one.inExt, two.inExt, sizeof(one.inExt)) == 0
+		&& memcmp(one.outExt, two.outExt, sizeof(one.outExt)) == 0
+		&& one.scalar_size == two.scalar_size
+		&& one.matrix_type_name == two.matrix_type_name
+		&& one.data_type_name == two.data_type_name;
+
+}
+
+bool operator!=(const vtkOpenCLContextParameters& one, const vtkOpenCLContextParameters& two)
+{
+	return !(one == two);
+}
+
 /*!
   Stores the OpenCL resources that do not change between slices.
 
@@ -95,7 +121,7 @@ bool vtkOpenCLHasGPU()
 class vtkOpenCLContext
 {
 public:
-	vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_size);
+	vtkOpenCLContext(vtkOpenCLContextParameters parameters);
 	~vtkOpenCLContext();
 
 public:
@@ -105,9 +131,11 @@ public:
 	cl::Buffer VolumeBuffer;
 	cl::Program Program;
 	cl::CommandQueue Queue;
+
+	vtkOpenCLContextParameters Parameters;
 };
 
-vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_size)
+vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Parameters(parameters)
 {
 	// OpenCL initialization
 	std::vector<cl::Platform> all_platforms;
@@ -128,26 +156,30 @@ vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_si
 
 	cl::Program::Sources sources;
 
-	std::string kernel_source =
+	std::stringstream kernel_source;
+	kernel_source <<
 		"struct PasteSliceArgs {\n"
-		"	int numscalars;\n"
+		" int numscalars;\n"
 		" int inIncX;\n"
 		" int inIncY;\n"
 		" int inIncZ;\n"
 		" int outExt[6];\n"
-		" int outInc[3];\n"
-		" float matrix[16];\n"
-		"};\n"
-		"\n"
-		"kernel void paste_slice(const global float* Slice, global float* Volume, struct PasteSliceArgs args)\n"
+		" int outInc[3];\n";
+	kernel_source << " " << parameters.matrix_type_name << " matrix[16];\n";
+    kernel_source << "};\n"
+		"\n;";
+	kernel_source <<
+		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, struct PasteSliceArgs args)\n";
+	kernel_source <<
 		"{\n"
 		"    size_t idX = get_global_id(0);\n"
 		"    size_t idY = get_global_id(1);\n"
-		"    size_t idZ = get_global_id(2);\n"
-		"    const global float* inPtr = Slice + args.numscalars * (idZ * args.inIncZ + idY * args.inIncY + idX * args.inIncX);\n"
+		"    size_t idZ = get_global_id(2);\n";
+	kernel_source <<
+		"    const global " << parameters.data_type_name << "* inPtr = Slice + args.numscalars * (idZ * args.inIncZ + idY * args.inIncY + idX * args.inIncX);\n"
 		"    // matrix multiplication - input -> output\n"
-		"    float inPoint[4] = {idX, idY, idZ, 1.0};\n"
-		"    float outPoint[4];"
+		"    " << parameters.matrix_type_name << " inPoint[4] = {idX, idY, idZ, 1.0};\n"
+		"    " << parameters.matrix_type_name << " outPoint[4];"
 		"    for (int i = 0; i < 4; i++) {\n"
 		"        int rowindex = i << 2;\n"
 		"        outPoint[i] = args.matrix[rowindex] * inPoint[0] + \n"
@@ -173,7 +205,7 @@ vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_si
 		"    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
 		"    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
 		"    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
-		"        global float* outPtr = Volume + args.numscalars * (outIdX * args.outInc[0] + outIdY * args.outInc[1] + outIdZ * args.outInc[2]);\n"
+		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX * args.outInc[0] + outIdY * args.outInc[1] + outIdZ * args.outInc[2]);\n"
 		"        for (int i = 0; i < args.numscalars; i++) {\n"
 		"            if (*inPtr > *outPtr) {\n"
 		"                *outPtr = *inPtr;\n"
@@ -182,7 +214,8 @@ vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_si
 		"    }\n"
 		"}\n";
 
-	sources.push_back({ kernel_source.c_str(), kernel_source.length() });
+	std::string kernel_source_str = kernel_source.str();
+	sources.push_back({ kernel_source_str.c_str(), kernel_source_str.length() });
 
 	cl::Program program(this->Context, sources);
 	if (program.build({ this->Device }) != CL_SUCCESS) {
@@ -193,13 +226,17 @@ vtkOpenCLContext::vtkOpenCLContext(int inExt[6], int outExt[6], size_t scalar_si
 		this->Program = program;
 	}
 
-	this->SliceBuffer = cl::Buffer(this->Context, CL_MEM_READ_ONLY, scalar_size * (inExt[5] - inExt[4]) * (inExt[3] - inExt[2]) * (inExt[1] - inExt[0]));
-	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, scalar_size * (outExt[5] - outExt[4]) * (outExt[3] - outExt[2]) * (outExt[1] - outExt[0]));
+	int* inExt = parameters.inExt;
+	int* outExt = parameters.outExt;
+	this->SliceBuffer = cl::Buffer(this->Context, CL_MEM_READ_ONLY, parameters.scalar_size * (inExt[5] - inExt[4]) * (inExt[3] - inExt[2]) * (inExt[1] - inExt[0]));
+	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, parameters.scalar_size * (outExt[5] - outExt[4]) * (outExt[3] - outExt[2]) * (outExt[1] - outExt[0]));
 
 	this->Queue = cl::CommandQueue(this->Context, this->Device);
 }
 
-
+vtkOpenCLContext::~vtkOpenCLContext()
+{
+}
 
 //----------------------------------------------------------------------------
 /*!
@@ -324,8 +361,17 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   if (*opencl_context == NULL) {
 	  static std::mutex contextInitMutex;
 	  std::lock_guard<std::mutex> lock(contextInitMutex);
-	  if (*opencl_context == NULL) {
-		  *opencl_context = new vtkOpenCLContext(inExt, outExt, sizeof(T) * numscalars);
+
+	  vtkOpenCLContextParameters p;
+	  memcpy(p.inExt, inExt, sizeof(p.inExt));
+	  memcpy(p.outExt, outExt, sizeof(p.outExt));
+	  p.scalar_size = sizeof(T);
+	  p.matrix_type_name = "double";
+	  p.data_type_name = "double";
+
+	  if (*opencl_context == NULL || (*opencl_context)->Parameters != p) {
+		  delete *opencl_context;
+		  *opencl_context = new vtkOpenCLContext(p);
 	  }
   }
   vtkOpenCLContext* context = *opencl_context;
