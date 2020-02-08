@@ -55,7 +55,7 @@ POSSIBILITY OF SUCH DAMAGES.
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperUnoptimized.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOptimized.h"
-#ifdef IGSIO_USE_OPENCL
+#ifdef IGSIO_USE_GPU
 #  include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
 #endif
 
@@ -633,7 +633,7 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
         LOG_ERROR( "OptimizedInsertSlice: Unknown input ScalarType" );
       }
     }
-#ifdef IGSIO_USE_OPENCL
+#ifdef IGSIO_USE_GPU
     else if (str->Optimization == GPU_ACCELERATION_OPENCL)
     {
       // GPU acceleration using OpenCL
@@ -909,10 +909,12 @@ void vtkIGSIOPasteSliceIntoVolume::SetPixelRejectionDisabled()
 //----------------------------------------------------------------------------
 bool vtkIGSIOPasteSliceIntoVolume::IsGpuAccelerationSupported()
 {
-#ifdef IGSIO_USE_OPENCL
-  return vtkOpenCLHasGPU();
+#ifdef IGSIO_USE_GPU
+	LOG_ERROR("GPU is enabled");
+	return vtkOpenCLHasGPU();
 #else
-  return false;
+	LOG_ERROR("GPU not enabled");
+	return false;
 #endif
 }
 
