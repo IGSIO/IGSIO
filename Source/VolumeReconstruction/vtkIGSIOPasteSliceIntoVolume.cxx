@@ -910,11 +910,9 @@ void vtkIGSIOPasteSliceIntoVolume::SetPixelRejectionDisabled()
 bool vtkIGSIOPasteSliceIntoVolume::IsGpuAccelerationSupported()
 {
 #ifdef IGSIO_USE_GPU
-	LOG_ERROR("GPU is enabled");
-	return vtkOpenCLHasGPU();
+  return vtkOpenCLHasGPU();
 #else
-	LOG_ERROR("GPU not enabled");
-	return false;
+  return false;
 #endif
 }
 
