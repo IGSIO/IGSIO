@@ -150,7 +150,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 
 	this->Device = all_devices[0];
 
-	LOG_ERROR("Using OpenCL platform device " << this->Device.getInfo<CL_DEVICE_NAME>());
+	LOG_DEBUG("Using OpenCL platform device " << this->Device.getInfo<CL_DEVICE_NAME>());
 
 	this->Context = cl::Context({ this->Device });
 
@@ -222,7 +222,6 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		LOG_ERROR(" Error building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(this->Device));
 	}
 	else {
-		LOG_ERROR(" Success building: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(this->Device));
 		this->Program = program;
 	}
 
