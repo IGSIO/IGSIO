@@ -67,7 +67,7 @@ struct PasteSliceArgs {
 	cl_int inIncZ;
 	cl_int outExt[6];
 	cl_int outInc[3];
-	cl_float matrix[16];
+	cl_double matrix[16];
 };
 
 bool vtkOpenCLHasGPU()
@@ -228,8 +228,17 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 
 	int* inExt = parameters.inExt;
 	int* outExt = parameters.outExt;
-	this->SliceBuffer = cl::Buffer(this->Context, CL_MEM_READ_ONLY, parameters.scalar_size * (inExt[5] - inExt[4]) * (inExt[3] - inExt[2]) * (inExt[1] - inExt[0]));
-	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, parameters.scalar_size * (outExt[5] - outExt[4]) * (outExt[3] - outExt[2]) * (outExt[1] - outExt[0]));
+
+	cl_int err = CL_SUCCESS;
+	this->SliceBuffer = cl::Buffer(this->Context, CL_MEM_READ_ONLY, parameters.scalar_size * (1 + inExt[5] - inExt[4]) * (1 + inExt[3] - inExt[2]) * (1 + inExt[1] - inExt[0]), NULL, &err);
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Create input slice buffer: " << err);
+	}
+
+	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, parameters.scalar_size * (1 + outExt[5] - outExt[4]) * (1 + outExt[3] - outExt[2]) * (1 + outExt[1] - outExt[0]), NULL, &err);
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Create output volume buffer: " << err);
+	}
 
 	this->Queue = cl::CommandQueue(this->Context, this->Device);
 }
@@ -245,21 +254,20 @@ vtkOpenCLContext::~vtkOpenCLContext()
   output from the input - no optimization.
   (this one function is pretty much the be-all and end-all of the filter)
 */
-template <class F, class T>
-static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, vtkOpenCLContext **opencl_context)
+static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, int scalar_type, vtkOpenCLContext **opencl_context)
 {
   // information on the volume
   vtkImageData* outData = insertionParams->outData;
-  T* outPtr = reinterpret_cast<T*>(insertionParams->outPtr);
+  void* outPtr = reinterpret_cast<void *>(insertionParams->outPtr);
   unsigned short* accPtr = insertionParams->accPtr;
   unsigned char* importancePtr = insertionParams->importancePtr;
   vtkImageData* inData = insertionParams->inData;
-  T* inPtr = reinterpret_cast<T*>(insertionParams->inPtr);
+  void* inPtr = reinterpret_cast<void *>(insertionParams->inPtr);
   int* inExt = insertionParams->inExt;
   unsigned int* accOverflowCount = insertionParams->accOverflowCount;
 
   // transform matrix for image -> volume
-  F* matrix = reinterpret_cast<F*>(insertionParams->matrix);
+  double* matrix = reinterpret_cast<double*>(insertionParams->matrix);
   LOG_TRACE("sliceToOutputVolumeMatrix="<<matrix[0]<<" "<<matrix[1]<<" "<<matrix[2]<<" "<<matrix[3]<<"; "
     <<matrix[4]<<" "<<matrix[5]<<" "<<matrix[6]<<" "<<matrix[7]<<"; "
     <<matrix[8]<<" "<<matrix[9]<<" "<<matrix[10]<<" "<<matrix[11]<<"; "
@@ -336,21 +344,6 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
     insertionParams->importanceMask->GetContinuousIncrements(inExt, impIncX, impIncY, impIncZ);
   }
 
-  // Set interpolation method - nearest neighbor or trilinear  
-  int (*interpolate)(F *, T *, T *, unsigned short *, unsigned char *, int, vtkIGSIOPasteSliceIntoVolume::CompoundingType, int a[6], vtkIdType b[3], unsigned int *)=NULL; // pointer to the nearest neighbor or trilinear interpolation function  
-  switch (interpolationMode)
-  {
-  case vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION:
-    interpolate = &vtkNearestNeighborInterpolation;
-    break;
-  case vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION:
-    interpolate = &vtkTrilinearInterpolation;
-    break;
-  default:
-    LOG_ERROR("Unknown interpolation mode: "<<interpolationMode);
-    return;
-  }
-
   bool pixelRejectionEnabled = PixelRejectionEnabled(insertionParams->pixelRejectionThreshold);
   double pixelRejectionThresholdSumAllComponents = 0;
   if (pixelRejectionEnabled)
@@ -358,16 +351,61 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
     pixelRejectionThresholdSumAllComponents = insertionParams->pixelRejectionThreshold * numscalars;
   }
 
-  if (*opencl_context == NULL) {
+  vtkOpenCLContextParameters p;
+  memcpy(p.inExt, inExt, sizeof(p.inExt));
+  memcpy(p.outExt, outExt, sizeof(p.outExt));
+  p.matrix_type_name = "double";
+
+  switch (scalar_type) {
+  case VTK_CHAR:
+	  p.scalar_size = sizeof(char);
+	  p.data_type_name = "char";
+	  break;
+  case VTK_UNSIGNED_CHAR:
+	  p.scalar_size = sizeof(unsigned char);
+	  p.data_type_name = "unsigned char";
+	  break;
+  case VTK_SHORT:
+	  p.scalar_size = sizeof(short);
+	  p.data_type_name = "short";
+	  break;
+  case VTK_UNSIGNED_SHORT:
+	  p.scalar_size = sizeof(unsigned short);
+	  p.data_type_name = "unsigned short";
+	  break;
+  case VTK_INT:
+	  p.scalar_size = sizeof(int);
+	  p.data_type_name = "int";
+	  break;
+  case VTK_UNSIGNED_INT:
+	  p.scalar_size = sizeof(unsigned int);
+	  p.data_type_name = "unsigned int";
+	  break;
+  case VTK_LONG:
+	  p.scalar_size = sizeof(long);
+	  p.data_type_name = "long";
+	  break;
+  case VTK_UNSIGNED_LONG:
+	  p.scalar_size = sizeof(unsigned long);
+	  p.data_type_name = "unsigned long";
+	  break;
+  case VTK_FLOAT:
+	  p.scalar_size = sizeof(float);
+	  p.data_type_name = "float";
+	  break;
+  case VTK_DOUBLE:
+	  p.scalar_size = sizeof(double);
+	  p.data_type_name = "double";
+	  break;
+  default:
+	  LOG_ERROR("OpenCLInsertSlice: Unknown input ScalarType");
+  }
+
+  p.scalar_size *= numscalars;
+
+  if (*opencl_context == NULL || (*opencl_context)->Parameters != p) {
 	  static std::mutex contextInitMutex;
 	  std::lock_guard<std::mutex> lock(contextInitMutex);
-
-	  vtkOpenCLContextParameters p;
-	  memcpy(p.inExt, inExt, sizeof(p.inExt));
-	  memcpy(p.outExt, outExt, sizeof(p.outExt));
-	  p.scalar_size = sizeof(T);
-	  p.matrix_type_name = "double";
-	  p.data_type_name = "double";
 
 	  if (*opencl_context == NULL || (*opencl_context)->Parameters != p) {
 		  delete *opencl_context;
@@ -379,35 +417,44 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   cl::size_t<3> origin;
   cl::size_t<3> region;
   for (int i = 0; i < 3; ++i) {
-	  region[i] = (inExt[2 * i + 1] - inExt[2 * i]) * sizeof(T);
+	  region[i] = (inExt[2 * i + 1] - inExt[2 * i]) * p.scalar_size;
   }
 
   cl_int err = CL_SUCCESS;
 
   err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, origin, origin, region,
-	  (inExt[1] - inExt[0]) * sizeof(T), (inExt[1] - inExt[0]) * (inExt[3] - inExt[2]) * sizeof(T),
-	  inIncY * sizeof(T), inIncZ * sizeof(T), inPtr);
+	  (1 + inExt[1] - inExt[0]) * p.scalar_size, (1 + inExt[1] - inExt[0]) * (1 + inExt[3] - inExt[2]) * p.scalar_size,
+	  inIncY * p.scalar_size, inIncZ * p.scalar_size, inPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write input slice buffer: " << err);
   }
 
   cl::size_t<3> out_region;
   for (int i = 0; i < 3; ++i) {
-	  region[i] = (outExt[2 * i + 1] - outExt[2 * i]) * sizeof(T);
+	  region[i] = (outExt[2 * i + 1] - outExt[2 * i]) * p.scalar_size;
   }
 
   err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, origin, origin, out_region,
-	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
-	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
+	  (1 + outExt[1] - outExt[0]) * p.scalar_size, (1 + outExt[1] - outExt[0]) * (1 + outExt[3] - outExt[2]) * p.scalar_size,
+	  outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write output volume buffer: " << err);
   }
 
 
-  cl::NDRange slice_range(inExt[1] - inExt[0], inExt[3] - inExt[2], inExt[5] - inExt[4]);
+  cl::NDRange slice_range(1 + inExt[1] - inExt[0], 1 + inExt[3] - inExt[2], 1 + inExt[5] - inExt[4]);
   cl::Kernel paste_slice_kernel(context->Program, "paste_slice");
-  paste_slice_kernel.setArg(0, context->SliceBuffer);
-  paste_slice_kernel.setArg(1, context->VolumeBuffer);
+
+  err = paste_slice_kernel.setArg(0, context->SliceBuffer);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Kernel set arg 0: " << err);
+  }
+
+  err = paste_slice_kernel.setArg(1, context->VolumeBuffer);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Kernel set arg 1: " << err);
+  }
+
   PasteSliceArgs args;
   args.numscalars = numscalars;
   args.inIncX = inIncX;
@@ -418,7 +465,12 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   for (int i = 0; i < 16; ++i) {
 	  args.matrix[i] = matrix[i];
   }
-  paste_slice_kernel.setArg(2, args);
+
+  err = paste_slice_kernel.setArg(2, args);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Kernel set arg 2: " << err);
+  }
+
   err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Launch OpenCL kernel: " << err);
@@ -427,8 +479,8 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
   // Wait for the execution to finish by issuing a BLOCKING read of the output buffer
   err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, origin, origin, out_region,
-	  (outExt[1] - outExt[0]) * sizeof(T), (outExt[1] - outExt[0]) * (outExt[3] - outExt[2]) * sizeof(T),
-	  outInc[1] * sizeof(T), outInc[2] * sizeof(T), outPtr);
+	  (1 + outExt[1] - outExt[0]) * p.scalar_size, (1 + outExt[1] - outExt[0]) * (1 + outExt[3] - outExt[2]) * p.scalar_size,
+	  outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Read output volume buffer: " << err);
   }

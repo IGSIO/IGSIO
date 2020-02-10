@@ -350,6 +350,11 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
 
   str.PixelRejectionThreshold = this->PixelRejectionThreshold;
 
+  if ( this->Optimization == GPU_ACCELERATION_OPENCL )
+  {
+    // Parallelization is done on the GPU, no nede for CPU threads
+    this->Threader->SetNumberOfThreads(1);
+  }
   if ( this->NumberOfThreads > 0 )
   {
     this->Threader->SetNumberOfThreads( this->NumberOfThreads );
@@ -637,41 +642,7 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
     else if (str->Optimization == GPU_ACCELERATION_OPENCL)
     {
       // GPU acceleration using OpenCL
-      switch (inData->GetScalarType())
-      {
-      case VTK_SHORT:
-        vtkOpenCLInsertSlice<double, short>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_UNSIGNED_SHORT:
-        vtkOpenCLInsertSlice<double, unsigned short>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_CHAR:
-        vtkOpenCLInsertSlice<double, char>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_UNSIGNED_CHAR:
-        vtkOpenCLInsertSlice<double, unsigned char>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_FLOAT:
-        vtkOpenCLInsertSlice<double, float>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_DOUBLE:
-        vtkOpenCLInsertSlice<double, double>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_INT:
-        vtkOpenCLInsertSlice<double, int>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_UNSIGNED_INT:
-        vtkOpenCLInsertSlice<double, unsigned int>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_LONG:
-        vtkOpenCLInsertSlice<double, long>(&insertionParams, str->OpenCLContext);
-        break;
-      case VTK_UNSIGNED_LONG:
-        vtkOpenCLInsertSlice<double, unsigned long>(&insertionParams, str->OpenCLContext);
-        break;
-      default:
-        LOG_ERROR("UnoptimizedInsertSlice: Unknown input ScalarType");
-      }
+      vtkOpenCLInsertSlice(&insertionParams, inData->GetScalarType(), str->OpenCLContext);
     }
 #endif
     else
