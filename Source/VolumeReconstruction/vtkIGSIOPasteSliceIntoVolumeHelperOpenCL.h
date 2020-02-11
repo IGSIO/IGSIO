@@ -126,6 +126,7 @@ public:
 	cl::Context Context;
 	cl::Buffer SliceBuffer;
 	cl::Buffer VolumeBuffer;
+	cl::Buffer AccumulationBuffer;
 	cl::Program Program;
 	cl::CommandQueue Queue;
 
@@ -162,7 +163,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
     kernel_source << "};\n"
 		"\n";
 	kernel_source <<
-		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, struct PasteSliceArgs args)\n";
+		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, global " << parameters.data_type_name << "* Accumulation, struct PasteSliceArgs args)\n";
 	kernel_source <<
 		"{\n"
 		"    size_t idX = get_global_id(0) - get_global_offset(0);\n"
@@ -241,6 +242,11 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	this->VolumeBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, parameters.scalar_size * (1 + outExt[5] - outExt[4]) * (1 + outExt[3] - outExt[2]) * (1 + outExt[1] - outExt[0]), NULL, &err);
 	if (err != CL_SUCCESS) {
 		LOG_ERROR("Create output volume buffer: " << err);
+	}
+
+	this->AccumulationBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, sizeof(unsigned short) * (1 + outExt[5] - outExt[4]) * (1 + outExt[3] - outExt[2]) * (1 + outExt[1] - outExt[0]), NULL, &err);
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Create accumulation buffer: " << err);
 	}
 
 	this->Queue = cl::CommandQueue(this->Context, this->Device);
@@ -434,14 +440,22 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   cl::size_t<3> in_region;
   cl::size_t<3> out_origin;
   cl::size_t<3> out_region;
+  cl::size_t<3> acc_origin;
+  cl::size_t<3> acc_region;
   for (int i = 0; i < 3; ++i) {
 	  size_t size_factor = (i == 0) ? p.scalar_size : 1;
 
 	  buffer_origin[i] = 0;
+	  
 	  in_origin[i] = inExt[2 * i] * size_factor;
 	  in_region[i] = (1 + inExt[2 * i + 1] - inExt[2 * i]) * size_factor;
+	  
 	  out_origin[i] = outExt[2 * i] * size_factor;
 	  out_region[i] = (1 + outExt[2 * i + 1] - outExt[2 * i]) * size_factor;
+
+	  size_t acc_size_factor = (i == 0) ? sizeof(unsigned short) : 1;
+	  acc_origin[i] = outExt[2 * i] * acc_size_factor;
+	  acc_region[i] = (1 + outExt[2 * i + 1] - outExt[2 * i]) * acc_size_factor;
   }
 
   cl_int err = CL_SUCCESS;
@@ -451,6 +465,9 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
   int outPitchY = outInc[1] * p.scalar_size;
   int outPitchZ = outInc[2] * p.scalar_size;
+
+  int accPitchY = outInc[1] * sizeof(unsigned short);
+  int accPitchZ = outInc[2] * sizeof(unsigned short);
 
   err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, buffer_origin, in_origin, in_region,
 	  0, 0, inPitchY, inPitchZ, inPtr);
@@ -462,6 +479,12 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  0, 0, outPitchY, outPitchZ, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write output volume buffer: " << err);
+  }
+
+  err = context->Queue.enqueueWriteBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
+	  0, 0, accPitchY, accPitchZ, accPtr);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Write accumulation buffer: " << err);
   }
 
   cl::NDRange slice_range(1 + inExt[1] - inExt[0], 1 + inExt[3] - inExt[2], 1 + inExt[5] - inExt[4]);
@@ -478,6 +501,11 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Kernel set arg 1 (Volume): " << err);
   }
 
+  err = paste_slice_kernel.setArg(2, context->AccumulationBuffer);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Kernel set arg 2 (Accumulation): " << err);
+  }
+
   PasteSliceArgs args;
   args.numscalars = numscalars;
   memcpy(args.outExt, outExt, sizeof(args.outExt));
@@ -485,9 +513,9 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  args.matrix[i] = matrix[i];
   }
 
-  err = paste_slice_kernel.setArg(2, args);
+  err = paste_slice_kernel.setArg(3, args);
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Kernel set arg 2 (Args): " << err);
+	  LOG_ERROR("Kernel set arg 3 (Args): " << err);
   }
 
   err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, slice_offset, slice_range);
@@ -495,13 +523,23 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Launch OpenCL kernel: " << err);
   }
 
-
-  // Wait for the execution to finish by issuing a BLOCKING read of the output buffer
-  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, buffer_origin, out_origin, out_region,
+  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
 	  0, 0, outPitchY, outPitchZ, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Read output volume buffer: " << err);
   }
+
+  err = context->Queue.enqueueReadBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
+	  0, 0, accPitchY, accPitchZ, accPtr);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Read accumulation buffer: " << err);
+  }
+
+  err = context->Queue.finish();
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Finish OpenCL queue: " << err);
+  }
+
 }
 
 
