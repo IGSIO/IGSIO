@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
   std::string inputImgSeqFileNameDeprecated;
 
   int verboseLevel = vtkIGSIOLogger::LOG_LEVEL_UNDEFINED;
+  int optimization = -1;
 
   bool disableCompression = false;
 
@@ -51,6 +52,7 @@ int main(int argc, char* argv[])
   cmdargs.AddArgument("--disable-compression", vtksys::CommandLineArguments::NO_ARGUMENT, &disableCompression, "Do not compress output image files.");
   cmdargs.AddArgument("--verbose", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &verboseLevel, "Verbose level (1=error only, 2=warning, 3=info, 4=debug, 5=trace)");
   cmdargs.AddArgument("--importance-mask-file", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &importanceMaskFileName, "The file to use as the importance mask.");
+  cmdargs.AddArgument("--optimization", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &optimization, "Optimization level (0=OpenCL, 1=full, 2=partial, 3=none)");
 
   // Deprecated arguments (2013-07-29, #800)
   cmdargs.AddArgument("--transform", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &inputImageToReferenceTransformNameDeprecated, "Image to reference transform name used for the reconstruction. DEPRECATED, use --image-to-reference-transform argument instead");

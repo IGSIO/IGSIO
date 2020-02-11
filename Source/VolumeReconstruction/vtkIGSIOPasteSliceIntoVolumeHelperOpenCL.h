@@ -62,11 +62,7 @@ POSSIBILITY OF SUCH DAMAGES.
 
 struct PasteSliceArgs {
 	cl_int numscalars;
-	cl_int inIncX;
-	cl_int inIncY;
-	cl_int inIncZ;
 	cl_int outExt[6];
-	cl_int outInc[3];
 	cl_double matrix[16];
 };
 
@@ -160,11 +156,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	kernel_source <<
 		"struct PasteSliceArgs {\n"
 		" int numscalars;\n"
-		" int inIncX;\n"
-		" int inIncY;\n"
-		" int inIncZ;\n"
-		" int outExt[6];\n"
-		" int outInc[3];\n";
+		" int outExt[6];\n";
 	kernel_source << " " << parameters.matrix_type_name << " matrix[16];\n";
     kernel_source << "};\n"
 		"\n;";
@@ -172,20 +164,20 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, struct PasteSliceArgs args)\n";
 	kernel_source <<
 		"{\n"
-		"    size_t idX = get_global_id(0);\n"
-		"    size_t idY = get_global_id(1);\n"
-		"    size_t idZ = get_global_id(2);\n";
+		"    size_t idX = get_global_id(0) - get_global_offset(0);\n"
+		"    size_t idY = get_global_id(1) - get_global_offset(1);\n"
+		"    size_t idZ = get_global_id(2) - get_global_offset(2);\n";
 	kernel_source <<
-		"    const global " << parameters.data_type_name << "* inPtr = Slice + args.numscalars * (idZ * args.inIncZ + idY * args.inIncY + idX * args.inIncX);\n"
+		"    const global " << parameters.data_type_name << "* inPtr = Slice + args.numscalars * (idZ * get_global_size(0) * get_global_size(1) + idY * get_global_size(0) + idX);\n"
 		"    // matrix multiplication - input -> output\n"
-		"    " << parameters.matrix_type_name << " inPoint[4] = {idX, idY, idZ, 1.0};\n"
+		"    " << parameters.matrix_type_name << " inPoint[4] = {idX + get_global_offset(0), idY + get_global_offset(1), idZ + get_global_offset(2), 1.0};\n"
 		"    " << parameters.matrix_type_name << " outPoint[4];"
 		"    for (int i = 0; i < 4; i++) {\n"
 		"        int rowindex = i << 2;\n"
 		"        outPoint[i] = args.matrix[rowindex] * inPoint[0] + \n"
 		"		   args.matrix[rowindex + 1] * inPoint[1] +\n"
-		"        args.matrix[rowindex + 2] * inPoint[2] +\n"
-		"        args.matrix[rowindex + 3] * inPoint[3];\n"
+		"          args.matrix[rowindex + 2] * inPoint[2] +\n"
+		"          args.matrix[rowindex + 3] * inPoint[3];\n"
 		"    }\n"
 
 		"    // deal with w (homogeneous transform) if the transform was a perspective transform\n"
@@ -205,11 +197,12 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
 		"    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
 		"    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
-		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX * args.outInc[0] + outIdY * args.outInc[1] + outIdZ * args.outInc[2]);\n"
+		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[2]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
 		"        for (int i = 0; i < args.numscalars; i++) {\n"
-		"            if (*inPtr > *outPtr) {\n"
-		"                *outPtr = *inPtr;\n"
-		"            }\n"
+				"            if (*inPtr > *outPtr) {\n"
+				"                *outPtr = *inPtr;\n"
+				"                *outPtr = *inPtr;\n"
+				"            }\n"
 		"        }\n"
 		"    }\n"
 		"}\n";
@@ -413,35 +406,36 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   }
   vtkOpenCLContext* context = *opencl_context;
 
-  cl::size_t<3> origin;
-  cl::size_t<3> region;
+  cl::size_t<3> buffer_origin;
+  cl::size_t<3> in_origin;
+  cl::size_t<3> in_region;
+  cl::size_t<3> out_origin;
+  cl::size_t<3> out_region;
   for (int i = 0; i < 3; ++i) {
-	  region[i] = (inExt[2 * i + 1] - inExt[2 * i]) * p.scalar_size;
+	  buffer_origin[i] = 0;
+	  in_origin[i] = inExt[2 * i] * p.scalar_size;
+	  in_region[i] = (1 + inExt[2 * i + 1] - inExt[2 * i]) * p.scalar_size;
+	  out_origin[i] = outExt[2 * i] * p.scalar_size;
+	  out_region[i] = (1 + outExt[2 * i + 1] - outExt[2 * i]) * p.scalar_size;
   }
 
   cl_int err = CL_SUCCESS;
 
-  err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, origin, origin, region,
-	  (1 + inExt[1] - inExt[0]) * p.scalar_size, (1 + inExt[1] - inExt[0]) * (1 + inExt[3] - inExt[2]) * p.scalar_size,
-	  inIncY * p.scalar_size, inIncZ * p.scalar_size, inPtr);
+  err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, buffer_origin, in_origin, in_region,
+	  0, 0, inIncY * p.scalar_size, inIncZ * p.scalar_size, inPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write input slice buffer: " << err);
   }
 
-  cl::size_t<3> out_region;
-  for (int i = 0; i < 3; ++i) {
-	  region[i] = (outExt[2 * i + 1] - outExt[2 * i]) * p.scalar_size;
-  }
-
-  err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, origin, origin, out_region,
-	  (1 + outExt[1] - outExt[0]) * p.scalar_size, (1 + outExt[1] - outExt[0]) * (1 + outExt[3] - outExt[2]) * p.scalar_size,
-	  outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
+  err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
+	  0, 0, outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write output volume buffer: " << err);
   }
 
 
   cl::NDRange slice_range(1 + inExt[1] - inExt[0], 1 + inExt[3] - inExt[2], 1 + inExt[5] - inExt[4]);
+  cl::NDRange slice_offset(inExt[0], inExt[2], inExt[4]);
   cl::Kernel paste_slice_kernel(context->Program, "paste_slice");
 
   err = paste_slice_kernel.setArg(0, context->SliceBuffer);
@@ -456,11 +450,7 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
   PasteSliceArgs args;
   args.numscalars = numscalars;
-  args.inIncX = inIncX;
-  args.inIncY = inIncY;
-  args.inIncZ = inIncZ;
   memcpy(args.outExt, outExt, sizeof(args.outExt));
-  memcpy(args.outInc, outInc, sizeof(args.outInc));
   for (int i = 0; i < 16; ++i) {
 	  args.matrix[i] = matrix[i];
   }
@@ -470,16 +460,15 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Kernel set arg 2: " << err);
   }
 
-  err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, cl::NullRange, slice_range, cl::NullRange);
+  err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, slice_offset, slice_range);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Launch OpenCL kernel: " << err);
   }
 
 
   // Wait for the execution to finish by issuing a BLOCKING read of the output buffer
-  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, origin, origin, out_region,
-	  (1 + outExt[1] - outExt[0]) * p.scalar_size, (1 + outExt[1] - outExt[0]) * (1 + outExt[3] - outExt[2]) * p.scalar_size,
-	  outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
+  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_BLOCKING, buffer_origin, out_origin, out_region,
+	  0, 0, outInc[1] * p.scalar_size, outInc[2] * p.scalar_size, outPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Read output volume buffer: " << err);
   }

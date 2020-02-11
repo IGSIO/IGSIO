@@ -58,3 +58,4 @@ VolRecRegressionTest(IMLinearNone ImportanceMaskLinearNone ImportanceMaskInput I
 VolRecRegressionTest(IMNearFull ImportanceMaskNNFull ImportanceMaskInput IMNNF)
 VolRecRegressionTest(IMNearPartial ImportanceMaskNNPartial ImportanceMaskInput IMNNP)
 VolRecRegressionTest(IMNearNone ImportanceMaskNNNone ImportanceMaskInput IMNNN)
+VolRecRegressionTest(IMNearOpenCL ImportanceMaskNNOpenCL ImportanceMaskInput IMNNO)
