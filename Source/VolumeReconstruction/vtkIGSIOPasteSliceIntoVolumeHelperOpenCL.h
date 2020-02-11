@@ -160,7 +160,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		" int outExt[6];\n";
 	kernel_source << " " << parameters.matrix_type_name << " matrix[16];\n";
     kernel_source << "};\n"
-		"\n;";
+		"\n";
 	kernel_source <<
 		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, struct PasteSliceArgs args)\n";
 	kernel_source <<
@@ -172,7 +172,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"    const global " << parameters.data_type_name << "* inPtr = Slice + args.numscalars * (idZ * get_global_size(0) * get_global_size(1) + idY * get_global_size(0) + idX);\n"
 		"    // matrix multiplication - input -> output\n"
 		"    " << parameters.matrix_type_name << " inPoint[4] = {idX + get_global_offset(0), idY + get_global_offset(1), idZ + get_global_offset(2), 1.0};\n"
-		"    " << parameters.matrix_type_name << " outPoint[4];"
+		"    " << parameters.matrix_type_name << " outPoint[4];\n"
 		"    for (int i = 0; i < 4; i++) {\n"
 		"        int rowindex = i << 2;\n"
 		"        outPoint[i] = args.matrix[rowindex] * inPoint[0] + \n"
@@ -198,23 +198,22 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
 		"    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
 		"    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
-		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[2]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
+		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[0]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
 		"        for (int i = 0; i < args.numscalars; i++) {\n";
 	switch (parameters.compounding_mode) {
-	case vtkIGSIOPasteSliceIntoVolume::MAXIMUM_COMPOUNDING_MODE:
-		kernel_source <<
-			"            if (*inPtr > *outPtr) {\n"
-			"                *outPtr = *inPtr;\n"
-			"            }\n";
-		break;
 	case vtkIGSIOPasteSliceIntoVolume::LATEST_COMPOUNDING_MODE:
 		kernel_source <<
-			"            *outPtr = *inPtr;\n";
+			"            outPtr[i] = inPtr[i];\n";
+		break;
+	case vtkIGSIOPasteSliceIntoVolume::MAXIMUM_COMPOUNDING_MODE:
+	default:
+		kernel_source <<
+			"            if (inPtr[i] > outPtr[i]) {\n"
+			"                outPtr[i] = inPtr[i];\n"
+			"            }\n";
 		break;
 	}
 	kernel_source <<
-		"            inPtr += 1;\n"
-		"            outPtr += 1;\n"
 		"        }\n"
 		"    }\n"
 		"}\n";
@@ -471,12 +470,12 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
   err = paste_slice_kernel.setArg(0, context->SliceBuffer);
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Kernel set arg 0: " << err);
+	  LOG_ERROR("Kernel set arg 0 (Slice): " << err);
   }
 
   err = paste_slice_kernel.setArg(1, context->VolumeBuffer);
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Kernel set arg 1: " << err);
+	  LOG_ERROR("Kernel set arg 1 (Volume): " << err);
   }
 
   PasteSliceArgs args;
@@ -488,7 +487,7 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
   err = paste_slice_kernel.setArg(2, args);
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Kernel set arg 2: " << err);
+	  LOG_ERROR("Kernel set arg 2 (Args): " << err);
   }
 
   err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, slice_offset, slice_range);
