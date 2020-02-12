@@ -163,7 +163,10 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
     kernel_source << "};\n"
 		"\n";
 	kernel_source <<
-		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, global " << parameters.data_type_name << "* Volume, global " << parameters.data_type_name << "* Accumulation, struct PasteSliceArgs args)\n";
+		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, "
+		"    global " << parameters.data_type_name << "* Volume,"
+		"    global unsigned short* Accumulation, "
+		"    struct PasteSliceArgs args)\n";
 	kernel_source <<
 		"{\n"
 		"    size_t idX = get_global_id(0) - get_global_offset(0);\n"
@@ -216,6 +219,8 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	}
 	kernel_source <<
 		"        }\n"
+		"        global unsigned short* accPtr = Accumulation + (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[0]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
+		"        *accPtr = min(*accPtr + " << ACCUMULATION_MULTIPLIER << ", " << ACCUMULATION_MAXIMUM << ");"
 		"    }\n"
 		"}\n";
 
