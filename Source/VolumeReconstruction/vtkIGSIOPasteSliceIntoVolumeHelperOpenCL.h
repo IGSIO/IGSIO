@@ -127,6 +127,7 @@ public:
 	cl::Buffer SliceBuffer;
 	cl::Buffer VolumeBuffer;
 	cl::Buffer AccumulationBuffer;
+	cl::Buffer OverflowBuffer;
 	cl::Program Program;
 	cl::CommandQueue Queue;
 
@@ -166,6 +167,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"kernel void paste_slice(const global " << parameters.data_type_name << "* Slice, "
 		"    global " << parameters.data_type_name << "* Volume,"
 		"    global unsigned short* Accumulation, "
+		"    global unsigned int* OverflowCount, "
 		"    struct PasteSliceArgs args)\n";
 	kernel_source <<
 		"{\n"
@@ -220,7 +222,11 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	kernel_source <<
 		"        }\n"
 		"        global unsigned short* accPtr = Accumulation + (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[0]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
-		"        *accPtr = min(*accPtr + " << ACCUMULATION_MULTIPLIER << ", " << ACCUMULATION_MAXIMUM << ");"
+		"        int newa = *accPtr + " << ACCUMULATION_MULTIPLIER << ";\n"
+	    "        if (newa > " << ACCUMULATION_THRESHOLD << ") {\n"
+		"            atomic_add(OverflowCount, 1);\n"
+		"        }\n"
+		"        *accPtr = min(newa, " << ACCUMULATION_MAXIMUM << ");"
 		"    }\n"
 		"}\n";
 
@@ -252,6 +258,11 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	this->AccumulationBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, sizeof(unsigned short) * (1 + outExt[5] - outExt[4]) * (1 + outExt[3] - outExt[2]) * (1 + outExt[1] - outExt[0]), NULL, &err);
 	if (err != CL_SUCCESS) {
 		LOG_ERROR("Create accumulation buffer: " << err);
+	}
+
+	this->OverflowBuffer = cl::Buffer(this->Context, CL_MEM_READ_WRITE, sizeof(unsigned int), NULL, &err);
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Create overflow buffer: " << err);
 	}
 
 	this->Queue = cl::CommandQueue(this->Context, this->Device);
@@ -492,6 +503,11 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Write accumulation buffer: " << err);
   }
 
+  err = context->Queue.enqueueWriteBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Write overflow buffer: " << err);
+  }
+
   cl::NDRange slice_range(1 + inExt[1] - inExt[0], 1 + inExt[3] - inExt[2], 1 + inExt[5] - inExt[4]);
   cl::NDRange slice_offset(inExt[0], inExt[2], inExt[4]);
   cl::Kernel paste_slice_kernel(context->Program, "paste_slice");
@@ -511,6 +527,11 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Kernel set arg 2 (Accumulation): " << err);
   }
 
+  err = paste_slice_kernel.setArg(3, context->OverflowBuffer);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Kernel set arg 3 (Overflow): " << err);
+  }
+
   PasteSliceArgs args;
   args.numscalars = numscalars;
   memcpy(args.outExt, outExt, sizeof(args.outExt));
@@ -518,9 +539,9 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  args.matrix[i] = matrix[i];
   }
 
-  err = paste_slice_kernel.setArg(3, args);
+  err = paste_slice_kernel.setArg(4, args);
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Kernel set arg 3 (Args): " << err);
+	  LOG_ERROR("Kernel set arg 4 (Args): " << err);
   }
 
   err = context->Queue.enqueueNDRangeKernel(paste_slice_kernel, slice_offset, slice_range);
@@ -538,6 +559,11 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  0, 0, accPitchY, accPitchZ, accPtr);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Read accumulation buffer: " << err);
+  }
+
+  err = context->Queue.enqueueReadBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
+  if (err != CL_SUCCESS) {
+	  LOG_ERROR("Read accumulation overflow buffer: " << err);
   }
 
   err = context->Queue.finish();
