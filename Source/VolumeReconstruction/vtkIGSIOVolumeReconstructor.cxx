@@ -116,7 +116,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::ReadConfiguration(vtkXMLDataElement* co
                                     this->Reconstructor->GetInterpolationModeAsString(vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION), vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION,
                                     this->Reconstructor->GetInterpolationModeAsString(vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION), vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION);
 
-  XML_READ_ENUM3_ATTRIBUTE_OPTIONAL(Optimization, reconConfig,
+  XML_READ_ENUM4_ATTRIBUTE_OPTIONAL(Optimization, reconConfig,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::GPU_ACCELERATION_OPENCL), vtkIGSIOPasteSliceIntoVolume::GPU_ACCELERATION_OPENCL,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::FULL_OPTIMIZATION), vtkIGSIOPasteSliceIntoVolume::FULL_OPTIMIZATION,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::PARTIAL_OPTIMIZATION), vtkIGSIOPasteSliceIntoVolume::PARTIAL_OPTIMIZATION,
