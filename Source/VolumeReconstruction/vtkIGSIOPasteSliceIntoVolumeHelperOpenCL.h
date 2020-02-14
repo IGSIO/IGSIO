@@ -226,12 +226,14 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	}
 	kernel_source <<
 		"        }\n"
+		/*
 		"        global unsigned short* accPtr = Accumulation + (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[0]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
 		"        int newa = *accPtr + " << ACCUMULATION_MULTIPLIER << ";\n"
 	    "        if (newa > " << ACCUMULATION_THRESHOLD << ") {\n"
-		"            atomic_add(OverflowCount, 1);\n"
+		"            *OverflowCount += 1;\n"
 		"        }\n"
 		"        *accPtr = min(newa, " << ACCUMULATION_MAXIMUM << ");"
+		*/
 		"    }\n"
 		"}\n";
 
@@ -490,27 +492,36 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   int accPitchY = outInc[1] * sizeof(unsigned short);
   int accPitchZ = outInc[2] * sizeof(unsigned short);
 
+  cl::Event write_event;
+
+  if (insertionParams->isFirst) {
+	  err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
+		  0, 0, outPitchY, outPitchZ, outPtr);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Write output volume buffer: " << err);
+	  }
+
+	  err = context->Queue.enqueueWriteBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
+		  0, 0, accPitchY, accPitchZ, accPtr);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Write accumulation buffer: " << err);
+	  }
+
+	  err = context->Queue.enqueueWriteBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Write overflow buffer: " << err);
+	  }
+  }
+
   err = context->Queue.enqueueWriteBufferRect(context->SliceBuffer, CL_NON_BLOCKING, buffer_origin, in_origin, in_region,
-	  0, 0, inPitchY, inPitchZ, inPtr);
+	  0, 0, inPitchY, inPitchZ, inPtr, NULL, &write_event);
   if (err != CL_SUCCESS) {
 	  LOG_ERROR("Write input slice buffer: " << err);
   }
 
-  err = context->Queue.enqueueWriteBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
-	  0, 0, outPitchY, outPitchZ, outPtr);
+  err = context->Queue.flush();
   if (err != CL_SUCCESS) {
-	  LOG_ERROR("Write output volume buffer: " << err);
-  }
-
-  err = context->Queue.enqueueWriteBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
-	  0, 0, accPitchY, accPitchZ, accPtr);
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Write accumulation buffer: " << err);
-  }
-
-  err = context->Queue.enqueueWriteBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Write overflow buffer: " << err);
+	  LOG_ERROR("Flush OpenCL queue: " << err);
   }
 
   cl::NDRange slice_range(1 + inExt[1] - inExt[0], 1 + inExt[3] - inExt[2], 1 + inExt[5] - inExt[4]);
@@ -554,28 +565,38 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Launch OpenCL kernel: " << err);
   }
 
-  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
-	  0, 0, outPitchY, outPitchZ, outPtr);
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Read output volume buffer: " << err);
-  }
+  if (insertionParams->isLast) {
+	  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
+		  0, 0, outPitchY, outPitchZ, outPtr);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Read output volume buffer: " << err);
+	  }
 
-  err = context->Queue.enqueueReadBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
-	  0, 0, accPitchY, accPitchZ, accPtr);
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Read accumulation buffer: " << err);
-  }
+	  err = context->Queue.enqueueReadBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
+		  0, 0, accPitchY, accPitchZ, accPtr);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Read accumulation buffer: " << err);
+	  }
 
-  err = context->Queue.enqueueReadBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Read accumulation overflow buffer: " << err);
-  }
+	  err = context->Queue.enqueueReadBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Read accumulation overflow buffer: " << err);
+	  }
 
-  err = context->Queue.finish();
-  if (err != CL_SUCCESS) {
-	  LOG_ERROR("Finish OpenCL queue: " << err);
+	  err = context->Queue.finish();
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Finish OpenCL queue: " << err);
+	  }
   }
-
+  else {
+	  /* We have to wait for writes to finish so the host memory pointed to by inPtr can be reused
+	   * On the other hand, no need to wait for kernel to finish as that is not (yet) visible to the CPU.
+	   */
+	  err = write_event.wait();
+	  if (err != CL_SUCCESS) {
+		  LOG_ERROR("Finish OpenCL queue: " << err);
+	  }
+  }
 }
 
 

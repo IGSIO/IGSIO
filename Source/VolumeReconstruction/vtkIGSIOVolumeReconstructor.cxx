@@ -475,7 +475,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool* insertedIntoVolume/*=NULL*/)
+igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool isFirst, bool isLast, bool* insertedIntoVolume/*=NULL*/)
 {
   igsioTransformName imageToReferenceTransformName;
   if (GetImageToReferenceTransformName(imageToReferenceTransformName) != IGSIO_SUCCESS)
@@ -538,7 +538,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* fram
     return IGSIO_SUCCESS;
   }
 
-  igsioStatus insertSliceStatus = this->Reconstructor->InsertSlice(frameImage, imageToReferenceTransformMatrix);
+  igsioStatus insertSliceStatus = this->Reconstructor->InsertSlice(frameImage, imageToReferenceTransformMatrix, isFirst, isLast);
   this->Modified();
   return insertSliceStatus;
 }

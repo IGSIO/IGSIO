@@ -144,6 +144,9 @@ struct vtkIGSIOPasteSliceIntoVolumeInsertSliceParams
   double fanRadiusStop; // in the input image physical coordinate system
 
   double pixelRejectionThreshold;
+
+  bool isFirst;
+  bool isLast;
 };
 
 

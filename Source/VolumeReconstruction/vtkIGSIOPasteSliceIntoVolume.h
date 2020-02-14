@@ -154,7 +154,7 @@ public:
     The origin of the image is at the first pixel stored in the memory.
     The extent, origin, and spacing of the output must be defined before calling this method.
   */
-  virtual igsioStatus InsertSlice(vtkImageData *image, vtkMatrix4x4* mImageToReference);
+  virtual igsioStatus InsertSlice(vtkImageData *image, vtkMatrix4x4* mImageToReference, bool isFirst, bool isLast);
 
   /*!
     Get the output reconstructed 3D ultrasound volume

@@ -201,7 +201,9 @@ int main(int argc, char* argv[])
 
     // Insert slice for reconstruction
     bool insertedIntoVolume = false;
-    if (reconstructor->AddTrackedFrame(frame, transformRepository, &insertedIntoVolume) != IGSIO_SUCCESS)
+	bool isFirst = frameIndex == 0;
+	bool isLast = frameIndex + reconstructor->GetSkipInterval() >= numberOfFrames;
+    if (reconstructor->AddTrackedFrame(frame, transformRepository, isFirst, isLast, &insertedIntoVolume) != IGSIO_SUCCESS)
     {
       LOG_ERROR("Failed to add tracked frame to volume with frame #" << frameIndex);
       continue;
