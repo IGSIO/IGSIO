@@ -698,7 +698,7 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
 
   auto end_time = std::chrono::steady_clock::now();
 
-  LOG_INFO("Inserted Slice: " << vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString(str->Optimization) << ", " << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << " us" << std::endl);
+  LOG_TRACE("Inserted Slice: " << vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString(str->Optimization) << ", " << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << " us" << std::endl);
 
   return VTK_THREAD_RETURN_VALUE;
 }
