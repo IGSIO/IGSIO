@@ -151,7 +151,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 
 	this->Device = all_devices[0];
 
-	LOG_ERROR("Using OpenCL platform device " << this->Device.getInfo<CL_DEVICE_NAME>());
+	LOG_INFO("Using OpenCL platform device " << this->Device.getInfo<CL_DEVICE_NAME>());
 
 	this->Context = cl::Context({ this->Device });
 
@@ -196,6 +196,33 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"    outPoint[3] = 1;\n";
 
 	if (parameters.interpolation_mode == vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION) {
+		// Linear interpolation
+		kernel_source <<
+			" // convert point components into integer component and a fraction\n"
+			<< parameters.matrix_type_name << " f[2][3], foutId[3];\n"
+			<< "int outId0[3], outId[2][3];\n"
+			"for (int i = 0; i < 3; ++i) {\n"
+			"    f[1][i] = fract(outPoint[i], &foutId[i]);\n"
+			"    f[0][i] = 1.0 - f[1][i];\n"
+			"    outId[0][i] = foutId[i];\n"
+			"}\n"
+			"if ((outId[0][0] | (args.outExt[1] - args.outExt[0] - outId[1][0]) |\n"
+			"outId[0][1] | (args.outExt[3] - args.outExt[2] - outId[1][1]) |\n"
+			"outId[0][2] | (args.outExt[5] - args.outExt[4] - outId[1][2])) >= 0)\n"
+			"{\n"
+			"// do reverse trilinear interpolation\n"
+			"for (int dx = 0; dx < 2; ++dx) {\n"
+			"for (int dy = 0; dy < 2; ++dx) {\n"
+			"for (int dz = 0; dz < 2; ++dz) {\n"
+			<< parameters.matrix_type_name << " weight = f[dx][0] * f[dy][1] * f[dy][2];\n"
+			"// Ignore the voxel where weight is less that one-eight\n"
+			"if (weight < 0.125) {\n"
+			"    continue;\n"
+			"}\n"
+			"int outIdX = outId[dx][0];\n"
+			"int outIdY = outId[dy][1];\n"
+			"int outIdZ = outId[dz][2];\n";
+	} else {
 		kernel_source <<
 			"    \n"
 			"    // The nearest neighbor interpolation occurs here\n"
@@ -213,36 +240,8 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 			"    if ((outIdX | (args.outExt[1] - args.outExt[0] - outIdX) |\n"
 			"    outIdY | (args.outExt[3] - args.outExt[2] - outIdY) |\n"
 			"    outIdZ | (args.outExt[5] - args.outExt[4] - outIdZ)) >= 0) {\n"
-            "        const " << parameters.matrix_type_name << " weight = 1.0";
+			"        const " << parameters.matrix_type_name << " weight = 1.0;\n";
 
-	}
-	else {
-		// Linear interpolation
-		kernel_source <<
-			" // convert point components into integer component and a fraction\n"
-			<< parameters.matrix_type_name << " f[2][3], foutId[3];\n"
-			<< "int outId0[3], outId[2][3];\n"
-			"for (int i = 0; i < 3; ++i) {\n"
-			"f[1][i] = fract(outPoint[i], &foutId[i]);\n"
-			"f[0][i] = 1.0 - f[1][i];\n"
-			"outId[0][i] = foutId[i];\n"
-			"}\n"
-			"if ((outId[0][0] | (args.outExt[1] - args.outExt[0] - outId[1][0]) |\n"
-			"outId[0][1] | (args.outExt[3] - args.outExt[2] - outId[1][1]) |\n"
-			"outId[0][2] | (args.outExt[5] - args.outExt[4] - outId[1][2])) >= 0)\n"
-			"{\n"
-			"// do reverse trilinear interpolation\n"
-			"for (dx = 0; dx < 2; ++dx) {\n"
-			"for (dy = 0; dy < 2; ++dx) {\n"
-			"for (dz = 0; dz < 2; ++dz) {\n"
-			"parameters.matrix_type_name weight = f[dx][0] * f[dy][1] * f[dy][2];\n"
-						"// Ignore the voxel where weight is less that one-eight\n"
-						"if (weight < 0.125) {\n"
-						"    continue;\n"
-						"}\n"
-						"int outIdX = outId[dx][0];\n"
-						"int outIdY = outId[dy][1];\n"
-						"int outIdZ = outId[dz][2];\n";
 	}
 	kernel_source <<
 		"        global " << parameters.data_type_name << "* outPtr = Volume + args.numscalars * (outIdX + outIdY * (1 + args.outExt[1] - args.outExt[0]) + outIdZ * (1 + args.outExt[1] - args.outExt[0]) * (1 + args.outExt[3] - args.outExt[2]));\n"
@@ -267,7 +266,7 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 		"        if (newa > " << ACCUMULATION_THRESHOLD << ") {\n"
 		"            *OverflowCount += 1;\n"
 		"        }\n"
-		"        *accPtr = min(newa, " << ACCUMULATION_MAXIMUM << ");";
+		"        *accPtr = min(newa, " << ACCUMULATION_MAXIMUM << ");\n";
 
 	if (parameters.interpolation_mode == vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION) {
 		kernel_source <<
@@ -275,15 +274,11 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
             "    }\n"
             "    }\n";
 	}
-	else {
-		kernel_source <<
-			"    }\n";
-	}
 	kernel_source << 
-		"}\n";
+		"    }\n"
+	    "}\n";
 
 	std::string kernel_source_str = kernel_source.str();
-	LOG_ERROR(" Building: " << kernel_source_str);
 
 	sources.push_back({ kernel_source_str.c_str(), kernel_source_str.length() });
 
