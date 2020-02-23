@@ -19,6 +19,7 @@
 #cmakedefine IGSIO_BUILD_SEQUENCEIO
 #cmakedefine IGSIO_SEQUENCEIO_ENABLE_MKV
 #cmakedefine IGSIO_USE_VP9
+#cmakedefine IGSIO_USE_GPU
 
 #include "vtkVersionMacros.h"
 

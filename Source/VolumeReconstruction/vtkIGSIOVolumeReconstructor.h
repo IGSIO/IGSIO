@@ -70,7 +70,7 @@ public:
     or setting the OutputSpacing, OutputOrigin, and OutputExtent attributes in the configuration data
     element).
   */
-  virtual igsioStatus AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool* insertedIntoVolume = NULL);
+  virtual igsioStatus AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool isFirst, bool isLast, bool* insertedIntoVolume = NULL);
 
   /*!
     Makes the reconstructed volume ready to be retrieved.

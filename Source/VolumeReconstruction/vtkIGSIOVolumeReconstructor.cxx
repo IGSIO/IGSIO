@@ -116,7 +116,8 @@ igsioStatus vtkIGSIOVolumeReconstructor::ReadConfiguration(vtkXMLDataElement* co
                                     this->Reconstructor->GetInterpolationModeAsString(vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION), vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION,
                                     this->Reconstructor->GetInterpolationModeAsString(vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION), vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION);
 
-  XML_READ_ENUM3_ATTRIBUTE_OPTIONAL(Optimization, reconConfig,
+  XML_READ_ENUM4_ATTRIBUTE_OPTIONAL(Optimization, reconConfig,
+                                    this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::GPU_ACCELERATION_OPENCL), vtkIGSIOPasteSliceIntoVolume::GPU_ACCELERATION_OPENCL,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::FULL_OPTIMIZATION), vtkIGSIOPasteSliceIntoVolume::FULL_OPTIMIZATION,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::PARTIAL_OPTIMIZATION), vtkIGSIOPasteSliceIntoVolume::PARTIAL_OPTIMIZATION,
                                     this->Reconstructor->GetOptimizationModeAsString(vtkIGSIOPasteSliceIntoVolume::NO_OPTIMIZATION), vtkIGSIOPasteSliceIntoVolume::NO_OPTIMIZATION);
@@ -474,7 +475,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool* insertedIntoVolume/*=NULL*/)
+igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool isFirst, bool isLast, bool* insertedIntoVolume/*=NULL*/)
 {
   igsioTransformName imageToReferenceTransformName;
   if (GetImageToReferenceTransformName(imageToReferenceTransformName) != IGSIO_SUCCESS)
@@ -537,7 +538,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* fram
     return IGSIO_SUCCESS;
   }
 
-  igsioStatus insertSliceStatus = this->Reconstructor->InsertSlice(frameImage, imageToReferenceTransformMatrix);
+  igsioStatus insertSliceStatus = this->Reconstructor->InsertSlice(frameImage, imageToReferenceTransformMatrix, isFirst, isLast);
   this->Modified();
   return insertSliceStatus;
 }

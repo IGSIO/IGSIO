@@ -55,6 +55,11 @@ POSSIBILITY OF SUCH DAMAGES.
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperUnoptimized.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperOptimized.h"
+#ifdef IGSIO_USE_GPU
+#  include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
+#endif
+
+#include <chrono>
 
 vtkStandardNewMacro( vtkIGSIOPasteSliceIntoVolume );
 
@@ -77,6 +82,10 @@ struct InsertSliceThreadFunctionInfoStruct
   double FanRadiusStart;
   double FanRadiusStop;
   std::vector<unsigned int> AccumulationBufferSaturationErrors;
+
+  bool IsFirst;
+  bool IsLast;
+  vtkOpenCLContext** OpenCLContext;
 };
 
 //----------------------------------------------------------------------------
@@ -131,6 +140,8 @@ vtkIGSIOPasteSliceIntoVolume::vtkIGSIOPasteSliceIntoVolume()
   // deprecated reconstruction options
   this->Compounding = -1;
   this->Calculation = UNDEFINED_CALCULATION;
+
+  this->OpenCLContext = NULL;
 
   SetPixelRejectionDisabled();
 }
@@ -296,7 +307,7 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::ResetOutput()
 //----------------------------------------------------------------------------
 // Does the actual work of optimally inserting a slice, with optimization
 // Basically, just calls Multithread()
-igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkMatrix4x4* transformImageToReference )
+igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkMatrix4x4* transformImageToReference, bool isFirst, bool isLast )
 {
   if ( this->OutputExtent[0] >= this->OutputExtent[1]
        && this->OutputExtent[2] >= this->OutputExtent[3]
@@ -317,6 +328,9 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
   str.InterpolationMode = this->InterpolationMode;
   str.CompoundingMode = this->CompoundingMode;
   str.Optimization = this->Optimization;
+  str.IsFirst = isFirst;
+  str.IsLast = isLast;
+
   if ( this->ClipRectangleSize[0] > 0 && this->ClipRectangleSize[1] > 0 )
   {
     // ClipRectangle specified
@@ -342,6 +356,11 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
 
   str.PixelRejectionThreshold = this->PixelRejectionThreshold;
 
+  if ( this->Optimization == GPU_ACCELERATION_OPENCL )
+  {
+    // Parallelization is done on the GPU, no nede for CPU threads
+    this->Threader->SetNumberOfThreads(1);
+  }
   if ( this->NumberOfThreads > 0 )
   {
     this->Threader->SetNumberOfThreads( this->NumberOfThreads );
@@ -355,6 +374,7 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
   {
     str.AccumulationBufferSaturationErrors.push_back( 0 );
   }
+  str.OpenCLContext = &this->OpenCLContext;
 
   this->Threader->SetSingleMethod( InsertSliceThreadFunction, &str );
   this->Threader->SingleMethodExecute();
@@ -509,7 +529,11 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
   insertionParams.outData = outData;
   insertionParams.outPtr = outPtr;
   insertionParams.pixelRejectionThreshold = str->PixelRejectionThreshold;
+  insertionParams.isFirst = str->IsFirst;
+  insertionParams.isLast = str->IsLast;
   // the matrix will be set once we know more about the optimization level
+
+  auto start_time = std::chrono::steady_clock::now();
 
   if ( str->Optimization == FULL_OPTIMIZATION )
   {
@@ -622,6 +646,15 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
         LOG_ERROR( "OptimizedInsertSlice: Unknown input ScalarType" );
       }
     }
+    else if (str->Optimization == GPU_ACCELERATION_OPENCL)
+    {
+      // GPU acceleration using OpenCL
+#ifdef IGSIO_USE_GPU
+		vtkOpenCLInsertSlice(&insertionParams, inData->GetScalarType(), str->OpenCLContext);
+#else
+		LOG_ERROR("InsertSlice: GPU Acceleration was chosen but is not supported");
+#endif
+	}
     else
     {
       // no optimization
@@ -662,6 +695,10 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
       }
     }
   }
+
+  auto end_time = std::chrono::steady_clock::now();
+
+  LOG_TRACE("Inserted Slice: " << vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString(str->Optimization) << ", " << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << " us" << std::endl);
 
   return VTK_THREAD_RETURN_VALUE;
 }
@@ -818,6 +855,8 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString( Optimizat
 {
   switch ( type )
   {
+  case GPU_ACCELERATION_OPENCL:
+    return "OPENCL";
   case FULL_OPTIMIZATION:
     return "FULL";
   case PARTIAL_OPTIMIZATION:
@@ -845,5 +884,16 @@ bool vtkIGSIOPasteSliceIntoVolume::IsPixelRejectionEnabled()
 //----------------------------------------------------------------------------
 void vtkIGSIOPasteSliceIntoVolume::SetPixelRejectionDisabled()
 {
-  this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
+	this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
 }
+
+//----------------------------------------------------------------------------
+bool vtkIGSIOPasteSliceIntoVolume::IsGpuAccelerationSupported()
+{
+#ifdef IGSIO_USE_GPU
+  return vtkOpenCLHasGPU();
+#else
+  return false;
+#endif
+}
+

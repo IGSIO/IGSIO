@@ -49,6 +49,7 @@ class vtkXMLDataElement;
 class vtkMultiThreader;
 class vtkImageData;
 class vtkMatrix4x4;
+class vtkOpenCLContext;
 
 // IGSIOCommon includes
 #include "igsioCommon.h"
@@ -84,7 +85,8 @@ public:
   {
     NO_OPTIMIZATION,
     PARTIAL_OPTIMIZATION,
-    FULL_OPTIMIZATION
+    FULL_OPTIMIZATION,
+    GPU_ACCELERATION_OPENCL
   };
 
   enum CompoundingType
@@ -152,7 +154,7 @@ public:
     The origin of the image is at the first pixel stored in the memory.
     The extent, origin, and spacing of the output must be defined before calling this method.
   */
-  virtual igsioStatus InsertSlice(vtkImageData *image, vtkMatrix4x4* mImageToReference);
+  virtual igsioStatus InsertSlice(vtkImageData *image, vtkMatrix4x4* mImageToReference, bool isFirst, bool isLast);
 
   /*!
     Get the output reconstructed 3D ultrasound volume
@@ -264,7 +266,7 @@ public:
   /*! Get the current optimization method */
   vtkGetMacro(Optimization,OptimizationType);
   /*! Get the name of an optimization method from a type id */
-  const char* GetOptimizationModeAsString(OptimizationType type);
+  static const char* GetOptimizationModeAsString(OptimizationType type);
 
   /*!
     Set the interpolation mode
@@ -329,6 +331,8 @@ public:
   vtkGetMacro(PixelRejectionThreshold, double);
   bool IsPixelRejectionEnabled();
   void SetPixelRejectionDisabled();
+
+  static bool IsGpuAccelerationSupported();
   
 protected:
   vtkIGSIOPasteSliceIntoVolume();
@@ -375,6 +379,8 @@ protected:
   int NumberOfThreads;
   
   double PixelRejectionThreshold;
+
+  vtkOpenCLContext *OpenCLContext;
   
 private:
   vtkIGSIOPasteSliceIntoVolume(const vtkIGSIOPasteSliceIntoVolume&);
