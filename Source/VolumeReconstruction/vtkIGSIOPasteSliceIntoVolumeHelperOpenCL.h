@@ -134,6 +134,7 @@ public:
 	cl::CommandQueue Queue;
 
 	vtkOpenCLContextParameters Parameters;
+	bool OutputVolumeChanged;
 };
 
 vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Parameters(parameters)
@@ -317,6 +318,8 @@ vtkOpenCLContext::vtkOpenCLContext(vtkOpenCLContextParameters parameters) : Para
 	}
 
 	this->Queue = cl::CommandQueue(this->Context, this->Device);
+
+	this->OutputVolumeChanged = false;
 }
 
 vtkOpenCLContext::~vtkOpenCLContext()
@@ -612,6 +615,8 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 	  LOG_ERROR("Launch OpenCL kernel: " << err);
   }
 
+  context->OutputVolumeChanged = true;
+
   if (insertionParams->isLast) {
 	  vtkOpenCLReadOutput(insertionParams, context);
   }
@@ -628,7 +633,7 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
 
 static void vtkOpenCLReadOutput(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, vtkOpenCLContext *context)
 {
-	if (context == NULL)
+	if (context == NULL || !context->OutputVolumeChanged )
 	{
 		return;
 	}
@@ -695,6 +700,8 @@ static void vtkOpenCLReadOutput(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* i
 	if (err != CL_SUCCESS) {
 		LOG_ERROR("Finish OpenCL queue: " << err);
 	}
+
+	context->OutputVolumeChanged = false;
 }
 
 #endif
