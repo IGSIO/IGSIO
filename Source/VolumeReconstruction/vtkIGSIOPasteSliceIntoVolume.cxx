@@ -222,6 +222,37 @@ void vtkIGSIOPasteSliceIntoVolume::PrintSelf( ostream& os, vtkIndent indent )
 //----------------------------------------------------------------------------
 vtkImageData* vtkIGSIOPasteSliceIntoVolume::GetReconstructedVolume()
 {
+#ifdef IGSIO_USE_GPU
+	if (this->OpenCLContext)
+	{
+		// Get output volume extent and pointer
+		vtkImageData* outData = this->ReconstructedVolume;
+
+		vtkIGSIOPasteSliceIntoVolumeInsertSliceParams insertionParams;
+		int* outExtent = this->OutputExtent;
+		void* outPtr = outData->GetScalarPointerForExtent(outExtent);
+
+		insertionParams.outData = this->ReconstructedVolume;
+		insertionParams.outPtr = outPtr;
+
+		// If we are not interested in the Acculumation buffer at this point, you can replace the following with NULL
+		// And the Accumulation buffer data will not be copied from the GPU. 
+		insertionParams.accPtr = static_cast<unsigned short*>(this->AccumulationBuffer->GetScalarPointerForExtent(outExtent));
+
+		// Similarly, if we don't cane about accumulation overflows, replace this with NULL
+		// and remove the overflow warning below
+		unsigned int accOverflowCount;
+		insertionParams.accOverflowCount = &accOverflowCount;
+
+		vtkOpenCLReadOutput(&insertionParams, this->OpenCLContext);
+
+		if (accOverflowCount && !EnableAccumulationBufferOverflowWarning)
+		{
+			LOG_WARNING(accOverflowCount << " voxels have had too many pixels inserted. This can result in errors in the final volume. It is recommended that the output volume resolution be increased.");
+		}
+	}
+#endif
+
   return this->ReconstructedVolume;
 }
 
