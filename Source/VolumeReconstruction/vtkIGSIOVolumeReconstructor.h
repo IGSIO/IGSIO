@@ -11,7 +11,7 @@
 #include "vtkIGSIOPasteSliceIntoVolume.h"
 #include "vtkImageAlgorithm.h"
 
-class igsioTrackedFrame; 
+class igsioTrackedFrame;
 class vtkIGSIOFanAngleDetectorAlgo;
 class vtkIGSIOFillHolesInVolume;
 class vtkIGSIOTrackedFrameList;

@@ -47,7 +47,7 @@ public:
   \param adjustSign If true, then slerp will operate by adjusting the sign of the slerp to take shortest path
   References: From Adv Anim and Rendering Tech. Pg 364
   */
-  static void Slerp(double *result, double t, double *from, double *to, bool adjustSign = true);
+  static void Slerp(double* result, double t, double* from, double* to, bool adjustSign = true);
 
   /*
   This function constrain an orientation in 3DOF to 2DOF (rotation around two axes)
@@ -68,7 +68,7 @@ public:
   static std::string GetTransformParametersString(vtkMatrix4x4* matrix);
 
   /*! Print VTK matrix into STL stream */
-  static void PrintVtkMatrix(vtkMatrix4x4* matrix, std::ostringstream &stream, int precision = 3);
+  static void PrintVtkMatrix(vtkMatrix4x4* matrix, std::ostringstream& stream, int precision = 3);
 
   /*! Print VTK matrix into log as info */
   static void LogVtkMatrix(vtkMatrix4x4* matrix, int precision = 3);
@@ -175,7 +175,7 @@ public:
   \return Output integer part
   */
   template <class F>
-  static inline int Floor(F x, F &f)
+  static inline int Floor(F x, F& f)
   {
     int ix = Floor(x);
     f = x - ix;
@@ -199,35 +199,35 @@ public:
   \param mean Computed mean
   \param stdev Computed standard deviation
   */
-  static igsioStatus ComputeMeanAndStdev(const std::vector<double> &values, double &mean, double &stdev);
+  static igsioStatus ComputeMeanAndStdev(const std::vector<double>& values, double& mean, double& stdev);
 
   /*!
   Convenience function to compute mean and standard deviation for a vector of doubles
   \param values Input values
   \param rms Root mean square
   */
-  static igsioStatus ComputeRms(const std::vector<double> &values, double &rms);
+  static igsioStatus ComputeRms(const std::vector<double>& values, double& rms);
 
   /*!
   Convenience function to compute a percentile (percentile % of the values are smaller than the computed value)
   \param values Input values
   \param percentile Percents of values to keep (between 0.0 and 1.0)
   */
-  static igsioStatus ComputePercentile(const std::vector<double> &values, double percentileToKeep, double &valueMax, double &valueMean, double &valueStdev);
+  static igsioStatus ComputePercentile(const std::vector<double>& values, double percentileToKeep, double& valueMax, double& valueMean, double& valueStdev);
 
   /*! Returns the Euclidean distance between two 4x4 homogeneous transformation matrix */
-  static double GetPositionDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix); 
+  static double GetPositionDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix);
 
   /*! Returns the orientation difference in degrees between two 4x4 homogeneous transformation matrix, in degrees. */
-  static double GetOrientationDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix); 
+  static double GetOrientationDifference(vtkMatrix4x4* aMatrix, vtkMatrix4x4* bMatrix);
 
 protected:
-  igsioMath(); 
+  igsioMath();
   ~igsioMath();
 
-private: 
+private:
   igsioMath(igsioMath const&);
   igsioMath& operator=(igsioMath const&);
 };
 
-#endif 
+#endif

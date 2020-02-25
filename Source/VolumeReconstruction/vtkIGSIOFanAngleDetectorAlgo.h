@@ -26,68 +26,68 @@ public:
 
   typedef std::vector<double> EvaluatedDepthsRadiusPercentageType;
 
-  static vtkIGSIOFanAngleDetectorAlgo *New();
+  static vtkIGSIOFanAngleDetectorAlgo* New();
   vtkTypeMacro(vtkIGSIOFanAngleDetectorAlgo, vtkObject);
   virtual void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
-    /*! Set input image */
-  vtkSetObjectMacro(Image, vtkImageData); 
+  /*! Set input image */
+  vtkSetObjectMacro(Image, vtkImageData);
   /*! Get input image */
-  vtkGetObjectMacro(Image, vtkImageData); 
+  vtkGetObjectMacro(Image, vtkImageData);
 
   /*!
     Set the clip rectangle origin to apply to the image in pixel coordinates.
     Pixels outside the clip rectangle will not be pasted into the volume.
     The origin of the rectangle is at its corner that is closest to the image origin.
   */
-  vtkSetVector2Macro(ClipRectangleOrigin,int);
+  vtkSetVector2Macro(ClipRectangleOrigin, int);
   /*!
     Get the clip rectangle origin to apply to the image in pixel coordinates.
   */
-  vtkGetVector2Macro(ClipRectangleOrigin,int);
+  vtkGetVector2Macro(ClipRectangleOrigin, int);
 
   /*! Set the clip rectangle size in pixels */
-  vtkSetVector2Macro(ClipRectangleSize,int);
+  vtkSetVector2Macro(ClipRectangleSize, int);
   /*! Get the clip rectangle size in pixels */
-  vtkGetVector2Macro(ClipRectangleSize,int);
+  vtkGetVector2Macro(ClipRectangleSize, int);
 
   /*!
     Set fan-shaped clipping region for curvilinear probes.
     The origin of the fan is defined in the image coordinate system, in the input image physical coordinate system.
   */
-  vtkSetVector2Macro(FanOrigin,double);
+  vtkSetVector2Macro(FanOrigin, double);
   /*! Get fan-shaped clipping region for curvilinear probes */
-  vtkGetVector2Macro(FanOrigin,double);
+  vtkGetVector2Macro(FanOrigin, double);
 
   /*!
     Set the fan-shaped clipping region for curvilinear probes.
     Fan angles is a vector containing the maximum allowed angles of the two straight edge of the fan, in degrees.
   */
-  vtkSetVector2Macro(MaxFanAnglesDeg,double);
+  vtkSetVector2Macro(MaxFanAnglesDeg, double);
   /*! Set the fan-shaped clipping region for curvilinear probes */
-  vtkGetVector2Macro(MaxFanAnglesDeg,double);
-  
+  vtkGetVector2Macro(MaxFanAnglesDeg, double);
+
   /*!
     Set the fan-shaped clipping region for curvilinear probes.
     Fan radius start is the minimum depth, in the input image physical coordinate system.
   */
-  vtkSetMacro(FanRadiusStart,double);
+  vtkSetMacro(FanRadiusStart, double);
   /*!
     Get the fan-shaped clipping region for curvilinear probes.
     Fan radius start is the minimum depth, in the input image physical coordinate system.
   */
-  vtkGetMacro(FanRadiusStart,double);
+  vtkGetMacro(FanRadiusStart, double);
 
   /*!
     Set the fan-shaped clipping region for curvilinear probes.
     Fan radius stopt is the maximum depth, in the input image physical coordinate system.
   */
-  vtkSetMacro(FanRadiusStop,double);
+  vtkSetMacro(FanRadiusStop, double);
   /*!
     Get the fan-shaped clipping region for curvilinear probes.
     Fan radius start is the maximum depth, in the input image physical coordinate system.
   */
-  vtkGetMacro(FanRadiusStop,double);
+  vtkGetMacro(FanRadiusStop, double);
 
   vtkSetMacro(FilterRadiusPixel, int);
   vtkGetMacro(FilterRadiusPixel, int);
@@ -99,13 +99,13 @@ public:
   void Update();
 
   /*! Output detected fan angles */
-  vtkSetVector2Macro(DetectedFanAnglesDeg,double);
-  vtkGetVector2Macro(DetectedFanAnglesDeg,double);
+  vtkSetVector2Macro(DetectedFanAnglesDeg, double);
+  vtkGetVector2Macro(DetectedFanAnglesDeg, double);
 
   /*! Returns true if non-blank (not black) area is found in the image */
-  vtkGetMacro(IsFrameEmpty,bool);
-  
-protected: 
+  vtkGetMacro(IsFrameEmpty, bool);
+
+protected:
   vtkIGSIOFanAngleDetectorAlgo();
   virtual ~vtkIGSIOFanAngleDetectorAlgo();
 
@@ -140,11 +140,11 @@ protected:
   {
     BandInfo()
     {
-      Valid=false;
-      TestRadius=1.0;
-      AngleIncrementRad=1.0;
-      DetectedFanAnglesRad[0]=0.0;
-      DetectedFanAnglesRad[1]=0.0;
+      Valid = false;
+      TestRadius = 1.0;
+      AngleIncrementRad = 1.0;
+      DetectedFanAnglesRad[0] = 0.0;
+      DetectedFanAnglesRad[1] = 0.0;
     }
     bool Valid;
     double TestRadius;
@@ -152,13 +152,13 @@ protected:
     double DetectedFanAnglesRad[2];
     std::vector<double> TestThetaRad;
     std::vector<double> TestValue;
-  	std::vector<double> LeftLogRad;
-  	std::vector<double> RightLogRad;
+    std::vector<double> LeftLogRad;
+    std::vector<double> RightLogRad;
   };
 
-private: 
+private:
   vtkIGSIOFanAngleDetectorAlgo(const vtkIGSIOFanAngleDetectorAlgo&);  // Not implemented.
   void operator=(const vtkIGSIOFanAngleDetectorAlgo&);  // Not implemented.
-}; 
+};
 
 #endif

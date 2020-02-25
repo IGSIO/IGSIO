@@ -41,7 +41,7 @@ POSSIBILITY OF SUCH DAMAGES.
 
 
 #ifndef _FIXED_H
-#define _FIXED_H 1 
+#define _FIXED_H 1
 
 /*!
   \class fixed
@@ -69,7 +69,7 @@ private:
 
   enum ConversionType
   {
-    /*! 
+    /*!
       A constant that is used as a second parameter in the fixed constructor
       when the input value is already encoded as fixed and so no conversion
       is necessary
@@ -79,32 +79,46 @@ private:
 
   static inline int point() { return 14; };
 
-  static inline int from_float(double x) {
+  static inline int from_float(double x)
+  {
     union { double d; unsigned int i[2]; } dual;
     dual.d = x + 412316860416.0; // (2**(52-point()))*1.5
-    return dual.i[0]; }; // warning: some compilers screw this up
+    return dual.i[0];
+  }; // warning: some compilers screw this up
 
-  static inline double to_float(int x) {
-    return x*(1.0/(1<<point())); };
+  static inline double to_float(int x)
+  {
+    return x * (1.0 / (1 << point()));
+  };
 
-  static inline int to_int(int x) {
-    return ((x >= 0) ? (x>>point()) : ((x + ((1<<point())-1))>>point())); };
+  static inline int to_int(int x)
+  {
+    return ((x >= 0) ? (x >> point()) : ((x + ((1 << point()) - 1)) >> point()));
+  };
 
-  static inline int from_int(int x) {
-    return x<<point(); };
+  static inline int from_int(int x)
+  {
+    return x << point();
+  };
 
-  static inline int fast_multiply(int x, int y) {
-    return ((x*y + (1<<(point()-1)))>>point()); };
+  static inline int fast_multiply(int x, int y)
+  {
+    return ((x * y + (1 << (point() - 1))) >> point());
+  };
 
-  static inline int multiply(int x, int y) {
-    int hx = x>>point();
-    int hy = y>>point();
-    int lx = x - (hx<<point());
-    int ly = y - (hy<<point());
-    return ((lx*ly + (1<<(point()-1)))>>point()) + hx*ly + x*hy; };
-    
-  static inline int divide(int x, int y) {
-    return from_float(double(x)/y); };
+  static inline int multiply(int x, int y)
+  {
+    int hx = x >> point();
+    int hy = y >> point();
+    int lx = x - (hx << point());
+    int ly = y - (hy << point());
+    return ((lx * ly + (1 << (point() - 1))) >> point()) + hx * ly + x * hy;
+  };
+
+  static inline int divide(int x, int y)
+  {
+    return from_float(double(x) / y);
+  };
 
   /*! Dummy null-conversion (to directly set the value of the integer container with an existing integer, without conversion */
   inline fixed(int x, ConversionType) : i(x) {};
@@ -115,7 +129,7 @@ public:
 
   /*! Constructs the object. Its value is not initialized. */
   inline fixed() {};
-  inline fixed(const fixed &x) : i(x.i) {}; 
+  inline fixed(const fixed& x) : i(x.i) {};
   inline fixed& operator=(const fixed& x) { i = x.i; return *this; };
 
   inline fixed(long x) : i(from_int(x)) {};
@@ -127,7 +141,7 @@ public:
   inline fixed(char x) : i(from_int(x)) {};
   inline fixed(unsigned char x) : i(from_int(x)) {};
   inline fixed(float x) : i(from_float(x)) {};
-  inline fixed(double x) : i(from_float(x)) {};  
+  inline fixed(double x) : i(from_float(x)) {};
 
   inline operator long() const { return to_int(i); };
   inline operator unsigned long() const { return to_int(i); };
@@ -142,10 +156,16 @@ public:
 
   inline fixed& operator+=(const fixed& x) { i += x.i; return *this; };
   inline fixed& operator-=(const fixed& x) { i -= x.i; return *this; };
-  inline fixed& operator*=(const fixed& x) { 
-    i = multiply(i, x.i); return *this; };
-  inline fixed& operator/=(const fixed& x) {
-    i = divide(i, x.i); return *this; };
+  inline fixed& operator*=(const fixed& x)
+  {
+    i = multiply(i, x.i);
+    return *this;
+  };
+  inline fixed& operator/=(const fixed& x)
+  {
+    i = divide(i, x.i);
+    return *this;
+  };
 
   inline fixed& operator*=(long x) { i *= x; return *this; };
   inline fixed& operator*=(unsigned long x) { i *= x; return *this; };
@@ -155,10 +175,16 @@ public:
   inline fixed& operator*=(unsigned short x) { i *= x; return *this; };
   inline fixed& operator*=(char x) { i *= x; return *this; };
   inline fixed& operator*=(unsigned char x) { i *= x; return *this; };
-  inline fixed& operator*=(float x) {
-    i = from_float(float(*this)*x); return *this; };
-  inline fixed& operator*=(double x) {
-    i = from_float(double(*this)*x); return *this; };  
+  inline fixed& operator*=(float x)
+  {
+    i = from_float(float(*this) * x);
+    return *this;
+  };
+  inline fixed& operator*=(double x)
+  {
+    i = from_float(double(*this) * x);
+    return *this;
+  };
 
   friend const fixed& operator+(const fixed& x);
   friend fixed operator-(const fixed& x);
@@ -178,57 +204,97 @@ public:
   friend bool operator<=(const fixed& x, const fixed& y);
   friend bool operator>=(const fixed& x, const fixed& y);
 
-  inline int round() const { return (i + (1<<(point()-1)))>>point(); };
+  inline int round() const { return (i + (1 << (point() - 1))) >> point(); };
   inline int floor() const { return i >> point(); };
-  inline int ceil() const { return (i + ((1<<point())-1))>>point(); };
+  inline int ceil() const { return (i + ((1 << point()) - 1)) >> point(); };
 };
 
-inline const fixed& operator+(const fixed& x) {
-  return x; }
-inline fixed operator-(const fixed& x) {
-  return fixed(-x.i, fixed::INTERPRET_AS_FIXED); }
+inline const fixed& operator+(const fixed& x)
+{
+  return x;
+}
+inline fixed operator-(const fixed& x)
+{
+  return fixed(-x.i, fixed::INTERPRET_AS_FIXED);
+}
 
-inline fixed operator+(const fixed& x, const fixed& y) {
-  return fixed(x.i + y.i, fixed::INTERPRET_AS_FIXED); }
-inline fixed operator-(const fixed& x, const fixed& y) {
-  return fixed(x.i - y.i, fixed::INTERPRET_AS_FIXED); }
-inline fixed operator*(const fixed& x, const fixed& y) {
-  return fixed(fixed::fast_multiply(x.i, y.i), fixed::INTERPRET_AS_FIXED); }
-inline fixed operator/(const fixed& x, const fixed& y) {
-  return fixed(fixed::divide(x.i, y.i), fixed::INTERPRET_AS_FIXED); }
+inline fixed operator+(const fixed& x, const fixed& y)
+{
+  return fixed(x.i + y.i, fixed::INTERPRET_AS_FIXED);
+}
+inline fixed operator-(const fixed& x, const fixed& y)
+{
+  return fixed(x.i - y.i, fixed::INTERPRET_AS_FIXED);
+}
+inline fixed operator*(const fixed& x, const fixed& y)
+{
+  return fixed(fixed::fast_multiply(x.i, y.i), fixed::INTERPRET_AS_FIXED);
+}
+inline fixed operator/(const fixed& x, const fixed& y)
+{
+  return fixed(fixed::divide(x.i, y.i), fixed::INTERPRET_AS_FIXED);
+}
 
-inline bool operator==(const fixed& x, const fixed& y) {
-  return x.i == y.i; }
-inline bool operator!=(const fixed& x, const fixed& y) {
-  return x.i != y.i; }
-inline bool operator>(const fixed& x, const fixed& y) {
-  return x.i > y.i; }
-inline bool operator<(const fixed& x, const fixed& y) {
-  return x.i < y.i; }
-inline bool operator>=(const fixed& x, const fixed& y) {
-  return x.i >= y.i; }
-inline bool operator<=(const fixed& x, const fixed& y) {
-  return x.i <= y.i; }
+inline bool operator==(const fixed& x, const fixed& y)
+{
+  return x.i == y.i;
+}
+inline bool operator!=(const fixed& x, const fixed& y)
+{
+  return x.i != y.i;
+}
+inline bool operator>(const fixed& x, const fixed& y)
+{
+  return x.i > y.i;
+}
+inline bool operator<(const fixed& x, const fixed& y)
+{
+  return x.i < y.i;
+}
+inline bool operator>=(const fixed& x, const fixed& y)
+{
+  return x.i >= y.i;
+}
+inline bool operator<=(const fixed& x, const fixed& y)
+{
+  return x.i <= y.i;
+}
 
-inline fixed operator+(int x, const fixed& y) {
-  return fixed(x) + y; }
-inline fixed operator+(const fixed& x, int y) {
-  return x + fixed(y); }
+inline fixed operator+(int x, const fixed& y)
+{
+  return fixed(x) + y;
+}
+inline fixed operator+(const fixed& x, int y)
+{
+  return x + fixed(y);
+}
 
-inline fixed operator-(int x, const fixed& y) {
-  return fixed(x) - y; }
-inline fixed operator-(const fixed& x, int y) {
-  return x - fixed(y); }
+inline fixed operator-(int x, const fixed& y)
+{
+  return fixed(x) - y;
+}
+inline fixed operator-(const fixed& x, int y)
+{
+  return x - fixed(y);
+}
 
-inline fixed operator*(int x, const fixed& y) {
-  return fixed(x*y.i, fixed::INTERPRET_AS_FIXED); }
-inline fixed operator*(const fixed& x, int y) {
-  return fixed(x.i*y, fixed::INTERPRET_AS_FIXED); }
+inline fixed operator*(int x, const fixed& y)
+{
+  return fixed(x * y.i, fixed::INTERPRET_AS_FIXED);
+}
+inline fixed operator*(const fixed& x, int y)
+{
+  return fixed(x.i * y, fixed::INTERPRET_AS_FIXED);
+}
 
-inline fixed operator/(int x, const fixed& y) {
-  return fixed(x) /= y; }
-inline fixed operator/(const fixed& x, int y) {
-  return x / fixed(y); }
+inline fixed operator/(int x, const fixed& y)
+{
+  return fixed(x) /= y;
+}
+inline fixed operator/(const fixed& x, int y)
+{
+  return x / fixed(y);
+}
 
 inline bool operator==(const fixed& x, int y) { return x == fixed(y); }
 inline bool operator==(int x, const fixed& y) { return fixed(x) == y; }
@@ -249,35 +315,59 @@ inline bool operator>=(const fixed& x, int y) { return x >= fixed(y); }
 inline bool operator>=(int x, const fixed& y) { return fixed(x) >= y; }
 
 
-inline bool operator==(const fixed& x, unsigned int y) {
-  return x == fixed(y); }
-inline bool operator==(unsigned int x, const fixed& y) {
-  return fixed(x) == y; }
+inline bool operator==(const fixed& x, unsigned int y)
+{
+  return x == fixed(y);
+}
+inline bool operator==(unsigned int x, const fixed& y)
+{
+  return fixed(x) == y;
+}
 
-inline bool operator!=(const fixed& x, unsigned int y) {
-  return x != fixed(y); }
-inline bool operator!=(unsigned int x, const fixed& y) {
-  return fixed(x) != y; }
+inline bool operator!=(const fixed& x, unsigned int y)
+{
+  return x != fixed(y);
+}
+inline bool operator!=(unsigned int x, const fixed& y)
+{
+  return fixed(x) != y;
+}
 
-inline bool operator<(const fixed& x, unsigned int y) {
-  return x < fixed(y); }
-inline bool operator<(unsigned int x, const fixed& y) {
-  return fixed(x) < y; }
+inline bool operator<(const fixed& x, unsigned int y)
+{
+  return x < fixed(y);
+}
+inline bool operator<(unsigned int x, const fixed& y)
+{
+  return fixed(x) < y;
+}
 
-inline bool operator>(const fixed& x, unsigned int y) {
-  return x > fixed(y); }
-inline bool operator>(unsigned int x, const fixed& y) {
-  return fixed(x) > y; }
+inline bool operator>(const fixed& x, unsigned int y)
+{
+  return x > fixed(y);
+}
+inline bool operator>(unsigned int x, const fixed& y)
+{
+  return fixed(x) > y;
+}
 
-inline bool operator<=(const fixed& x, unsigned int y) {
-  return x <= fixed(y); }
-inline bool operator<=(unsigned int x, const fixed& y) {
-  return fixed(x) <= y; }
+inline bool operator<=(const fixed& x, unsigned int y)
+{
+  return x <= fixed(y);
+}
+inline bool operator<=(unsigned int x, const fixed& y)
+{
+  return fixed(x) <= y;
+}
 
-inline bool operator>=(const fixed& x, unsigned int y) {
-  return x >= fixed(y); }
-inline bool operator>=(unsigned int x, const fixed& y) {
-  return fixed(x) >= y; }
+inline bool operator>=(const fixed& x, unsigned int y)
+{
+  return x >= fixed(y);
+}
+inline bool operator>=(unsigned int x, const fixed& y)
+{
+  return fixed(x) >= y;
+}
 
 
 inline bool operator!=(const fixed& x, long y) { return x != fixed(y); }
@@ -296,35 +386,59 @@ inline bool operator>=(const fixed& x, long y) { return x >= fixed(y); }
 inline bool operator>=(long x, const fixed& y) { return fixed(x) >= y; }
 
 
-inline bool operator==(const fixed& x, unsigned long y) {
-  return x == fixed(y); }
-inline bool operator==(unsigned long x, const fixed& y) {
-  return fixed(x) == y; }
+inline bool operator==(const fixed& x, unsigned long y)
+{
+  return x == fixed(y);
+}
+inline bool operator==(unsigned long x, const fixed& y)
+{
+  return fixed(x) == y;
+}
 
-inline bool operator!=(const fixed& x, unsigned long y) {
-  return x != fixed(y); }
-inline bool operator!=(unsigned long x, const fixed& y) {
-  return fixed(x) != y; }
+inline bool operator!=(const fixed& x, unsigned long y)
+{
+  return x != fixed(y);
+}
+inline bool operator!=(unsigned long x, const fixed& y)
+{
+  return fixed(x) != y;
+}
 
-inline bool operator<(const fixed& x, unsigned long y) {
-  return x < fixed(y); }
-inline bool operator<(unsigned long x, const fixed& y) {
-  return fixed(x) < y; }
+inline bool operator<(const fixed& x, unsigned long y)
+{
+  return x < fixed(y);
+}
+inline bool operator<(unsigned long x, const fixed& y)
+{
+  return fixed(x) < y;
+}
 
-inline bool operator>(const fixed& x, unsigned long y) {
-  return x > fixed(y); }
-inline bool operator>(unsigned long x, const fixed& y) {
-  return fixed(x) > y; }
+inline bool operator>(const fixed& x, unsigned long y)
+{
+  return x > fixed(y);
+}
+inline bool operator>(unsigned long x, const fixed& y)
+{
+  return fixed(x) > y;
+}
 
-inline bool operator<=(const fixed& x, unsigned long y) {
-  return x <= fixed(y); }
-inline bool operator<=(unsigned long x, const fixed& y) {
-  return fixed(x) <= y; }
+inline bool operator<=(const fixed& x, unsigned long y)
+{
+  return x <= fixed(y);
+}
+inline bool operator<=(unsigned long x, const fixed& y)
+{
+  return fixed(x) <= y;
+}
 
-inline bool operator>=(const fixed& x, unsigned long y) {
-  return x >= fixed(y); }
-inline bool operator>=(unsigned long x, const fixed& y) {
-  return fixed(x) >= y; }
+inline bool operator>=(const fixed& x, unsigned long y)
+{
+  return x >= fixed(y);
+}
+inline bool operator>=(unsigned long x, const fixed& y)
+{
+  return fixed(x) >= y;
+}
 
 
 inline fixed operator+(long x, const fixed& y) { return int(x) + y; }

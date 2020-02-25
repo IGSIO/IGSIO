@@ -73,53 +73,53 @@ POSSIBILITY OF SUCH DAMAGES.
   the inner loops of the look-up and interpolation are
   tightened relative to the un-uptimized version.
 
-  Do nearest-neighbor interpolation of the input data 'inPtr' of extent 
-  'inExt' at the 'point'.  The result is placed at 'outPtr'.  
+  Do nearest-neighbor interpolation of the input data 'inPtr' of extent
+  'inExt' at the 'point'.  The result is placed at 'outPtr'.
   If the lookup data is beyond the extent 'inExt', set 'outPtr' to
-  the background color 'background'.  
+  the background color 'background'.
   The number of scalar components in the data is 'numscalars'
 */
 template <class F, class T>
-static int vtkNearestNeighborInterpolation(F *point,
-                                           T *inPtr,
-                                           T *outPtr,
-                                           unsigned short *accPtr,
-                                           unsigned char *importancePtr,
-                                           int numscalars,
-                                           vtkIGSIOPasteSliceIntoVolume::CompoundingType compoundingMode,
-                                           int outExt[6],
-                                           vtkIdType outInc[3],
-                                           unsigned int* accOverflowCount)
+static int vtkNearestNeighborInterpolation(F* point,
+    T* inPtr,
+    T* outPtr,
+    unsigned short* accPtr,
+    unsigned char* importancePtr,
+    int numscalars,
+    vtkIGSIOPasteSliceIntoVolume::CompoundingType compoundingMode,
+    int outExt[6],
+    vtkIdType outInc[3],
+    unsigned int* accOverflowCount)
 {
   int i;
   // The nearest neighbor interpolation occurs here
   // The output point is the closest point to the input point - rounding
   // to get closest point
-  int outIdX = igsioMath::Round(point[0])-outExt[0];
-  int outIdY = igsioMath::Round(point[1])-outExt[2];
-  int outIdZ = igsioMath::Round(point[2])-outExt[4];
+  int outIdX = igsioMath::Round(point[0]) - outExt[0];
+  int outIdY = igsioMath::Round(point[1]) - outExt[2];
+  int outIdZ = igsioMath::Round(point[2]) - outExt[4];
 
   // fancy way of checking bounds
-  if ((outIdX | (outExt[1]-outExt[0] - outIdX) |
-       outIdY | (outExt[3]-outExt[2] - outIdY) |
-       outIdZ | (outExt[5]-outExt[4] - outIdZ)) >= 0)
+  if ((outIdX | (outExt[1] - outExt[0] - outIdX) |
+       outIdY | (outExt[3] - outExt[2] - outIdY) |
+       outIdZ | (outExt[5] - outExt[4] - outIdZ)) >= 0)
   {
-    int inc = outIdX*outInc[0]+outIdY*outInc[1]+outIdZ*outInc[2];
+    int inc = outIdX * outInc[0] + outIdY * outInc[1] + outIdZ * outInc[2];
     outPtr += inc;
     switch (compoundingMode)
     {
-    case (vtkIGSIOPasteSliceIntoVolume::MAXIMUM_COMPOUNDING_MODE):
+      case (vtkIGSIOPasteSliceIntoVolume::MAXIMUM_COMPOUNDING_MODE):
       {
-        accPtr += inc/outInc[0];
+        accPtr += inc / outInc[0];
 
         int newa = *accPtr + ACCUMULATION_MULTIPLIER;
         if (newa > ACCUMULATION_THRESHOLD)
-          (*accOverflowCount) += 1;
+        { (*accOverflowCount) += 1; }
 
         for (i = 0; i < numscalars; i++)
         {
           if (*inPtr > *outPtr)
-            *outPtr = *inPtr;
+          { *outPtr = *inPtr; }
           inPtr++;
           outPtr++;
         }
@@ -132,18 +132,19 @@ static int vtkNearestNeighborInterpolation(F *point,
 
         break;
       }
-    case (vtkIGSIOPasteSliceIntoVolume::MEAN_COMPOUNDING_MODE):
+      case (vtkIGSIOPasteSliceIntoVolume::MEAN_COMPOUNDING_MODE):
       {
-        accPtr += inc/outInc[0];
-        if (*accPtr <= ACCUMULATION_THRESHOLD) { // no overflow, act normally
+        accPtr += inc / outInc[0];
+        if (*accPtr <= ACCUMULATION_THRESHOLD)   // no overflow, act normally
+        {
 
           int newa = *accPtr + ACCUMULATION_MULTIPLIER;
           if (newa > ACCUMULATION_THRESHOLD)
-            (*accOverflowCount) += 1;
+          { (*accOverflowCount) += 1; }
 
           for (i = 0; i < numscalars; i++)
           {
-            *outPtr = ((*inPtr++)*ACCUMULATION_MULTIPLIER + (*outPtr)*(*accPtr))/newa;
+            *outPtr = ((*inPtr++) * ACCUMULATION_MULTIPLIER + (*outPtr) * (*accPtr)) / newa;
             outPtr++;
           }
 
@@ -152,16 +153,19 @@ static int vtkNearestNeighborInterpolation(F *point,
           {
             *accPtr = newa;
           }
-        } else { // overflow, use recursive filtering with 255/256 and 1/256 as the weights, since 255 voxels have been inserted so far
+        }
+        else     // overflow, use recursive filtering with 255/256 and 1/256 as the weights, since 255 voxels have been inserted so far
+        {
           // TODO: Should do this for all the scalars, and accumulation?
           *outPtr = (T)(fraction1_256 * (*inPtr++) + fraction255_256 * (*outPtr));
         }
         break;
       }
-    case (vtkIGSIOPasteSliceIntoVolume::IMPORTANCE_MASK_COMPOUNDING_MODE):
+      case (vtkIGSIOPasteSliceIntoVolume::IMPORTANCE_MASK_COMPOUNDING_MODE):
       {
-        accPtr += inc/outInc[0];
-        if (*accPtr <= ACCUMULATION_THRESHOLD) { // no overflow, act normally
+        accPtr += inc / outInc[0];
+        if (*accPtr <= ACCUMULATION_THRESHOLD)   // no overflow, act normally
+        {
 
           if (*importancePtr == 0)
           {
@@ -174,10 +178,10 @@ static int vtkNearestNeighborInterpolation(F *point,
           {
             (*accOverflowCount) += 1;
           }
-          
+
           for (i = 0; i < numscalars; i++)
           {
-            *outPtr = ((*inPtr++)*(*importancePtr) + (*outPtr)*(*accPtr))/newa;
+            *outPtr = ((*inPtr++) * (*importancePtr) + (*outPtr) * (*accPtr)) / newa;
             outPtr++;
           }
 
@@ -186,22 +190,22 @@ static int vtkNearestNeighborInterpolation(F *point,
           {
             *accPtr = newa;
           }
-        } 
-        else 
-        { 
+        }
+        else
+        {
           // overflow, use recursive filtering with 255/256 and 1/256 as the weights, since 255 voxels have been inserted so far
           // TODO: Should do this for all the scalars, and accumulation?
           *outPtr = (T)(fraction1_256 * (*inPtr++) + fraction255_256 * (*outPtr));
         }
         break;
       }
-    case (vtkIGSIOPasteSliceIntoVolume::LATEST_COMPOUNDING_MODE):
+      case (vtkIGSIOPasteSliceIntoVolume::LATEST_COMPOUNDING_MODE):
       {
-        accPtr += inc/outInc[0];
+        accPtr += inc / outInc[0];
 
         int newa = *accPtr + ACCUMULATION_MULTIPLIER;
         if (newa > ACCUMULATION_THRESHOLD)
-          (*accOverflowCount) += 1;
+        { (*accOverflowCount) += 1; }
 
         for (i = 0; i < numscalars; i++)
         {
@@ -218,14 +222,14 @@ static int vtkNearestNeighborInterpolation(F *point,
 
         break;
       }
-    default:
-      LOG_ERROR("Unknown Compounding operator detected, value " << compoundingMode << ". Leaving value as-is.");
-      break;
+      default:
+        LOG_ERROR("Unknown Compounding operator detected, value " << compoundingMode << ". Leaving value as-is.");
+        break;
     }
     return 1;
   }
   return 0;
-} 
+}
 
 //----------------------------------------------------------------------------
 /*!
@@ -249,11 +253,11 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
 
   // transform matrix for image -> volume
   F* matrix = reinterpret_cast<F*>(insertionParams->matrix);
-  LOG_TRACE("sliceToOutputVolumeMatrix="<<matrix[0]<<" "<<matrix[1]<<" "<<matrix[2]<<" "<<matrix[3]<<"; "
-    <<matrix[4]<<" "<<matrix[5]<<" "<<matrix[6]<<" "<<matrix[7]<<"; "
-    <<matrix[8]<<" "<<matrix[9]<<" "<<matrix[10]<<" "<<matrix[11]<<"; "
-    <<matrix[12]<<" "<<matrix[13]<<" "<<matrix[14]<<" "<<matrix[15]
-    );
+  LOG_TRACE("sliceToOutputVolumeMatrix=" << matrix[0] << " " << matrix[1] << " " << matrix[2] << " " << matrix[3] << "; "
+            << matrix[4] << " " << matrix[5] << " " << matrix[6] << " " << matrix[7] << "; "
+            << matrix[8] << " " << matrix[9] << " " << matrix[10] << " " << matrix[11] << "; "
+            << matrix[12] << " " << matrix[13] << " " << matrix[14] << " " << matrix[15]
+           );
 
   // details specified by the user RE: how the voxels should be computed
   vtkIGSIOPasteSliceIntoVolume::InterpolationType interpolationMode = insertionParams->interpolationMode;   // linear or nearest neighbor
@@ -273,33 +277,33 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
   double inOrigin[3];
   inData->GetOrigin(inOrigin);
 
-  // number of pixels in the x and y directions between the fan origin and the slice origin  
+  // number of pixels in the x and y directions between the fan origin and the slice origin
   double fanOriginInPixels[2] =
   {
-    (fanOrigin[0]-inOrigin[0])/inSpacing[0],
-    (fanOrigin[1]-inOrigin[1])/inSpacing[1]
+    (fanOrigin[0] - inOrigin[0]) / inSpacing[0],
+    (fanOrigin[1] - inOrigin[1]) / inSpacing[1]
   };
-  // fan depth squared 
-  double squaredFanRadiusStart = fanRadiusStart*fanRadiusStart;
-  double squaredFanRadiusStop = fanRadiusStop*fanRadiusStop;
+  // fan depth squared
+  double squaredFanRadiusStart = fanRadiusStart * fanRadiusStart;
+  double squaredFanRadiusStop = fanRadiusStop * fanRadiusStop;
 
   // absolute value of slice spacing
-  double inSpacingSquare[2]=
+  double inSpacingSquare[2] =
   {
-    inSpacing[0]*inSpacing[0],
-    inSpacing[1]*inSpacing[1]
+    inSpacing[0]* inSpacing[0],
+    inSpacing[1]* inSpacing[1]
   };
 
-  double pixelAspectRatio=fabs(inSpacing[1]/inSpacing[0]);
+  double pixelAspectRatio = fabs(inSpacing[1] / inSpacing[0]);
   // tan of the left and right fan angles
-  double fanLinePixelRatioLeft = tan(vtkMath::RadiansFromDegrees(fanAnglesDeg[0]))*pixelAspectRatio;
-  double fanLinePixelRatioRight = tan(vtkMath::RadiansFromDegrees(fanAnglesDeg[1]))*pixelAspectRatio;
+  double fanLinePixelRatioLeft = tan(vtkMath::RadiansFromDegrees(fanAnglesDeg[0])) * pixelAspectRatio;
+  double fanLinePixelRatioRight = tan(vtkMath::RadiansFromDegrees(fanAnglesDeg[1])) * pixelAspectRatio;
   // the tan of the right fan angle is always greater than the left one
   if (fanLinePixelRatioLeft > fanLinePixelRatioRight)
   {
     // swap left and right fan lines
-    double tmp = fanLinePixelRatioLeft; 
-    fanLinePixelRatioLeft = fanLinePixelRatioRight; 
+    double tmp = fanLinePixelRatioLeft;
+    fanLinePixelRatioLeft = fanLinePixelRatioRight;
     fanLinePixelRatioRight = tmp;
   }
   // get the clip rectangle as an extent
@@ -312,9 +316,9 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
 
   // Get increments to march through data - ex move from the end of one x scanline of data to the
   // start of the next line
-  vtkIdType outInc[3] ={0};
+  vtkIdType outInc[3] = {0};
   outData->GetIncrements(outInc);
-  vtkIdType inIncX=0, inIncY=0, inIncZ=0;
+  vtkIdType inIncX = 0, inIncY = 0, inIncZ = 0;
   inData->GetContinuousIncrements(inExt, inIncX, inIncY, inIncZ);
   int numscalars = inData->GetNumberOfScalarComponents();
   vtkIdType impIncX = 0;
@@ -325,19 +329,19 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
     insertionParams->importanceMask->GetContinuousIncrements(inExt, impIncX, impIncY, impIncZ);
   }
 
-  // Set interpolation method - nearest neighbor or trilinear  
-  int (*interpolate)(F *, T *, T *, unsigned short *, unsigned char *, int, vtkIGSIOPasteSliceIntoVolume::CompoundingType, int a[6], vtkIdType b[3], unsigned int *)=NULL; // pointer to the nearest neighbor or trilinear interpolation function  
+  // Set interpolation method - nearest neighbor or trilinear
+  int (*interpolate)(F*, T*, T*, unsigned short*, unsigned char*, int, vtkIGSIOPasteSliceIntoVolume::CompoundingType, int a[6], vtkIdType b[3], unsigned int*) = NULL;     // pointer to the nearest neighbor or trilinear interpolation function
   switch (interpolationMode)
   {
-  case vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION:
-    interpolate = &vtkNearestNeighborInterpolation;
-    break;
-  case vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION:
-    interpolate = &vtkTrilinearInterpolation;
-    break;
-  default:
-    LOG_ERROR("Unknown interpolation mode: "<<interpolationMode);
-    return;
+    case vtkIGSIOPasteSliceIntoVolume::NEAREST_NEIGHBOR_INTERPOLATION:
+      interpolate = &vtkNearestNeighborInterpolation;
+      break;
+    case vtkIGSIOPasteSliceIntoVolume::LINEAR_INTERPOLATION:
+      interpolate = &vtkTrilinearInterpolation;
+      break;
+    default:
+      LOG_ERROR("Unknown interpolation mode: " << interpolationMode);
+      return;
   }
 
   bool pixelRejectionEnabled = PixelRejectionEnabled(insertionParams->pixelRejectionThreshold);
@@ -351,7 +355,7 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
   // the resulting point in the output volume (outPoint) from a point in the input slice
   // (inpoint)
   double outPoint[4];
-  double inPoint[4]; 
+  double inPoint[4];
   inPoint[3] = 1;
   bool fanClippingEnabled = (fanLinePixelRatioLeft != 0 || fanLinePixelRatioRight != 0);
   for (int idZ = inExt[4]; idZ <= inExt[5]; idZ++, inPtr += inIncZ, importancePtr += impIncZ)
@@ -370,30 +374,30 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
         if (pixelRejectionEnabled)
         {
           double inPixelSumAllComponents = 0;
-          for (int i = numscalars-1; i>=0; i--)
+          for (int i = numscalars - 1; i >= 0; i--)
           {
-            inPixelSumAllComponents+=inPtr[i];
+            inPixelSumAllComponents += inPtr[i];
           }
-          if (inPixelSumAllComponents<pixelRejectionThresholdSumAllComponents)
+          if (inPixelSumAllComponents < pixelRejectionThresholdSumAllComponents)
           {
             // too dark, skip this pixel
             continue;
           }
-        }        
+        }
 
         // check if we are within the clipping fan
-        if ( fanClippingEnabled )
+        if (fanClippingEnabled)
         {
           // x and y are the current pixel coordinates in fan coordinate system (in pixels)
-          double x = (idX-fanOriginInPixels[0]);
-          double y = (idY-fanOriginInPixels[1]);
-          if (y<0 || (x/y<fanLinePixelRatioLeft) || (x/y>fanLinePixelRatioRight))
+          double x = (idX - fanOriginInPixels[0]);
+          double y = (idY - fanOriginInPixels[1]);
+          if (y < 0 || (x / y < fanLinePixelRatioLeft) || (x / y > fanLinePixelRatioRight))
           {
             // outside the fan triangle
             continue;
           }
-          double squaredDistanceFromFanOrigin = x*x*inSpacingSquare[0]+y*y*inSpacingSquare[1];
-          if (squaredDistanceFromFanOrigin<squaredFanRadiusStart || squaredDistanceFromFanOrigin>squaredFanRadiusStop)
+          double squaredDistanceFromFanOrigin = x * x * inSpacingSquare[0] + y * y * inSpacingSquare[1];
+          if (squaredDistanceFromFanOrigin < squaredFanRadiusStart || squaredDistanceFromFanOrigin > squaredFanRadiusStop)
           {
             // too close or too far from the fan origin
             continue;
@@ -408,15 +412,15 @@ static void vtkUnoptimizedInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSlicePar
         for (int i = 0; i < 4; i++)
         {
           int rowindex = i << 2;
-          outPoint[i] = matrix[rowindex  ] * inPoint[0] + 
-                        matrix[rowindex+1] * inPoint[1] + 
-                        matrix[rowindex+2] * inPoint[2] + 
-                        matrix[rowindex+3] * inPoint[3] ;
+          outPoint[i] = matrix[rowindex  ] * inPoint[0] +
+                        matrix[rowindex + 1] * inPoint[1] +
+                        matrix[rowindex + 2] * inPoint[2] +
+                        matrix[rowindex + 3] * inPoint[3] ;
         }
 
         // deal with w (homogeneous transform) if the transform was a perspective transform
-        outPoint[0] /= outPoint[3]; 
-        outPoint[1] /= outPoint[3]; 
+        outPoint[0] /= outPoint[3];
+        outPoint[1] /= outPoint[3];
         outPoint[2] /= outPoint[3];
         outPoint[3] = 1;
 

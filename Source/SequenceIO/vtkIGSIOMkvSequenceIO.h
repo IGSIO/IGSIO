@@ -53,7 +53,7 @@ public:
   static bool CanWriteFile(const std::string& filename);
 
   /*! Update a field in the image header with its current value */
-  virtual igsioStatus UpdateFieldInImageHeader(const char* fieldName) VTK_OVERRIDE { return IGSIO_SUCCESS; } 
+  virtual igsioStatus UpdateFieldInImageHeader(const char* fieldName) VTK_OVERRIDE { return IGSIO_SUCCESS; }
 
   /*! Return the string that represents the dimensional sizes */
   virtual const char* GetDimensionSizeString() VTK_OVERRIDE { return ""; }

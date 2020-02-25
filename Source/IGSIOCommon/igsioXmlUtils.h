@@ -53,7 +53,7 @@ public:
   }
 
   /*! Get a nested XML element with the specified name. If the element does not exist then create one. */
-  static vtkXMLDataElement* GetNestedElementWithName(vtkXMLDataElement * config, const char* elementName)
+  static vtkXMLDataElement* GetNestedElementWithName(vtkXMLDataElement* config, const char* elementName)
   {
     if (config == NULL)
     {

@@ -59,11 +59,11 @@ struct vtkIGSIOFillHolesInVolumeKernel
 };
 
 // TODO: This needs massive optimization
-class FillHolesInVolumeElement 
+class FillHolesInVolumeElement
 {
 public:
 
-  enum HFElementTypeIdentifier 
+  enum HFElementTypeIdentifier
   {
     HFTYPE_GAUSSIAN,
     HFTYPE_GAUSSIAN_ACCUMULATION,
@@ -72,7 +72,7 @@ public:
     HFTYPE_STICK
   };
 
-  FillHolesInVolumeElement() 
+  FillHolesInVolumeElement()
   {
     type = HFTYPE_NEAREST_NEIGHBOR;
     size = 3;
@@ -92,14 +92,14 @@ public:
   void setupAsNearestNeighbor(int size, float minRatio);
   template <class T>
   bool applyNearestNeighbor(T* inputData,            // contains the dataset being interpolated between
-                     unsigned short* accData, // contains the weights of each voxel
-                     vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
-                     vtkIdType* accOffsets,
-                     const int& inputComp,    // the component index of interest
-                     int* bounds,             // the boundaries of the thread
-                     int* wholeExtent,        // the boundaries of the volume, outputExtent
-                     int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
-                     T& returnVal);           // The value of the pixel being calculated (unknown);
+                            unsigned short* accData, // contains the weights of each voxel
+                            vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
+                            vtkIdType* accOffsets,
+                            const int& inputComp,    // the component index of interest
+                            int* bounds,             // the boundaries of the thread
+                            int* wholeExtent,        // the boundaries of the volume, outputExtent
+                            int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
+                            T& returnVal);           // The value of the pixel being calculated (unknown);
   //int size;       // <= this is also used here, see GAUSSIAN below
   //float minRatio; // <= this is also used here, see GAUSSIAN below
 
@@ -107,14 +107,14 @@ public:
   void setupAsDistanceWeightInverse(int size, float minRatio);
   template <class T>
   bool applyDistanceWeightInverse(T* inputData,            // contains the dataset being interpolated between
-                     unsigned short* accData, // contains the weights of each voxel
-                     vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
-                     vtkIdType* accOffsets,
-                     const int& inputComp,    // the component index of interest
-                     int* bounds,             // the boundaries of the thread
-                     int* wholeExtent,        // the boundaries of the volume, outputExtent
-                     int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
-                     T& returnVal);           // The value of the pixel being calculated (unknown);
+                                  unsigned short* accData, // contains the weights of each voxel
+                                  vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
+                                  vtkIdType* accOffsets,
+                                  const int& inputComp,    // the component index of interest
+                                  int* bounds,             // the boundaries of the thread
+                                  int* wholeExtent,        // the boundaries of the volume, outputExtent
+                                  int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
+                                  T& returnVal);           // The value of the pixel being calculated (unknown);
   void allocateDistanceWeightInverse();
   //int size;       // <= this is also used here, see GAUSSIAN below
   //float minRatio; // <= this is also used here, see GAUSSIAN below
@@ -135,14 +135,14 @@ public:
                      T& returnVal);           // The value of the pixel being calculated (unknown);
   template <class T>
   bool applyGaussianAccumulation(T* inputData,            // contains the dataset being interpolated between
-                     unsigned short* accData, // contains the weights of each voxel
-                     vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
-                     vtkIdType* accOffsets,
-                     const int& inputComp,    // the component index of interest
-                     int* bounds,             // the boundaries of the thread
-                     int* wholeExtent,        // the boundaries of the volume, outputExtent
-                     int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
-                     T& returnVal);           // The value of the pixel being calculated (unknown);
+                                 unsigned short* accData, // contains the weights of each voxel
+                                 vtkIdType* inputOffsets, // contains the indexing offsets between adjacent x,y,z
+                                 vtkIdType* accOffsets,
+                                 const int& inputComp,    // the component index of interest
+                                 int* bounds,             // the boundaries of the thread
+                                 int* wholeExtent,        // the boundaries of the volume, outputExtent
+                                 int* thisPixel,          // The x,y,z coordinates of the voxel being calculated
+                                 T& returnVal);           // The value of the pixel being calculated (unknown);
   void allocateGaussianMatrix();
   int size;
   float stdev;
@@ -167,7 +167,7 @@ public:
   int numSticksInList;         // the number of sticks in sticksList
   int* sticksList; // triples each corresponding to a stick orientation
 
-//private: 
+  //private:
   //double computeAngle(int* v1, int* v2);
 
 };
@@ -179,7 +179,7 @@ public:
   This class has not been tested extensively and it may not work properly!
   Fill holes in the output by using the weighted average of the
   surrounding voxels.  If Compounding is off, then all hit voxels
-  are weighted equally. 
+  are weighted equally.
   These papers could be useful to study when reviewing/updating the algorithm:
   http://www.irma-international.org/viewtitle/46058/
   http://www.3dmed.net/paper/daiyakang_TITB.pdf
@@ -194,19 +194,19 @@ public:
 class VTKVOLUMERECONSTRUCTION_EXPORT vtkIGSIOFillHolesInVolume : public vtkThreadedImageAlgorithm
 {
 public:
-  static vtkIGSIOFillHolesInVolume *New();
-  vtkTypeMacro(vtkIGSIOFillHolesInVolume,vtkThreadedImageAlgorithm);
+  static vtkIGSIOFillHolesInVolume* New();
+  vtkTypeMacro(vtkIGSIOFillHolesInVolume, vtkThreadedImageAlgorithm);
   virtual void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
-    
+
   /*! Get current compounding setting */
-  vtkGetMacro(Compounding,int);
+  vtkGetMacro(Compounding, int);
 
   /*!
     Turn on or off the compounding (default on, which means
     that scans will be compounded where they overlap instead
     of just considering the last acquired slice.
   */
-  vtkSetMacro(Compounding,int);
+  vtkSetMacro(Compounding, int);
 
   /*!
     Get the index'th kernel that is to be tried, index ranging from 0 (first kernel)
@@ -221,7 +221,7 @@ public:
   void SetHFElement(int index, FillHolesInVolumeElement& element);
 
   /*!
-    Allocate memory for all of the kernels that are to be tried. NumKernels must be 
+    Allocate memory for all of the kernels that are to be tried. NumKernels must be
   set first (see SetNumKernels)
   */
   void AllocateHFElements();
@@ -237,18 +237,18 @@ public:
   void SetNumHFElements(int n);
 
   /*! Set the input volume (reconstructed volume, with holes) */
-  void SetReconstructedVolume(vtkImageData *reconstructedVolume);
+  void SetReconstructedVolume(vtkImageData* reconstructedVolume);
 
-  /*! 
+  /*!
     Set the input accumulation buffer, which indicates how many slices
     were inserted at each particular voxel.
   */
-  void SetAccumulationBuffer(vtkImageData *accumulationBuffer);
+  void SetAccumulationBuffer(vtkImageData* accumulationBuffer);
 
   unsigned int* calculateGaussianMatrix(const int& kernelIndex);
 
   /*! Read hole filling parameter form a HoleFilling XML element */
-  virtual igsioStatus ReadConfiguration( vtkXMLDataElement* holeFillingConfig); 
+  virtual igsioStatus ReadConfiguration(vtkXMLDataElement* holeFillingConfig);
 
 protected:
   vtkIGSIOFillHolesInVolume();
@@ -259,38 +259,38 @@ protected:
     input, and changes the region to hold the image extent of this filters
     output.
   */
-  virtual int RequestInformation (vtkInformation*,
-                                  vtkInformationVector**,
-                                  vtkInformationVector*);
-  
+  virtual int RequestInformation(vtkInformation*,
+                                 vtkInformationVector**,
+                                 vtkInformationVector*);
+
   /*! This method computes the input extent necessary to generate the output */
   virtual int RequestUpdateExtent(vtkInformation*,
                                   vtkInformationVector**,
                                   vtkInformationVector*);
 
   template <class T>
-  void vtkIGSIOFillHolesInVolumeExecute(vtkImageData *inVolData,
-                   T *inVolPtr,
-                   vtkImageData *accData,
-                   unsigned short *accPtr, 
-                   vtkImageData *outData, 
-                   T *outPtr,
-                   int outExt[6],
-                   int id);
+  void vtkIGSIOFillHolesInVolumeExecute(vtkImageData* inVolData,
+                                        T* inVolPtr,
+                                        vtkImageData* accData,
+                                        unsigned short* accPtr,
+                                        vtkImageData* outData,
+                                        T* outPtr,
+                                        int outExt[6],
+                                        int id);
 
   /*!
     This method contains a switch statement that calls the correct
     templated function for the input data type.  The output data
     must match input type.
   */
-  virtual void ThreadedRequestData(vtkInformation *request, 
-    vtkInformationVector **inputVector, 
-    vtkInformationVector *outputVector,
-    vtkImageData ***inData, 
-    vtkImageData **outData,
-    int extent[6], int threadId);
+  virtual void ThreadedRequestData(vtkInformation* request,
+                                   vtkInformationVector** inputVector,
+                                   vtkInformationVector* outputVector,
+                                   vtkImageData*** inData,
+                                   vtkImageData** outData,
+                                   int extent[6], int threadId);
 
-  static VTK_THREAD_RETURN_TYPE FillHoleThreadFunction( void *arg );
+  static VTK_THREAD_RETURN_TYPE FillHoleThreadFunction(void* arg);
 
   int Compounding;
   int NumHFElements;

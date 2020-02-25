@@ -29,7 +29,7 @@ Version:   $Revision: 1.3 $
 class VTKIGSIOCODECS_EXPORT vtkVP9VolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
-  static vtkVP9VolumeCodec *New();
+  static vtkVP9VolumeCodec* New();
   virtual vtkStreamingVolumeCodec* CreateCodecInstance() VTK_OVERRIDE;
   vtkTypeMacro(vtkVP9VolumeCodec, vtkStreamingVolumeCodec);
 
