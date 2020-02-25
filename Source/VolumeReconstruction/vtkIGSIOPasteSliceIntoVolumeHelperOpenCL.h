@@ -332,6 +332,8 @@ void vtkOpenCLComputePitch(int ext[6], int incY, int incZ, int scalar_size, int 
 	*pitchZ *= scalar_size;
 }
 
+static void vtkOpenCLReadOutput(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, vtkOpenCLContext *context);
+
 //----------------------------------------------------------------------------
 /*!
   Actually inserts the slice - executes the filter for any type of data, without optimization
@@ -611,27 +613,7 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   }
 
   if (insertionParams->isLast) {
-	  err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
-		  0, 0, outPitchY, outPitchZ, outPtr);
-	  if (err != CL_SUCCESS) {
-		  LOG_ERROR("Read output volume buffer: " << err);
-	  }
-
-	  err = context->Queue.enqueueReadBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
-		  0, 0, accPitchY, accPitchZ, accPtr);
-	  if (err != CL_SUCCESS) {
-		  LOG_ERROR("Read accumulation buffer: " << err);
-	  }
-
-	  err = context->Queue.enqueueReadBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), accOverflowCount);
-	  if (err != CL_SUCCESS) {
-		  LOG_ERROR("Read accumulation overflow buffer: " << err);
-	  }
-
-	  err = context->Queue.finish();
-	  if (err != CL_SUCCESS) {
-		  LOG_ERROR("Finish OpenCL queue: " << err);
-	  }
+	  vtkOpenCLReadOutput(insertionParams, context);
   }
   else {
 	  /* We have to wait for writes to finish so the host memory pointed to by inPtr can be reused
@@ -644,5 +626,75 @@ static void vtkOpenCLInsertSlice(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* 
   }
 }
 
+static void vtkOpenCLReadOutput(vtkIGSIOPasteSliceIntoVolumeInsertSliceParams* insertionParams, vtkOpenCLContext *context)
+{
+	if (context == NULL)
+	{
+		return;
+	}
+
+	int outExt[6];
+	insertionParams->outData->GetExtent(outExt);
+	vtkIdType outInc[3] = { 0 };
+	insertionParams->outData->GetIncrements(outInc);
+
+	insertionParams->outData->GetScalarSize();
+
+	int scalar_size = insertionParams->outData->GetScalarSize() * insertionParams->outData->GetNumberOfScalarComponents();
+
+	cl::size_t<3> buffer_origin;
+	cl::size_t<3> out_origin;
+	cl::size_t<3> out_region;
+	cl::size_t<3> acc_origin;
+	cl::size_t<3> acc_region;
+	for (int i = 0; i < 3; ++i) {
+		size_t size_factor = (i == 0) ? scalar_size : 1;
+
+		buffer_origin[i] = 0;
+
+		out_origin[i] = outExt[2 * i] * size_factor;
+		out_region[i] = (1 + outExt[2 * i + 1] - outExt[2 * i]) * size_factor;
+
+		size_t acc_size_factor = (i == 0) ? sizeof(unsigned short) : 1;
+		acc_origin[i] = outExt[2 * i] * acc_size_factor;
+		acc_region[i] = (1 + outExt[2 * i + 1] - outExt[2 * i]) * acc_size_factor;
+	}
+
+	cl_int err = CL_SUCCESS;
+
+	int outPitchY = outInc[1] * scalar_size;
+	int outPitchZ = outInc[2] * scalar_size;
+
+	int accPitchY = outInc[1] * sizeof(unsigned short);
+	int accPitchZ = outInc[2] * sizeof(unsigned short);
+
+	err = context->Queue.enqueueReadBufferRect(context->VolumeBuffer, CL_NON_BLOCKING, buffer_origin, out_origin, out_region,
+		0, 0, outPitchY, outPitchZ, insertionParams->outPtr);
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Read output volume buffer: " << err);
+	}
+
+	if (insertionParams->accPtr)
+	{
+		err = context->Queue.enqueueReadBufferRect(context->AccumulationBuffer, CL_NON_BLOCKING, buffer_origin, acc_origin, acc_region,
+			0, 0, accPitchY, accPitchZ, insertionParams->accPtr);
+		if (err != CL_SUCCESS) {
+			LOG_ERROR("Read accumulation buffer: " << err);
+		}
+	}
+
+	if (insertionParams->accOverflowCount)
+	{
+		err = context->Queue.enqueueReadBuffer(context->OverflowBuffer, CL_NON_BLOCKING, 0, sizeof(unsigned int), insertionParams->accOverflowCount);
+		if (err != CL_SUCCESS) {
+			LOG_ERROR("Read accumulation overflow buffer: " << err);
+		}
+	}
+
+	err = context->Queue.finish();
+	if (err != CL_SUCCESS) {
+		LOG_ERROR("Finish OpenCL queue: " << err);
+	}
+}
 
 #endif

@@ -222,6 +222,33 @@ void vtkIGSIOPasteSliceIntoVolume::PrintSelf( ostream& os, vtkIndent indent )
 //----------------------------------------------------------------------------
 vtkImageData* vtkIGSIOPasteSliceIntoVolume::GetReconstructedVolume()
 {
+#ifdef IGSIO_USE_GPU
+	if (this->OpenCLContext)
+	{
+		// Get output volume extent and pointer
+		vtkImageData* outData = this->ReconstructedVolume;
+
+		vtkIGSIOPasteSliceIntoVolumeInsertSliceParams insertionParams;
+		int* outExtent = this->OutputExtent;
+		outData->SetExtent(outExtent);
+		outData->SetOrigin(this->OutputOrigin);
+		outData->SetSpacing(this->OutputSpacing);
+		outData->AllocateScalars(this->OutputScalarMode, 1);
+
+		void* outPtr = outData->GetScalarPointerForExtent(outExtent);
+
+		insertionParams.outData = this->ReconstructedVolume;
+		insertionParams.outPtr = outPtr;
+		insertionParams.accPtr = NULL;
+		insertionParams.accOverflowCount = NULL
+
+		vtkOpenCLReadOutput(&insertionParams, this->OpenCLContext);
+	}
+
+	LOG_INFO("Reading OpenCL output");
+
+#endif
+
   return this->ReconstructedVolume;
 }
 
