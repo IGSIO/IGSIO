@@ -197,8 +197,6 @@ int main(int argc, char* argv[])
       continue;
     }
 
-	LOG_ERROR("Reconstructing frame " << frameIndex);
-
     // Insert slice for reconstruction
     bool insertedIntoVolume = false;
 	bool isFirst = frameIndex == 0;
