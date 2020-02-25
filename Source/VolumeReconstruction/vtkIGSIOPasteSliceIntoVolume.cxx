@@ -230,11 +230,6 @@ vtkImageData* vtkIGSIOPasteSliceIntoVolume::GetReconstructedVolume()
 
 		vtkIGSIOPasteSliceIntoVolumeInsertSliceParams insertionParams;
 		int* outExtent = this->OutputExtent;
-		outData->SetExtent(outExtent);
-		outData->SetOrigin(this->OutputOrigin);
-		outData->SetSpacing(this->OutputSpacing);
-		outData->AllocateScalars(this->OutputScalarMode, 1);
-
 		void* outPtr = outData->GetScalarPointerForExtent(outExtent);
 
 		insertionParams.outData = this->ReconstructedVolume;
@@ -256,9 +251,6 @@ vtkImageData* vtkIGSIOPasteSliceIntoVolume::GetReconstructedVolume()
 			LOG_WARNING(accOverflowCount << " voxels have had too many pixels inserted. This can result in errors in the final volume. It is recommended that the output volume resolution be increased.");
 		}
 	}
-
-	LOG_INFO("Reading OpenCL output");
-
 #endif
 
   return this->ReconstructedVolume;
