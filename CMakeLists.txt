@@ -127,11 +127,7 @@ option(IGSIO_USE_GPU "GPU acceleration via OpenCL" OFF)
 mark_as_advanced(IGSIO_USE_GPU)
 
 if(IGSIO_USE_GPU)
-  FIND_PACKAGE(OpenCL QUIET)
-  IF (NOT OpenCL_FOUND)
-    MESSAGE(WARNING "Could not find OpenCL. Disabling IGSIO_USE_GPU")
-    SET(IGSIO_USE_GPU OFF)
-  ENDIF()
+  FIND_PACKAGE(OpenCL REQUIRED)
 endif()
 
 #-----------------------------------------------------------------------------

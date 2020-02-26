@@ -22,7 +22,7 @@ IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
     )
 ENDIF()
 
-SET(${PROJECT_NAME}_INCLUDE_DIRS 
+SET(${PROJECT_NAME}_INCLUDE_DIRS
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${vtkIGSIOCommon_INCLUDES}
@@ -36,17 +36,27 @@ SET(${PROJECT_NAME}_LIBS
   vtkSequenceIO
   )
 
+set(${PROJECT_NAME}_LIBS_PRIVATE
+  )
+
+if(IGSIO_USE_GPU)
+  LIST(APPEND ${PROJECT_NAME}_INCLUDE_DIRS
+    ${OPENCL_INCLUDE_DIRS}
+    )
+  LIST(APPEND ${PROJECT_NAME}_LIBS_PRIVATE
+    ${OPENCL_LIBRARIES}
+    )
+endif()
+
 ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
 FOREACH(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${p}>)
 ENDFOREACH()
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${IGSIOLIB_INCLUDE_INSTALL}>)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${${PROJECT_NAME}_LIBS})
-
-if(IGSIO_USE_GPU)
-target_include_directories(${PROJECT_NAME} PRIVATE ${OPENCL_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${OPENCL_LIBRARIES})
-endif()
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}
+  PUBLIC ${${PROJECT_NAME}_LIBS}
+  PRIVATE ${${PROJECT_NAME}_LIBS_PRIVATE}
+  )
 
 INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   RUNTIME DESTINATION ${IGSIO_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
@@ -66,17 +76,17 @@ SET(vcProj_${PROJECT_NAME} ${PROJECT_NAME};${IGSIOLib_BINARY_DIR}/src/${PROJECT_
 IF(IGSIOBUILD_BUILD_IGSIOLib_TOOLS)
   ADD_EXECUTABLE(VolumeReconstructor Tools/VolumeReconstructor.cxx )
   SET_TARGET_PROPERTIES(VolumeReconstructor PROPERTIES FOLDER Tools)
-  TARGET_LINK_LIBRARIES(VolumeReconstructor 
+  TARGET_LINK_LIBRARIES(VolumeReconstructor
     vtkIGSIOVolumeReconstruction
     )
   GENERATE_HELP_DOC(VolumeReconstructor)
 
   ADD_EXECUTABLE(CreateSliceModels Tools/CreateSliceModels.cxx )
   SET_TARGET_PROPERTIES(CreateSliceModels PROPERTIES FOLDER Tools)
-  TARGET_LINK_LIBRARIES(CreateSliceModels 
-    vtkIGSIOCommon 
-    vtkIGSIOVolumeReconstruction 
-    vtkFiltersSources 
+  TARGET_LINK_LIBRARIES(CreateSliceModels
+    vtkIGSIOCommon
+    vtkIGSIOVolumeReconstruction
+    vtkFiltersSources
     vtkFiltersGeneral
     vtkIOLegacy
     )
@@ -85,17 +95,17 @@ IF(IGSIOBUILD_BUILD_IGSIOLib_TOOLS)
   ADD_EXECUTABLE(CompareVolumes Tools/CompareVolumes.cxx Tools/vtkIGSIOCompareVolumes.cxx )
   SET_TARGET_PROPERTIES(CompareVolumes PROPERTIES FOLDER Tools)
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/Tools)
-  TARGET_LINK_LIBRARIES(CompareVolumes 
-    vtkIGSIOCommon 
-    vtkIOLegacy 
-    vtkImagingMath 
+  TARGET_LINK_LIBRARIES(CompareVolumes
+    vtkIGSIOCommon
+    vtkIOLegacy
+    vtkImagingMath
     vtkImagingStatistics
     )
 
   ADD_EXECUTABLE(DrawClipRegion Tools/DrawClipRegion.cxx )
   SET_TARGET_PROPERTIES(DrawClipRegion PROPERTIES FOLDER Tools)
-  TARGET_LINK_LIBRARIES(DrawClipRegion 
-    vtkIGSIOCommon 
+  TARGET_LINK_LIBRARIES(DrawClipRegion
+    vtkIGSIOCommon
     vtkIGSIOVolumeReconstruction
     )
   GENERATE_HELP_DOC(DrawClipRegion)
