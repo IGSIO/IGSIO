@@ -23,7 +23,16 @@
 #ifndef __vtkAddonExport_h
 #define __vtkAddonExport_h
 
-#include <vtkaddon_export.h>
-#define VTK_ADDON_EXPORT VTKADDON_EXPORT
+#include <vtkAddonConfigure.h>
+
+#if defined(_WIN32) && !defined(VTKADDON_STATIC)
+#if defined(vtkAddon_EXPORTS)
+#define VTK_ADDON_EXPORT __declspec( dllexport )
+#else
+#define VTK_ADDON_EXPORT __declspec( dllimport )
+#endif
+#else
+#define VTK_ADDON_EXPORT
+#endif
 
 #endif

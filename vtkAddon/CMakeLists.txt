@@ -1,7 +1,7 @@
 project(vtkAddon)
 
 #-----------------------------------------------------------------------------
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.13.4)
 #-----------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------
@@ -10,19 +10,6 @@ cmake_minimum_required(VERSION 3.5)
 if(NOT DEFINED BUILD_SHARED_LIBS)
   option(BUILD_SHARED_LIBS "Build with shared libraries." ON)
 endif()
-
-IF(NOT vtkAddon_INSTALL_BIN_DIR)
-  SET(vtkAddon_INSTALL_BIN_DIR "bin")
-ENDIF()
-
-IF(NOT vtkAddon_INSTALL_LIB_DIR)
-  SET(vtkAddon_INSTALL_LIB_DIR "lib")
-ENDIF()
-
-IF(NOT vtkAddon_INSTALL_DATA_DIR)
-  SET(vtkAddon_INSTALL_DATA_DIR "share")
-ENDIF()
-
 
 # --------------------------------------------------------------------------
 # Dependencies
@@ -33,9 +20,7 @@ ENDIF()
 #
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
-set(vtkAddon_LIBS
-  ${VTK_LIBRARIES}
-  )
+set(vtkAddon_LIBS ${VTK_LIBRARIES})
 
 
 # --------------------------------------------------------------------------
@@ -64,6 +49,23 @@ endif()
 # Sources
 # --------------------------------------------------------------------------
 set(vtkAddon_SRCS
+  vtkAddonTestingUtilities.cxx
+  vtkAddonTestingUtilities.h
+  vtkAddonTestingUtilities.txx
+  vtkErrorSink.cxx
+  vtkErrorSink.h
+  vtkLoggingMacros.h
+  vtkTestingOutputWindow.cxx
+  vtkTestingOutputWindow.h
+  vtkOrientedBSplineTransform.cxx
+  vtkOrientedBSplineTransform.h
+  vtkOrientedGridTransform.cxx
+  vtkOrientedGridTransform.h
+  vtkPersonInformation.cxx
+  vtkPersonInformation.h
+  vtkAddonMathUtilities.h
+  vtkAddonMathUtilities.cxx
+  vtkAddonSetGet.h
   vtkStreamingVolumeCodec.cxx
   vtkStreamingVolumeCodec.h
   vtkStreamingVolumeFrame.cxx
@@ -74,6 +76,35 @@ set(vtkAddon_SRCS
   vtkRawRGBVolumeCodec.h
 )
 
+if(Slicer_VTK_RENDERING_USE_OpenGL2_BACKEND)
+  set(vtkAddon_SRCS
+    ${vtkAddon_SRCS}
+    vtkOpenGLTextureImage.cxx
+    vtkOpenGLTextureImage.h
+    vtkOpenGLShaderComputation.cxx
+    vtkOpenGLShaderComputation.h
+  )
+  find_package(OpenGL)
+  set(vtkAddon_LIBS
+    ${vtkAddon_LIBS}
+    ${OPENGL_LIBRARIES}
+  )
+endif()
+
+# Abstract/pure virtual classes
+
+#set_source_files_properties(
+#  ABSTRACT
+#  )
+
+# Helper classes
+
+set_source_files_properties(
+  vtkAddonTestingUtilities.h
+  vtkLoggingMacros.h 
+  vtkAddonSetGet.h
+  WRAP_EXCLUDE
+  )
 # --------------------------------------------------------------------------
 # Include dirs
 # --------------------------------------------------------------------------
@@ -89,30 +120,80 @@ include_directories(BEFORE ${include_dirs})
 set(lib_name ${PROJECT_NAME})
 
 set(srcs ${vtkAddon_SRCS})
+add_library(${lib_name} ${srcs})
+
+target_link_libraries(${lib_name} ${vtkAddon_LIBS})
+
+# Apply user-defined properties to the library target.
+if(Slicer_LIBRARY_PROPERTIES)
+  set_target_properties(${lib_name} PROPERTIES ${Slicer_LIBRARY_PROPERTIES})
+endif()
+
+# --------------------------------------------------------------------------
+# Folder
+# --------------------------------------------------------------------------
+if(NOT DEFINED ${PROJECT_NAME}_FOLDER)
+  set(${PROJECT_NAME}_FOLDER ${PROJECT_NAME})
+endif()
+if(NOT "${${PROJECT_NAME}_FOLDER}" STREQUAL "")
+  set_target_properties(${lib_name} PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
+endif()
+
+# --------------------------------------------------------------------------
+# Export target
+# --------------------------------------------------------------------------
+if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
+  set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
+endif()
+export(TARGETS ${lib_name} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+
+# --------------------------------------------------------------------------
+# Install library
+# --------------------------------------------------------------------------
+if(NOT DEFINED ${PROJECT_NAME}_INSTALL_BIN_DIR)
+  set(${PROJECT_NAME}_INSTALL_BIN_DIR bin)
+endif()
+if(NOT DEFINED ${PROJECT_NAME}_INSTALL_LIB_DIR)
+  set(${PROJECT_NAME}_INSTALL_LIB_DIR lib/${PROJECT_NAME})
+endif()
+
+install(TARGETS ${lib_name}
+  RUNTIME DESTINATION ${${PROJECT_NAME}_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
+  LIBRARY DESTINATION ${${PROJECT_NAME}_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
+  ARCHIVE DESTINATION ${${PROJECT_NAME}_INSTALL_LIB_DIR} COMPONENT Development
+  )
 
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-# if(VTK_WRAP_PYTHON)
-  # include(vtkMacroKitPythonWrap)
+#if(VTK_WRAP_PYTHON)
+if(FALSE)
+  include(vtkMacroKitPythonWrap)
 
-  # vtkMacroKitPythonWrap(
-    # KIT_NAME ${lib_name}
-    # KIT_SRCS ${vtkAddon_SRCS}
-    # KIT_INSTALL_BIN_DIR ${${PROJECT_NAME}_INSTALL_BIN_DIR}
-    # KIT_INSTALL_LIB_DIR ${${PROJECT_NAME}_INSTALL_LIB_DIR}
-    # )
-  # # Export target
-  # export(TARGETS ${lib_name}Python ${lib_name}PythonD APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
-  # # Folder
-  # if(NOT "${${PROJECT_NAME}_FOLDER}" STREQUAL "")
-    # set_target_properties(${lib_name}Python PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
-    # set_target_properties(${lib_name}PythonD PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
-    # if(TARGET ${lib_name}Hierarchy)
-      # set_target_properties(${lib_name}Hierarchy PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
-    # endif()
-  # endif()
-# endif()
+  vtkMacroKitPythonWrap(
+    KIT_NAME ${lib_name}
+    KIT_SRCS ${vtkAddon_SRCS}
+    KIT_INSTALL_BIN_DIR ${${PROJECT_NAME}_INSTALL_BIN_DIR}
+    KIT_INSTALL_LIB_DIR ${${PROJECT_NAME}_INSTALL_LIB_DIR}
+    )
+  # Export target
+  export(TARGETS ${lib_name}Python ${lib_name}PythonD APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+  # Folder
+  if(NOT "${${PROJECT_NAME}_FOLDER}" STREQUAL "")
+    set_target_properties(${lib_name}Python PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
+    set_target_properties(${lib_name}PythonD PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
+    if(TARGET ${lib_name}Hierarchy)
+      set_target_properties(${lib_name}Hierarchy PROPERTIES FOLDER ${${PROJECT_NAME}_FOLDER})
+    endif()
+  endif()
+endif()
+
+# --------------------------------------------------------------------------
+# Testing (requires some of the examples)
+# --------------------------------------------------------------------------
+if(BUILD_TESTING)
+  add_subdirectory(Testing)
+endif()
 
 # --------------------------------------------------------------------------
 # Set INCLUDE_DIRS variable
@@ -120,44 +201,9 @@ set(srcs ${vtkAddon_SRCS})
 set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
   CACHE INTERNAL "${PROJECT_NAME} include dirs" FORCE)
 
-#-----------------------------------------------------------------------------
-# Create the library
-IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
-  ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
-ELSE()
-  ADD_LIBRARY(${PROJECT_NAME} ${${PROJECT_NAME}_SRCS})
-ENDIF()
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_LIBS})
-
-INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
-  RUNTIME DESTINATION ${vtkAddon_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
-  LIBRARY DESTINATION ${vtkAddon_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
-  ARCHIVE DESTINATION ${vtkAddon_INSTALL_LIB_DIR} COMPONENT Development)
-
-FOREACH(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
-  TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${p}>)
-ENDFOREACH()
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}>)
-
-include(GenerateExportHeader)
-GENERATE_EXPORT_HEADER(${PROJECT_NAME})
-
-SET_PROPERTY(GLOBAL APPEND PROPERTY vtkAddon_TARGETS ${PROJECT_NAME})
-
-SET(${PROJECT_NAME}_INCLUDE_DIRS ${${PROJECT_NAME}_INCLUDE_DIRS} CACHE INTERNAL "")
-
 # --------------------------------------------------------------------------
 # Configure support file
 # --------------------------------------------------------------------------
-#-----------------------------------------------------------------------------
-# Export all targets at once from the build tree in their final configuration.
-get_property(_vtkaddon_targets GLOBAL PROPERTY vtkAddon_TARGETS)
-if (_vtkaddon_targets)
-  list(REMOVE_DUPLICATES _vtkaddon_targets)
-  EXPORT(TARGETS ${_vtkaddon_targets} FILE ${CMAKE_CURRENT_BINARY_DIR}/vtkAddonTargets.cmake)
-endif()
-unset(_vtkaddon_targets)
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/vtkAddonConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/vtkAddonConfig.cmake

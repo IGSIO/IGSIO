@@ -28,7 +28,7 @@ Care Ontario.
 class VTK_ADDON_EXPORT vtkRawRGBVolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
-  static vtkRawRGBVolumeCodec* New();
+  static vtkRawRGBVolumeCodec *New();
   vtkStreamingVolumeCodec* CreateCodecInstance() override;
   vtkTypeMacro(vtkRawRGBVolumeCodec, vtkStreamingVolumeCodec);
 

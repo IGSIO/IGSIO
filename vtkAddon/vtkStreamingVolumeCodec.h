@@ -70,7 +70,7 @@ public:
   /// \param outputStreamingFrame Output frame that will be used to store the compressed frame
   /// \param forceKeyFrame If the codec supports it, attempt to encode the image as a keyframe
   /// Returns true if the image is encoded successfully
-  virtual bool EncodeImageData(vtkImageData* inputImageData, vtkStreamingVolumeFrame* outputStreamingFrame, bool forceKeyFrame = false);
+  virtual bool EncodeImageData(vtkImageData* inputImageData, vtkStreamingVolumeFrame* outputStreamingFrame, bool forceKeyFrame=false);
 
   /// Read this codec's information from a string representation
   /// Format is "ParameterName1:ParameterValue1;ParameterName2;ParameterValue2;ParameterNameN:ParameterValueN"
@@ -125,7 +125,7 @@ public:
   std::string GetParameterPresetName(const std::string& presetValue) const;
 
   /// Get the number of parameter presets
-  int GetNumberOfParameterPresets() const { return static_cast<int>(this->ParameterPresets.size()); };
+  int GetNumberOfParameterPresets() const { return this->ParameterPresets.size(); };
 
   struct ParameterPreset
   {

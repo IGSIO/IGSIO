@@ -1,8 +1,8 @@
 PROJECT(vtkIGSIOCommon)
 
-IF (NOT USE_SLICER)
-  FIND_PACKAGE(vtkAddon REQUIRED)
-ENDIF()
+#IF (NOT USE_SLICER)
+FIND_PACKAGE(vtkAddon REQUIRED)
+#ENDIF()
 
 # --------------------------------------------------------------------------
 # Configure library
