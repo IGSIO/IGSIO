@@ -24,6 +24,12 @@ ELSE()
   SET (IGSIO_vtkAddon_PREFIX_DIR ${CMAKE_BINARY_DIR}/vtkAddon-prefix CACHE INTERNAL "Path to store vtkAddon prefix data.")
   SET (IGSIO_vtkAddon_DIR ${CMAKE_BINARY_DIR}/vtkAddon-bin CACHE INTERNAL "Path to store vtkAddon binaries")
 
+  IF(WIN32)
+    set(ep_common_cxx_flags
+      /DWIN32
+      )
+  ENDIF()
+
   ExternalProject_Add( vtkAddon
     PREFIX ${PLUS_IGSIO_PREFIX_DIR}
     "${PLUSBUILD_EXTERNAL_PROJECT_CUSTOM_COMMANDS}"
