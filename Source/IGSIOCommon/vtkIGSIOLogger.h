@@ -4,8 +4,8 @@
   See License.txt for details.
 =========================================================Plus=header=end*/
 
-#ifndef __PLUSLOGGER_H
-#define __PLUSLOGGER_H
+#ifndef __IGSIOLOGGER_H
+#define __IGSIOLOGGER_H
 
 #include "vtkigsiocommon_export.h"
 

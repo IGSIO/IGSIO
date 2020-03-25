@@ -20,11 +20,18 @@ ELSE()
     set(vtkAddon_CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   ENDIF()
 
+  SET (IGSIO_vtkAddon_SRC_DIR ${CMAKE_BINARY_DIR}/vtkAddon CACHE INTERNAL "Path to store vtkAddon contents.")
+  SET (IGSIO_vtkAddon_PREFIX_DIR ${CMAKE_BINARY_DIR}/vtkAddon-prefix CACHE INTERNAL "Path to store vtkAddon prefix data.")
+  SET (IGSIO_vtkAddon_DIR ${CMAKE_BINARY_DIR}/vtkAddon-bin CACHE INTERNAL "Path to store vtkAddon binaries")
+
   ExternalProject_Add( vtkAddon
     PREFIX ${PLUS_IGSIO_PREFIX_DIR}
     "${PLUSBUILD_EXTERNAL_PROJECT_CUSTOM_COMMANDS}"
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vtkAddon"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/vtkAddon-bin"
+    SOURCE_DIR "${IGSIO_vtkAddon_SRC_DIR}"
+    BINARY_DIR "${IGSIO_vtkAddon_DIR}"
+    #--Download step--------------
+    GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git"
+    GIT_TAG "master"
     #--Configure step-------------
     CMAKE_ARGS
       ${ep_common_args}

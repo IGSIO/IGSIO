@@ -1,8 +1,7 @@
 PROJECT(vtkIGSIOCommon)
 
-#IF (NOT USE_SLICER)
 FIND_PACKAGE(vtkAddon REQUIRED)
-#ENDIF()
+INCLUDE(${vtkAddon_DIR}/vtkAddonTargets.cmake)
 
 # --------------------------------------------------------------------------
 # Configure library
@@ -59,14 +58,18 @@ SET(${PROJECT_NAME}_LIBS
   )
 
 IF(IGSIO_BUILD_CODECS)
-  LIST(APPEND ${PROJECT_NAME}_LIBS vtkIGSIOCodecs)
+  LIST(APPEND ${PROJECT_NAME}_LIBS
+    vtkIGSIOCodecs
+    )
 ENDIF()
 
 SET(${PROJECT_NAME}_LIBS_PRIVATE
   )
 
 IF(WIN32)
-  LIST(APPEND ${PROJECT_NAME}_LIBS Winmm)
+  LIST(APPEND ${PROJECT_NAME}_LIBS
+    Winmm
+    )
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
