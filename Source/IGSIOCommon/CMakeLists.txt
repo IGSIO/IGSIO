@@ -1,7 +1,11 @@
 PROJECT(vtkIGSIOCommon)
 
-FIND_PACKAGE(vtkAddon REQUIRED)
-INCLUDE(${vtkAddon_DIR}/vtkAddonTargets.cmake)
+IF (IGSIO_USE_3DSlicer)
+  FIND_PACKAGE(Slicer REQUIRED)
+ELSE()
+  FIND_PACKAGE(vtkAddon REQUIRED)
+  INCLUDE(${vtkAddon_DIR}/vtkAddonTargets.cmake)
+ENDIF()
 
 # --------------------------------------------------------------------------
 # Configure library
