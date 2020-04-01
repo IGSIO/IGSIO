@@ -23,9 +23,11 @@ ENDIF()
 
 #---------------------------------------------------
 # vtkAddon
-INCLUDE(${CMAKE_CURRENT_LIST_DIR}/External_vtkAddon.cmake)
-IF(NOT vtkAddon_FOUND)
-  LIST(APPEND IGSIO_DEPENDENCIES vtkAddon)
+IF (NOT IGSIO_USE_3DSlicer)
+  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/External_vtkAddon.cmake)
+  IF(NOT vtkAddon_FOUND)
+    LIST(APPEND IGSIO_DEPENDENCIES vtkAddon)
+  ENDIF()
 ENDIF()
 
 set(BUILD_OPTIONS
