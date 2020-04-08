@@ -55,7 +55,11 @@ POSSIBILITY OF SUCH DAMAGES.
 
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 
+#ifdef __APPLE__
+#include <OpenCL/opencl.hpp>
+#else
 #include <CL/cl.hpp>
+#endif
 
 #include <mutex>
 #include <sstream>
