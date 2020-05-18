@@ -250,7 +250,7 @@ public:
   /*! Get the output data type */
   vtkGetMacro(OutputScalarMode, int);
   /*! Get the output data type from an id */
-  const char* GetOutputScalarModeAsString(int type);
+  static const char* GetOutputScalarModeAsString(int type);
 
   /*!
     Set optimization method (turn off optimization only if it is not stable
@@ -279,7 +279,7 @@ public:
   /*! Get the interpolation mode */
   vtkGetMacro(InterpolationMode, InterpolationType);
   /*! Get the name of an interpolation mode from a type id */
-  const char* GetInterpolationModeAsString(InterpolationType interpEnum);
+  static const char* GetInterpolationModeAsString(InterpolationType interpEnum);
 
   /*!
     Set the compounding mode
@@ -296,7 +296,7 @@ public:
   /*! Get the result mode */
   vtkGetMacro(CompoundingMode, CompoundingType);
   /*! Get the name of a result mode from a type id */
-  const char* GetCompoundingModeAsString(CompoundingType compoundingEnum);
+  static const char* GetCompoundingModeAsString(CompoundingType compoundingEnum);
 
   /*!
     Set number of threads used for processing the data.
@@ -320,7 +320,7 @@ public:
   /*! DEPRECATED - use CompoundingMode instead! */
   vtkGetMacro(Calculation, CalculationTypeDeprecated);
   /*! DEPRECATED - use CompoundingMode instead! */
-  const char* GetCalculationAsString(CalculationTypeDeprecated calcEnum);
+  static const char* GetCalculationAsString(CalculationTypeDeprecated calcEnum);
 
   /*!
     Pixels that have lower brightness value than this threshold value will not be inserted into the volume.
