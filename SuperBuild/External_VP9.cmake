@@ -23,7 +23,7 @@ ELSE()
     ExternalProject_Add(VP9
       PREFIX "${CMAKE_BINARY_DIR}/VP9-prefix"
       GIT_REPOSITORY https://github.com/webmproject/libvpx/
-      GIT_TAG v1.6.1
+      GIT_TAG v1.8.2
       SOURCE_DIR        "${IGSIO_VP9_DIR}"
       CONFIGURE_COMMAND "${IGSIO_VP9_DIR}/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc
       BUILD_ALWAYS 1
