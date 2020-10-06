@@ -28,12 +28,17 @@ SET(${PROJECT_NAME}_HDRS
   )
 
 SET(${PROJECT_NAME}_LIBS
-  vtkCommonCore
-  vtkCommonDataModel
-  vtksys
-  vtkIOImage
+  ${IGSIO_VTK_PREFIX}CommonCore
+  ${IGSIO_VTK_PREFIX}CommonDataModel
+  ${IGSIO_VTK_PREFIX}IOImage
   vtkIGSIOCommon
   )
+
+IF(VTK_VERSION VERSION_LESS 8.9.0)
+  LIST(APPEND ${PROJECT_NAME}_LIBS vtksys)
+ELSE()
+  LIST(APPEND ${PROJECT_NAME}_LIBS VTK::vtksys)
+ENDIF()
 
 SET(${PROJECT_NAME}_LIBS_PRIVATE
   )

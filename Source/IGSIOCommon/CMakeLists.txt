@@ -52,14 +52,19 @@ SET(${PROJECT_NAME}_HDRS
   )
 
 SET(${PROJECT_NAME}_LIBS
-  vtkCommonCore
-  vtksys
-  vtkIOImage
-  vtkIOXMLParser
-  vtkImagingCore
-  vtkCommonSystem
+  ${IGSIO_VTK_PREFIX}CommonCore
+  ${IGSIO_VTK_PREFIX}IOImage
+  ${IGSIO_VTK_PREFIX}IOXMLParser
+  ${IGSIO_VTK_PREFIX}ImagingCore
+  ${IGSIO_VTK_PREFIX}CommonSystem
   vtkAddon
   )
+
+IF(VTK_VERSION VERSION_LESS 8.9.0)
+  LIST(APPEND ${PROJECT_NAME}_LIBS vtksys)
+ELSE()
+  LIST(APPEND ${PROJECT_NAME}_LIBS VTK::vtksys)
+ENDIF()
 
 IF(IGSIO_BUILD_CODECS)
   LIST(APPEND ${PROJECT_NAME}_LIBS
