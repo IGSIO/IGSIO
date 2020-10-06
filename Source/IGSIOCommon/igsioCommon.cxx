@@ -528,7 +528,7 @@ igsioStatus igsioCommon::XML::PrintXML(ostream& os, vtkIndent indent, vtkXMLData
 //----------------------------------------------------------------------------
 igsioStatus igsioCommon::XML::PrintXML(const std::string& fname, vtkXMLDataElement* elem)
 {
-  ofstream of(fname);
+  std::ofstream of(fname);
   if (!of.is_open())
   {
     LOG_ERROR("Failed to open " << fname << " for writing");
