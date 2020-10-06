@@ -77,10 +77,14 @@ INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/CMake/IGSIOMacros.cmake)
 # --------------------------------------------------------------------------
 # Try to find VTK and include its settings (otherwise complain)
 FIND_PACKAGE(VTK NO_MODULE REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
-IF(VTK_FOUND)
+IF(VTK_FOUND AND VTK_VERSION VERSION_LESS 8.9.0)
   INCLUDE(${VTK_USE_FILE})
+ENDIF()
+
+IF(TARGET VTK::CommonCore)
+  SET(IGSIO_VTK_PREFIX VTK::)
 ELSE()
-  MESSAGE(FATAL_ERROR "This application requires VTK. One of these components is missing. Please verify configuration")
+  SET(IGSIO_VTK_PREFIX vtk)
 ENDIF()
 
 IF (COPY_EXTERNAL_LIBS)
