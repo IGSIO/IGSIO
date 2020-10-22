@@ -75,6 +75,13 @@ INCLUDE(${CMAKE_ROOT}/Modules/GenerateExportHeader.cmake)
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/CMake/IGSIOMacros.cmake)
 
 # --------------------------------------------------------------------------
+OPTION(IGSIO_USE_3DSlicer "" OFF)
+IF (IGSIO_USE_3DSlicer)
+  FIND_PACKAGE(Slicer REQUIRED)
+  SET(IGSIO_Slicer_DIR ${Slicer_DIR} CACHE STRING "")
+ENDIF()
+
+# --------------------------------------------------------------------------
 # Try to find VTK and include its settings (otherwise complain)
 FIND_PACKAGE(VTK NO_MODULE REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
 IF(VTK_FOUND AND VTK_VERSION VERSION_LESS 8.9.0)
@@ -108,12 +115,6 @@ ENDIF()
 
 IF(IGSIO_SEQUENCEIO_ENABLE_MKV)
   SET(IGSIO_BUILD_SEQUENCEIO ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
-ENDIF()
-
-OPTION(IGSIO_USE_3DSlicer "" OFF)
-IF (IGSIO_USE_3DSlicer)
-  FIND_PACKAGE(Slicer REQUIRED)
-  SET(IGSIO_Slicer_DIR ${Slicer_DIR} CACHE STRING "")
 ENDIF()
 
 SET(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY} CACHE STRING "")
