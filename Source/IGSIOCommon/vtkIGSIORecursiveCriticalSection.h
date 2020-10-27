@@ -9,8 +9,12 @@
 
 #include "vtkigsiocommon_export.h"
 
-// Get vtkCritSecType definition
-#include "vtkCriticalSection.h"
+// VTK includes
+#include <vtkCriticalSection.h>
+
+#ifndef VTK_OVERRIDE
+#define VTK_OVERRIDE override
+#endif
 
 /*!
   \class vtkIGSIOSimpleRecursiveCriticalSection

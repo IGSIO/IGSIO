@@ -9,10 +9,17 @@
 
 #include "vtkigsiocommon_export.h"
 
-#include "vtkObject.h"
-#include "vtkOutputWindow.h"
+// VTK includes
+#include <vtkObject.h>
+#include <vtkOutputWindow.h>
+
+// STL includes
 #include <fstream>
 #include <sstream>
+
+#ifndef VTK_OVERRIDE
+#define VTK_OVERRIDE override
+#endif
 
 class vtkIGSIORecursiveCriticalSection;
 

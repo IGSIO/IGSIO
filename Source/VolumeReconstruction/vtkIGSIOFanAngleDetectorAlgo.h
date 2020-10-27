@@ -7,11 +7,20 @@
 #ifndef __vtkIGSIOFanAngleDetectorAlgo_h
 #define __vtkIGSIOFanAngleDetectorAlgo_h
 
-#include "igsioConfigure.h"
 #include "vtkvolumereconstruction_export.h"
 
-#include "vtkImageData.h"
+// IGSIO includes
+#include <igsioConfigure.h>
+
+// VTK includes
+#include <vtkImageData.h>
+
+// STL includes
 #include <vector>
+
+#ifndef VTK_OVERRIDE
+#define VTK_OVERRIDE override
+#endif
 
 /*!
   \class vtkIGSIOFanAngleDetectorAlgo

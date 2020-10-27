@@ -161,6 +161,12 @@ vtkVP9VolumeCodec::~vtkVP9VolumeCodec()
   this->Internal = NULL;
 }
 
+//----------------------------------------------------------------------------
+std::string vtkVP9VolumeCodec::GetFourCC()
+{
+  return "VP90";
+}
+
 //---------------------------------------------------------------------------
 std::string vtkVP9VolumeCodec::GetParameterDescription(std::string parameterName)
 {
@@ -227,7 +233,7 @@ bool vtkVP9VolumeCodec::SetParametersFromPresetValue(const std::string& presetVa
 
   if (!success)
   {
-    vtkErrorMacro("SetParametersFromPresetValue: Failed to set parameters!")
+    vtkErrorMacro("SetParametersFromPresetValue: Failed to set parameters!");
   }
   return success;
 }

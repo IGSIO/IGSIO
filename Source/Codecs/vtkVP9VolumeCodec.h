@@ -26,6 +26,10 @@ Version:   $Revision: 1.3 $
 // Codec includes
 #include "vtkigsiocodecs_export.h"
 
+#ifndef VTK_OVERRIDE
+#define VTK_OVERRIDE override
+#endif
+
 class VTKIGSIOCODECS_EXPORT vtkVP9VolumeCodec : public vtkStreamingVolumeCodec
 {
 public:
@@ -43,7 +47,7 @@ public:
   std::string GetRateControlParameter() { return "rateControl"; };
   std::string GetDeadlineModeParameter() { return "deadlineMode"; };
 
-  virtual std::string GetFourCC() VTK_OVERRIDE { return "VP90"; };
+  virtual std::string GetFourCC() VTK_OVERRIDE;
 
   virtual std::string GetParameterDescription(std::string parameterName) VTK_OVERRIDE;
 

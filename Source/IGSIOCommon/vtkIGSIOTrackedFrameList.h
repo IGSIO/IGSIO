@@ -9,10 +9,18 @@
 
 #include "vtkigsiocommon_export.h"
 
-#include "igsioVideoFrame.h" // for US_IMAGE_ORIENTATION
-#include "vtkObject.h"
+// IGSIO includes
+#include <igsioCommon.h> // for US_IMAGE_ORIENTATION
 
+// VTK includes
+#include <vtkObject.h>
+
+// STL includes
 #include <deque>
+
+#ifndef VTK_OVERRIDE
+#define VTK_OVERRIDE override
+#endif
 
 class vtkXMLDataElement;
 class igsioTrackedFrame;

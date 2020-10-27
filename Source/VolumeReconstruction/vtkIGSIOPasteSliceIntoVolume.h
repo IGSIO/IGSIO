@@ -51,8 +51,11 @@ class vtkImageData;
 class vtkMatrix4x4;
 class vtkOpenCLContext;
 
-// IGSIOCommon includes
-#include "igsioCommon.h"
+// IGSIO includes
+#include <igsioCommon.h>
+
+// VTK includes
+#include <vtkThreads.h>
 
 /*!
   \class vtkIGSIOPasteSliceIntoVolume
