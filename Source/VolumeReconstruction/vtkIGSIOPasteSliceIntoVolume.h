@@ -55,7 +55,9 @@ class vtkOpenCLContext;
 #include <igsioCommon.h>
 
 // VTK includes
+#ifndef VTK_THREAD_RETURN_TYPE
 #include <vtkThreads.h>
+#endif
 
 /*!
   \class vtkIGSIOPasteSliceIntoVolume
