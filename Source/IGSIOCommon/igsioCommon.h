@@ -22,6 +22,7 @@
 
 // STL includes
 #include <array>
+#include <limits>
 #include <list>
 #include <locale>
 #include <sstream>

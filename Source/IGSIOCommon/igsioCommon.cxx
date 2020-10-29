@@ -304,7 +304,7 @@ igsioStatus igsioCommon::CreateTemporaryFilename(std::string& aString, const std
     {
       continue;
     }
-    ofstream aFile(candidateFilename);
+    std::ofstream aFile(candidateFilename);
     if (!aFile.is_open())
     {
       LOG_WARNING("Cannot write to temp file " << candidateFilename << " check write permissions of output directory.");
