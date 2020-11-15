@@ -475,6 +475,23 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
 }
 
 //----------------------------------------------------------------------------
+igsioStatus vtkIGSIOVolumeReconstructor::SetOutputScalarType(int scalarType)
+{
+  if (this->Reconstructor->GetOutputScalarMode() == scalarType)
+  {
+    // already using this scalar type
+    return IGSIO_SUCCESS;
+  }
+  this->Reconstructor->SetOutputScalarMode(scalarType);
+  if (this->Reconstructor->ResetOutput() != IGSIO_SUCCESS) // :TODO: call this automatically
+  {
+    LOG_ERROR("Failed to change scalar type of output volume of the reconstructor");
+    return IGSIO_FAIL;
+  }
+  return IGSIO_SUCCESS;
+}
+
+//----------------------------------------------------------------------------
 igsioStatus vtkIGSIOVolumeReconstructor::AddTrackedFrame(igsioTrackedFrame* frame, vtkIGSIOTransformRepository* transformRepository, bool isFirst, bool isLast, bool* insertedIntoVolume/*=NULL*/)
 {
   igsioTransformName imageToReferenceTransformName;

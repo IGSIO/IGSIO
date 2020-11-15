@@ -51,7 +51,7 @@ POSSIBILITY OF SUCH DAMAGES.
   Holds information about a user-specified kernel
   \ingroup IGSIOLibVolumeReconstruction
 */
-struct vtkIGSIOFillHolesInVolumeKernel
+struct VTKVOLUMERECONSTRUCTION_EXPORT vtkIGSIOFillHolesInVolumeKernel
 {
   int size[3];
   float stdev[3];
@@ -59,7 +59,7 @@ struct vtkIGSIOFillHolesInVolumeKernel
 };
 
 // TODO: This needs massive optimization
-class FillHolesInVolumeElement
+class VTKVOLUMERECONSTRUCTION_EXPORT FillHolesInVolumeElement
 {
 public:
 
@@ -210,29 +210,29 @@ public:
 
   /*!
     Get the index'th kernel that is to be tried, index ranging from 0 (first kernel)
-  up to NumKernels-1 (last kernel).
+  up to NumHFElements-1 (last kernel).
   */
   //vtkIGSIOFillHolesInVolumeKernel GetKernel(int index);
 
   /*!
     Set the index'th kernel that is to be tried, index ranging from 0 (first kernel)
-  up to NumKernels-1 (last kernel).
+  up to NumHFElements-1 (last kernel).
   */
   void SetHFElement(int index, FillHolesInVolumeElement& element);
 
   /*!
-    Allocate memory for all of the kernels that are to be tried. NumKernels must be
-  set first (see SetNumKernels)
+    Allocate memory for all of the kernels that are to be tried. NumHFElements must be
+  set first (see SetNumHFElements)
   */
   void AllocateHFElements();
 
   /*!
     Get the number of kernels that are to be tried on the data.
   */
-  //int GetNumKernels();
+  //int GetNumHFElements();
 
   /*!
-    Get the number of kernels that are to be tried on the data.
+    Set the number of hole filling kernels that are to be tried on the data.
   */
   void SetNumHFElements(int n);
 

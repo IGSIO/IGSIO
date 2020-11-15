@@ -64,6 +64,8 @@ public:
   */
   virtual igsioStatus SetOutputExtentFromFrameList(vtkIGSIOTrackedFrameList* trackedFrameList, vtkIGSIOTransformRepository* transformRepository, std::string& errorDescription);
 
+  virtual igsioStatus SetOutputScalarType(int scalarType);
+
   /*!
     Inserts the tracked frame into the volume. The origin, spacing, and extent of the output volume
     must be set before calling this method (either by calling the SetOutputExtentFromFrameList method
@@ -201,6 +203,8 @@ public:
     is only needed if the file is changed since it is last used by the reconstructor.
   */
   virtual igsioStatus UpdateImportanceMask();
+
+  vtkGetObjectMacro(HoleFiller, vtkIGSIOFillHolesInVolume);
 
 protected:
   vtkIGSIOVolumeReconstructor();
