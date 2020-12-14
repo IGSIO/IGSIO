@@ -29,6 +29,10 @@ public:
 };
 //ETX
 
+#ifndef VTK_OVERRIDE
+  #define VTK_OVERRIDE override
+#endif
+
 //----------------------------------------------------------------------------
 /*!
   \class vtkIGSIOAccurateTimer
