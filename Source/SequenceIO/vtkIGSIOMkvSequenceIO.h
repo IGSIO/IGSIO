@@ -53,13 +53,18 @@ public:
   static bool CanWriteFile(const std::string& filename);
 
   /*! Update a field in the image header with its current value */
-  virtual igsioStatus UpdateFieldInImageHeader(const char* fieldName) VTK_OVERRIDE { return IGSIO_SUCCESS; } 
+  virtual igsioStatus UpdateFieldInImageHeader(const char* fieldName) VTK_OVERRIDE { return IGSIO_SUCCESS; }
 
   /*! Return the string that represents the dimensional sizes */
   virtual const char* GetDimensionSizeString() VTK_OVERRIDE { return ""; }
 
   /*! Return the string that represents the dimensional kinds */
   virtual const char* GetDimensionKindsString() VTK_OVERRIDE { return ""; }
+
+  virtual void SetWriteHeaderOnly(bool) VTK_OVERRIDE
+  {
+    LOG_WARNING(this->GetNameOfClass() << " does not support writing only the header");
+  }
 
   /*!
     Set input/output file name. The file contains only the image header in case of
@@ -103,4 +108,4 @@ protected:
   vtkInternal* Internal;
 };
 
-#endif // __vtkIGSIOMkvSequenceIO_h 
+#endif // __vtkIGSIOMkvSequenceIO_h
