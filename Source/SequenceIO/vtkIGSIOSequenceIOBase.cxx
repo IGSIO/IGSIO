@@ -478,13 +478,29 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
     else
     {
       // This is not Win9x.  Use the MoveFileEx implementation.
-      success = (MoveFileEx(oldname, newname, MOVEFILE_REPLACE_EXISTING) != 0);
+      success = (MoveFileEx(oldname, newname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0);
     }
   }
   else
   {
     // The destination does not exist.  Just move the file.
     success = (MoveFile(oldname, newname) != 0);
+  }
+  if (!success)
+  {
+    DWORD dw = GetLastError();
+    LPVOID lpMsgBuf;
+    FormatMessage(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER |
+      FORMAT_MESSAGE_FROM_SYSTEM |
+      FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL,
+      dw,
+      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+      (LPTSTR)&lpMsgBuf,
+      0, NULL);
+    LOG_ERROR("Could not move file. Windows error: " << (char*)lpMsgBuf);
+    LocalFree(lpMsgBuf);
   }
 #else
   if (!vtksys::SystemTools::CopyFileAlways(oldname, newname))
