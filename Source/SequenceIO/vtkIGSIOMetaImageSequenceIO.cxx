@@ -784,27 +784,33 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   if (GetCustomString("ElementSpacing") == NULL
       || igsioCommon::SplitStringIntoTokens(GetCustomString("ElementSpacing"), ' ', false).size() != numSpaceDimensions)
   {
-    // Dynamically calculate the spacing values
-    std::ostringstream spacingStream;
-    for (int i = 0; i < numSpaceDimensions; ++i)
+    // Code assumes all images have the same spacing
+    igsioTrackedFrame* trackedFrame0 = this->TrackedFrameList->GetTrackedFrame(0);
+    std::string elementSpacing = trackedFrame0->GetFrameField("ElementSpacing");
+    if (elementSpacing.empty())
     {
-      // Code assumes all images have the same spacing
-      vtkImageData* image = this->TrackedFrameList->GetTrackedFrame(0)->GetImageData()->GetImage();
-      if (image)
+      // Dynamically calculate the spacing values
+      std::ostringstream spacingStream;
+      for (int i = 0; i < numSpaceDimensions; ++i)
       {
-        spacingStream << image->GetSpacing()[i];
-      }
-      else
-      {
-        spacingStream << "1";
-      }
+        vtkImageData* image = trackedFrame0->GetImageData()->GetImage();
+        if (image)
+        {
+          spacingStream << image->GetSpacing()[i];
+        }
+        else
+        {
+          spacingStream << "1";
+        }
 
-      if (i != numSpaceDimensions - 1)
-      {
-        spacingStream << " ";
+        if (i != numSpaceDimensions - 1)
+        {
+          spacingStream << " ";
+        }
       }
+      elementSpacing = spacingStream.str();
     }
-    this->SetFrameField("ElementSpacing", spacingStream.str());
+    this->SetFrameField("ElementSpacing", elementSpacing);
   }
 
   if (GetCustomString("AnatomicalOrientation") == NULL)
