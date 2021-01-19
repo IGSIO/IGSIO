@@ -135,19 +135,12 @@ public:
   /*! Return the dimensions of the sequence */
   std::array<unsigned int, 4> GetDimensions() const;
 
-  /*! Flag to write small token data instead of real pixel data */
-  vtkGetMacro(ReduceImageDataToOnePixel, bool);
-  /*! Flag write small token data instead of real pixel data */
-  vtkSetMacro(ReduceImageDataToOnePixel, bool);
-  /*! Flag write small token data instead of real pixel data */
-  vtkBooleanMacro(ReduceImageDataToOnePixel, bool);
-
   /*! Flag to enable/disable writing of image data */
-  vtkGetMacro(WriteHeaderOnly, bool);
+  vtkGetMacro(EnableImageDataWrite, bool);
   /*! Flag to enable/disable writing of image data */
-  vtkSetMacro(WriteHeaderOnly, bool);
+  vtkSetMacro(EnableImageDataWrite, bool);
   /*! Flag to enable/disable writing of image data */
-  vtkBooleanMacro(WriteHeaderOnly, bool);
+  vtkBooleanMacro(EnableImageDataWrite, bool);
 
 protected:
   /*! Read all the fields in the image file header */
@@ -234,9 +227,7 @@ protected:
   /*! Buffered compressed data size */
   unsigned long long CompressedBytesWritten;
   /*! Whether to enable pixel writing */
-  bool WriteHeaderOnly = false;
-  /*! Whether to write small token data instead of real pixel data */
-  bool ReduceImageDataToOnePixel = true;
+  bool EnableImageDataWrite;
   /*! Integer/float, short/long, signed/unsigned */
   igsioCommon::VTKScalarPixelType PixelType;
   /*! Number of components (or channels) */

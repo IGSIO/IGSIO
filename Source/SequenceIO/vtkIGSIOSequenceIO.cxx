@@ -17,7 +17,7 @@
 #endif
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile/*=US_IMG_ORIENT_MF*/, bool useCompression/*=true*/, bool reduceImageDataToOnePixel/*=false*/, bool writeHeaderOnly/*= false*/)
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile/*=US_IMG_ORIENT_MF*/, bool useCompression/*=true*/, bool enableImageDataWrite/*=true*/)
 {
 
   // Convert local filename to plus output filename
@@ -43,8 +43,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
-    writer->SetReduceImageDataToOnePixel(reduceImageDataToOnePixel);
-    writer->SetWriteHeaderOnly(writeHeaderOnly);
+    writer->SetEnableImageDataWrite(enableImageDataWrite);
     if (frameList->GetNumberOfTrackedFrames() == 1)
     {
       writer->IsDataTimeSeriesOff();
@@ -64,8 +63,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
-    writer->SetReduceImageDataToOnePixel(reduceImageDataToOnePixel);
-    writer->SetWriteHeaderOnly(writeHeaderOnly);
+    writer->SetEnableImageDataWrite(enableImageDataWrite);
     if (frameList->GetNumberOfTrackedFrames() == 1)
     {
       writer->IsDataTimeSeriesOff();
@@ -86,8 +84,7 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
     writer->SetOutputFilePath(outputPath);
     writer->SetImageOrientationInFile(orientationInFile);
     writer->SetTrackedFrameList(frameList);
-    writer->SetReduceImageDataToOnePixel(reduceImageDataToOnePixel);
-    writer->SetWriteHeaderOnly(writeHeaderOnly);
+    writer->SetEnableImageDataWrite(enableImageDataWrite);
     if (frameList->GetNumberOfTrackedFrames() == 1)
     {
       writer->IsDataTimeSeriesOff();
@@ -106,23 +103,23 @@ igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::st
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool reduceImageDataToOnePixel/*=false*/, bool writeHeaderOnly/*= false*/)
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, const std::string& path, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
 {
   vtkNew<vtkIGSIOTrackedFrameList> list;
   list->AddTrackedFrame(frame);
-  return vtkIGSIOSequenceIO::Write(filename, path, list.GetPointer(), orientationInFile, useCompression, reduceImageDataToOnePixel, writeHeaderOnly);
+  return vtkIGSIOSequenceIO::Write(filename, path, list.GetPointer(), orientationInFile, useCompression, enableImageDataWrite);
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool reduceImageDataToOnePixel/*=false*/, bool writeHeaderOnly/*= false*/)
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, igsioTrackedFrame* frame, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
 {
-  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frame, orientationInFile, useCompression, reduceImageDataToOnePixel, writeHeaderOnly);
+  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frame, orientationInFile, useCompression, enableImageDataWrite);
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool reduceImageDataToOnePixel/*=false*/, bool writeHeaderOnly/*= false*/)
+igsioStatus vtkIGSIOSequenceIO::Write(const std::string& filename, vtkIGSIOTrackedFrameList* frameList, US_IMAGE_ORIENTATION orientationInFile /*= US_IMG_ORIENT_MF*/, bool useCompression /*= true*/, bool enableImageDataWrite /*= true*/)
 {
-  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frameList, orientationInFile, useCompression, reduceImageDataToOnePixel, writeHeaderOnly);
+  return vtkIGSIOSequenceIO::Write(vtksys::SystemTools::GetFilenameName(filename), vtksys::SystemTools::GetFilenamePath(filename), frameList, orientationInFile, useCompression, enableImageDataWrite);
 }
 
 //----------------------------------------------------------------------------

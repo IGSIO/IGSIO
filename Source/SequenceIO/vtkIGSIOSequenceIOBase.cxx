@@ -28,6 +28,7 @@ vtkIGSIOSequenceIOBase::vtkIGSIOSequenceIOBase()
   : TrackedFrameList(vtkIGSIOTrackedFrameList::New())
   , UseCompression(false)
   , CompressedBytesWritten(0)
+  , EnableImageDataWrite(true)
   , PixelType(VTK_VOID)
   , NumberOfScalarComponents(1)
   , IsDataTimeSeries(true)
@@ -193,7 +194,7 @@ const char* vtkIGSIOSequenceIOBase::GetCustomString(const char* fieldName)
     return NULL;
   }
   // Can't return this->GetFrameField(fieldName).c_str(), since the string object would be deleted,
-  // leaving a dangling char* pointer.
+  // leaving a dangling char* pointer. 
   return this->TrackedFrameList->GetCustomString(fieldName);
 }
 
@@ -227,7 +228,7 @@ void vtkIGSIOSequenceIOBase::CreateTrackedFrameIfNonExisting(unsigned int frameN
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOSequenceIOBase::PrepareHeader()
 {
-  if (!this->ReduceImageDataToOnePixel && this->TrackedFrameList->IsContainingValidImageData())
+  if (this->EnableImageDataWrite && this->TrackedFrameList->IsContainingValidImageData())
   {
     if (this->ImageOrientationInFile == US_IMG_ORIENT_XX)
     {
@@ -281,10 +282,6 @@ igsioStatus vtkIGSIOSequenceIOBase::PrepareHeader()
     return IGSIO_FAIL;
   }
 
-  if (this->WriteHeaderOnly)
-  {
-    return IGSIO_SUCCESS;
-  }
   return this->PrepareImageFile();
 }
 
@@ -313,12 +310,9 @@ igsioStatus vtkIGSIOSequenceIOBase::Write()
     return IGSIO_FAIL;
   }
 
-  if (!this->WriteHeaderOnly)
+  if (this->WriteImages() != IGSIO_SUCCESS)
   {
-    if (this->WriteImages() != IGSIO_SUCCESS)
-    {
-      return IGSIO_FAIL;
-    }
+    return IGSIO_FAIL;
   }
 
   this->Close();
@@ -336,27 +330,24 @@ igsioStatus vtkIGSIOSequenceIOBase::Close()
 
   LOG_DEBUG("Moved file from: " << this->TempHeaderFileName << " to " << headerFullPath);
 
-  if (!this->WriteHeaderOnly)
+  if (this->PixelDataFileName.empty())
   {
-    if (this->PixelDataFileName.empty())
-    {
-      // Append image to final file (single file)
-      AppendFile(this->TempImageFileName, headerFullPath.c_str());
-    }
-    else
-    {
-      // Rename image to final filename (header+data file)
+    // Append image to final file (single file)
+    AppendFile(this->TempImageFileName, headerFullPath.c_str());
+  }
+  else
+  {
+    // Rename image to final filename (header+data file)
 
-      // Use the same path as the header but replace the filename
-      std::vector<std::string> pathElements;
-      vtksys::SystemTools::SplitPath(headerFullPath.c_str(), pathElements);
-      pathElements.erase(pathElements.end() - 1);
-      std::string pixelDataFileNameOnly = vtksys::SystemTools::GetFilenameName(this->PixelDataFileName);
-      pathElements.push_back(pixelDataFileNameOnly);
-      std::string pixFullPath = vtksys::SystemTools::JoinPath(pathElements);
+    // Use the same path as the header but replace the filename
+    std::vector<std::string> pathElements;
+    vtksys::SystemTools::SplitPath(headerFullPath.c_str(), pathElements);
+    pathElements.erase(pathElements.end() - 1);
+    std::string pixelDataFileNameOnly = vtksys::SystemTools::GetFilenameName(this->PixelDataFileName);
+    pathElements.push_back(pixelDataFileNameOnly);
+    std::string pixFullPath = vtksys::SystemTools::JoinPath(pathElements);
 
-      MoveFileInternal(this->TempImageFileName.c_str(), pixFullPath.c_str());
-    }
+    MoveFileInternal(this->TempImageFileName.c_str(), pixFullPath.c_str());
   }
 
   this->TempHeaderFileName.clear();
@@ -372,7 +363,7 @@ igsioStatus vtkIGSIOSequenceIOBase::Close()
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOSequenceIOBase::WriteImages()
 {
-  if (!this->ReduceImageDataToOnePixel && this->TrackedFrameList->IsContainingValidImageData() && this->ImageOrientationInFile != this->TrackedFrameList->GetImageOrientation())
+  if (this->EnableImageDataWrite && this->TrackedFrameList->IsContainingValidImageData() && this->ImageOrientationInFile != this->TrackedFrameList->GetImageOrientation())
   {
     // Reordering of the frames is not implemented, so return with an error
     LOG_ERROR("Saving of images is supported only in the same orientation as currently in the memory");
@@ -388,57 +379,54 @@ igsioStatus vtkIGSIOSequenceIOBase::WriteImages()
   }
 
   igsioStatus result = IGSIO_SUCCESS;
-  if (!this->WriteHeaderOnly)
+  if (!GetUseCompression())
   {
-    if (!GetUseCompression())
+    if (imageDataAvailable)
     {
-      if (imageDataAvailable)
+      // Create a blank frame if we have to write an invalid frame to sequence file
+      igsioVideoFrame blankFrame;
+      FrameSizeType frameSize = { this->Dimensions[0], this->Dimensions[1], this->Dimensions[2] };
+      if (blankFrame.AllocateFrame(frameSize, this->PixelType, this->NumberOfScalarComponents) != IGSIO_SUCCESS)
       {
-        // Create a blank frame if we have to write an invalid frame to sequence file
-        igsioVideoFrame blankFrame;
-        FrameSizeType frameSize = { this->Dimensions[0], this->Dimensions[1], this->Dimensions[2] };
-        if (blankFrame.AllocateFrame(frameSize, this->PixelType, this->NumberOfScalarComponents) != IGSIO_SUCCESS)
+        LOG_ERROR("Failed to allocate space for blank image.");
+        return IGSIO_FAIL;
+      }
+      blankFrame.FillBlank();
+
+      // not compressed
+      for (unsigned int frameNumber = 0; frameNumber < this->TrackedFrameList->GetNumberOfTrackedFrames(); frameNumber++)
+      {
+        igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
+
+        igsioVideoFrame* videoFrame = &blankFrame;
+        if (this->EnableImageDataWrite && trackedFrame->GetImageData()->IsImageValid())
         {
-          LOG_ERROR("Failed to allocate space for blank image.");
-          return IGSIO_FAIL;
+          videoFrame = trackedFrame->GetImageData();
         }
-        blankFrame.FillBlank();
 
-        // not compressed
-        for (unsigned int frameNumber = 0; frameNumber < this->TrackedFrameList->GetNumberOfTrackedFrames(); frameNumber++)
+        size_t writtenSize = 0;
+        igsioStatus status = igsioCommon::RobustFwrite(this->OutputImageFileHandle, videoFrame->GetScalarPointer(),
+          videoFrame->GetFrameSizeInBytes(), writtenSize);
+        if (status == IGSIO_FAIL)
         {
-          igsioTrackedFrame* trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
-
-          igsioVideoFrame* videoFrame = &blankFrame;
-          if (!this->ReduceImageDataToOnePixel && trackedFrame->GetImageData()->IsImageValid())
-          {
-            videoFrame = trackedFrame->GetImageData();
-          }
-
-          size_t writtenSize = 0;
-          igsioStatus status = igsioCommon::RobustFwrite(this->OutputImageFileHandle, videoFrame->GetScalarPointer(),
-            videoFrame->GetFrameSizeInBytes(), writtenSize);
-          if (status == IGSIO_FAIL)
-          {
-            LOG_ERROR("Unable to write entire frame to file. Frame size: " << videoFrame->GetFrameSizeInBytes()
-              << ", successfully written: " << writtenSize << " bytes");
-          }
-          this->TotalBytesWritten += writtenSize;
+          LOG_ERROR("Unable to write entire frame to file. Frame size: " << videoFrame->GetFrameSizeInBytes()
+            << ", successfully written: " << writtenSize << " bytes");
         }
+        this->TotalBytesWritten += writtenSize;
       }
     }
-    else
+  }
+  else
+  {
+    // compressed
+    int compressedDataSize = 0;
+    if (imageDataAvailable)
     {
-      // compressed
-      int compressedDataSize = 0;
-      if (imageDataAvailable)
+      result = WriteCompressedImagePixelsToFile(compressedDataSize);
+      if (result == IGSIO_SUCCESS)
       {
-        result = WriteCompressedImagePixelsToFile(compressedDataSize);
-        if (result == IGSIO_SUCCESS)
-        {
-          TotalBytesWritten += compressedDataSize;
-          this->CompressedBytesWritten += compressedDataSize;
-        }
+        TotalBytesWritten += compressedDataSize;
+        this->CompressedBytesWritten += compressedDataSize;
       }
     }
   }
