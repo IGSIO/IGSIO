@@ -19,11 +19,18 @@ ELSE()
     SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
     SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
 
+    IF(NOT DEFINED(VP9_GIT_REPOSITORY))
+      SET(VP9_GIT_REPOSITORY "https://github.com/webmproject/libvpx/" CACHE STRING "Set VP9 desired git url")
+    ENDIF()
+    IF(NOT DEFINED(VP9_GIT_REVISION))
+      SET(VP9_GIT_REVISION "v1.8.2" CACHE STRING "Set VP9 desired git hash (master means latest)")
+    ENDIF()
+
     MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")
     ExternalProject_Add(VP9
       PREFIX "${CMAKE_BINARY_DIR}/VP9-prefix"
-      GIT_REPOSITORY https://github.com/webmproject/libvpx/
-      GIT_TAG v1.8.2
+      GIT_REPOSITORY ${VP9_GIT_REPOSITORY}
+      GIT_TAG ${VP9_GIT_REVISION}
       SOURCE_DIR        "${IGSIO_VP9_DIR}"
       CONFIGURE_COMMAND "${IGSIO_VP9_DIR}/configure" --disable-examples --as=yasm --enable-pic --disable-tools --disable-docs --disable-vp8 --disable-libyuv --disable-unit_tests --disable-postproc
       BUILD_ALWAYS 1

@@ -29,15 +29,22 @@ ELSE()
       /DWIN32
       )
   ENDIF()
+  
+  IF(NOT DEFINED(vtkAddon_GIT_REPOSITORY))
+    SET(vtkAddon_GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git" CACHE STRING "Set vtkAddon desired git url")
+  ENDIF()
+  IF(NOT DEFINED(vtkAddon_GIT_REVISION))
+    SET(vtkAddon_GIT_REVISION "master" CACHE STRING "Set vtkAddon desired git hash (master means latest)")
+  ENDIF()
 
-  ExternalProject_Add( vtkAddon
+  ExternalProject_Add(vtkAddon
     PREFIX ${PLUS_IGSIO_PREFIX_DIR}
     "${PLUSBUILD_EXTERNAL_PROJECT_CUSTOM_COMMANDS}"
     SOURCE_DIR "${IGSIO_vtkAddon_SRC_DIR}"
     BINARY_DIR "${IGSIO_vtkAddon_DIR}"
     #--Download step--------------
-    GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git"
-    GIT_TAG "master"
+    GIT_REPOSITORY  ${vtkAddon_GIT_REPOSITORY}
+    GIT_TAG ${vtkAddon_GIT_REVISION}
     #--Configure step-------------
     CMAKE_ARGS
       ${ep_common_args}

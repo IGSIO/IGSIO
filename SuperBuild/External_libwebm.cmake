@@ -31,12 +31,19 @@ ELSE()
       )
   ENDIF()
 
+  IF(NOT DEFINED(libwebm_GIT_REPOSITORY))
+    SET(libwebm_GIT_REPOSITORY "https://github.com/Sunderlandkyl/libwebm.git" CACHE STRING "Set libwebm desired git url")
+  ENDIF()
+  IF(NOT DEFINED(libwebm_GIT_REVISION))
+    SET(libwebm_GIT_REVISION "master" CACHE STRING "Set libwebm desired git hash (master means latest)")
+  ENDIF()
+
  ExternalProject_Add( libwebm
    SOURCE_DIR ${IGSIO_libwebm_SRC_DIR}
    BINARY_DIR ${IGSIO_libwebm_DIR}
    #--Download step--------------
-   GIT_REPOSITORY "https://github.com/Sunderlandkyl/libwebm.git"
-   GIT_TAG "master"
+   GIT_REPOSITORY ${libwebm_GIT_REPOSITORY}
+   GIT_TAG ${libwebm_GIT_REVISION}
    #--Configure step-------------
    CMAKE_ARGS
      ${ep_common_args}
