@@ -602,15 +602,15 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   this->SetFrameField("encoding", GetUseCompression() ? "gz" : "raw");
 
   FrameSizeType frameSize = {0, 0, 0};
-  if (this->EnableImageDataWrite)
-  {
-    frameSize = this->GetMaximumImageDimensions();
-  }
-  else
+  if (this->ReduceImageDataToOnePixel)
   {
     frameSize[0] = 1;
     frameSize[1] = 1;
     frameSize[2] = 1;
+  }
+  else
+  {
+    frameSize = this->GetMaximumImageDimensions();
   }
 
   // Set the dimensions of the data to be written
@@ -619,7 +619,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   this->Dimensions[2] = frameSize[2];
   this->Dimensions[3] = this->TrackedFrameList->GetNumberOfTrackedFrames();
 
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     // Make sure the frame size is the same for each valid image
     // If it's needed, we can use the largest frame size for each frame and copy the image data row by row
@@ -760,7 +760,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   }
 
   // Image orientation
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     std::string orientationStr = SEQUENCE_FIELD_US_IMG_ORIENT + ":=" + igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile) + "\n";
     fputs(orientationStr.c_str(), stream);
@@ -768,7 +768,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteInitialImageHeader()
   }
 
   // Image type
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     std::string orientationStr = SEQUENCE_FIELD_US_IMG_TYPE + ":=" + igsioCommon::GetStringFromUsImageType(this->ImageType) + "\n";
     fputs(orientationStr.c_str(), stream);
@@ -811,7 +811,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::AppendImagesToHeader()
       TotalBytesWritten += field.length();
     }
     //Only write this field if the image is saved. If only the tracking pose is kept do not save this field to the header
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       // Add image status field
       std::string imageStatus("OK");
@@ -856,13 +856,16 @@ igsioStatus vtkIGSIONrrdSequenceIO::FinalizeHeader()
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIONrrdSequenceIO::Close()
 {
-  if (this->GetUseCompression())
+  if (!this->WriteHeaderOnly)
   {
-    gzclose(this->CompressionStream);
-  }
-  else
-  {
-    fclose(this->OutputImageFileHandle);
+    if (this->GetUseCompression())
+    {
+      gzclose(this->CompressionStream);
+    }
+    else
+    {
+      fclose(this->OutputImageFileHandle);
+    }
   }
 
   return Superclass::Close();
@@ -889,7 +892,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteCompressedImagePixelsToFile(int& compre
   {
     igsioTrackedFrame* trackedFrame(NULL);
 
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
       if (trackedFrame == NULL)
@@ -901,7 +904,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::WriteCompressedImagePixelsToFile(int& compre
     }
 
     igsioVideoFrame* videoFrame = &blankFrame;
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       if (trackedFrame->GetImageData()->IsImageValid())
       {
@@ -1308,7 +1311,7 @@ igsioStatus vtkIGSIONrrdSequenceIO::SetFileName(const std::string& aFilename)
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIONrrdSequenceIO::UpdateDimensionsCustomStrings(int numberOfFrames, bool isData3D)
 {
-  if (this->EnableImageDataWrite && this->TrackedFrameList->IsContainingValidImageData())
+  if (!this->ReduceImageDataToOnePixel && this->TrackedFrameList->IsContainingValidImageData())
   {
     this->NumberOfScalarComponents = this->TrackedFrameList->GetNumberOfScalarComponents();
   }

@@ -61,6 +61,11 @@ public:
   /*! Return the string that represents the dimensional kinds */
   virtual const char* GetDimensionKindsString() VTK_OVERRIDE { return ""; }
 
+  virtual void SetWriteHeaderOnly(bool) VTK_OVERRIDE
+  {
+    LOG_WARNING(this->GetNameOfClass() << " does not support writing only the header");
+  }
+
   /*!
     Set input/output file name. The file contains only the image header in case of
     MHD images and the full image (including pixel data) in case of MHA images.
@@ -103,4 +108,4 @@ protected:
   vtkInternal* Internal;
 };
 
-#endif // __vtkIGSIOMkvSequenceIO_h 
+#endif // __vtkIGSIOMkvSequenceIO_h
