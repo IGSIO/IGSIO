@@ -61,6 +61,7 @@ ELSE()
       -DVTK_DIR:PATH=${VTK_DIR}
       -DvtkAddon_INSTALL_BIN_DIR:PATH=${vtkAddon_INSTALL_BIN_DIR}
       -DvtkAddon_INSTALL_LIB_DIR:PATH=${vtkAddon_INSTALL_LIB_DIR}
+      -DQt5_DIR:PATH=${Qt5_DIR}
 
     #--Build step-----------------
     BUILD_ALWAYS 1
