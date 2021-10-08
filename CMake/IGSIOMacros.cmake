@@ -13,7 +13,7 @@ MACRO(IGSIOInstallLibrary _target_name _variable_root)
     ARCHIVE DESTINATION "${IGSIO_INSTALL_ARCHIVE_DIR}" CONFIGURATIONS ${CONFIG} COMPONENT Development
     )
   INSTALL(FILES ${${_variable_root}_HDRS}
-    DESTINATION "${IGSIO_INCLUDE_INSTALL}" COMPONENT Development
+    DESTINATION "${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}" COMPONENT Development
     )
   GET_TARGET_PROPERTY(_library_type ${_target_name} TYPE)
   IF(${_library_type} STREQUAL SHARED_LIBRARY AND MSVC)

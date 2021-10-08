@@ -1,5 +1,7 @@
 PROJECT(IGSIOCalibration)
 
+SET(${PROJECT_NAME}_INSTALL_INCLUDE_DIR ${IGSIOLIB_INCLUDE_INSTALL} CACHE INTERNAL "")
+
 # --------------------------------------------------------------------------
 # Sources
 SET(${PROJECT_NAME}_SRCS
@@ -57,7 +59,7 @@ ADD_LIBRARY(vtk${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
 FOREACH(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
   target_include_directories(vtk${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${p}>)
 ENDFOREACH()
-target_include_directories(vtk${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${IGSIO_INCLUDE_INSTALL}>)
+target_include_directories(vtk${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}>)
 TARGET_LINK_LIBRARIES(vtk${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_LIBS})
 IGSIOAddVersionInfo(vtk${PROJECT_NAME} "Library containing various calibration algorithms. Part of the IGSIO toolkit." vtk${PROJECT_NAME} vtk${PROJECT_NAME})
 
