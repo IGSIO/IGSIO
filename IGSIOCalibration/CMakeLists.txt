@@ -1,5 +1,7 @@
 project(IGSIOCalibration)
 
+SET(${PROJECT_NAME}_INSTALL_INCLUDE_DIR ${IGSIOLIB_INCLUDE_INSTALL} CACHE INTERNAL "")
+
 # --------------------------------------------------------------------------
 # Sources
 set(${PROJECT_NAME}_SRCS
@@ -14,6 +16,7 @@ set(${PROJECT_NAME}_HDRS
   vtkIGSIOPivotCalibrationAlgo.h
   vtkIGSIOLandmarkDetectionAlgo.h
   vtkIGSIOSpinCalibrationAlgo.h
+  ${CMAKE_CURRENT_BINARY_DIR}/vtk${PROJECT_NAME}Export.h
   )
 
 set(${PROJECT_NAME}_INCLUDE_DIRS
@@ -31,7 +34,7 @@ add_library(vtk${PROJECT_NAME} ${${PROJECT_NAME}_SRCS} ${${PROJECT_NAME}_HDRS})
 foreach(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
   target_include_directories(vtk${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${p}>)
 endforeach()
-target_include_directories(vtk${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${IGSIO_INCLUDE_INSTALL}>)
+target_include_directories(vtk${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}>)
 target_link_libraries(vtk${PROJECT_NAME} PUBLIC ${${PROJECT_NAME}_LIBS})
 
 set_property(GLOBAL APPEND PROPERTY IGSIO_TARGETS vtk${PROJECT_NAME})
