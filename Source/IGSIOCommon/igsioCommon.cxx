@@ -339,6 +339,7 @@ std::vector<std::string> igsioCommon::GetSequenceExtensions()
   sequenceExtensions.push_back(".mhd");
   sequenceExtensions.push_back(".nrrd");
   sequenceExtensions.push_back(".nhdr");
+  sequenceExtensions.push_back(".mkv");
   return sequenceExtensions;
 }
 
