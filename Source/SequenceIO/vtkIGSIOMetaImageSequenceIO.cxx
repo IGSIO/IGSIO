@@ -622,15 +622,15 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   }
 
   FrameSizeType frameSize = {0, 0, 0};
-  if (this->EnableImageDataWrite)
-  {
-    frameSize = this->GetMaximumImageDimensions();
-  }
-  else
+  if (this->ReduceImageDataToOnePixel)
   {
     frameSize[0] = 1;
     frameSize[1] = 1;
     frameSize[2] = 1;
+  }
+  else
+  {
+    frameSize = this->GetMaximumImageDimensions();
   }
 
   // Set the dimensions of the data to be written
@@ -639,7 +639,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   this->Dimensions[2] = frameSize[2];
   this->Dimensions[3] = this->TrackedFrameList->GetNumberOfTrackedFrames();
 
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     // Make sure the frame size is the same for each valid image
     // If it's needed, we can use the largest frame size for each frame and copy the image data row by row
@@ -675,7 +675,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   this->SetFrameField("ElementType", pixelTypeStr);   // pixel type (a.k.a component type) is stored in the ElementType element
 
   // ElementNumberOfChannels
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     if (this->TrackedFrameList->IsContainingValidImageData())
     {
@@ -686,14 +686,14 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
 
   this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, igsioCommon::GetStringFromUsImageOrientation(US_IMG_ORIENT_MF));
   // Image orientation
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     std::string orientationStr = igsioCommon::GetStringFromUsImageOrientation(this->ImageOrientationInFile);
     this->SetFrameField(SEQMETA_FIELD_US_IMG_ORIENT, orientationStr);
   }
 
   // Image type
-  if (this->EnableImageDataWrite)
+  if (!this->ReduceImageDataToOnePixel)
   {
     std::string typeStr = igsioCommon::GetStringFromUsImageType(this->ImageType);
     this->SetFrameField(SEQMETA_FIELD_US_IMG_TYPE, typeStr);
@@ -784,27 +784,33 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteInitialImageHeader()
   if (GetCustomString("ElementSpacing") == NULL
       || igsioCommon::SplitStringIntoTokens(GetCustomString("ElementSpacing"), ' ', false).size() != numSpaceDimensions)
   {
-    // Dynamically calculate the spacing values
-    std::ostringstream spacingStream;
-    for (int i = 0; i < numSpaceDimensions; ++i)
+    // Code assumes all images have the same spacing
+    igsioTrackedFrame* trackedFrame0 = this->TrackedFrameList->GetTrackedFrame(0);
+    std::string elementSpacing = trackedFrame0->GetFrameField("ElementSpacing");
+    if (elementSpacing.empty())
     {
-      // Code assumes all images have the same spacing
-      vtkImageData* image = this->TrackedFrameList->GetTrackedFrame(0)->GetImageData()->GetImage();
-      if (image)
+      // Dynamically calculate the spacing values
+      std::ostringstream spacingStream;
+      for (int i = 0; i < numSpaceDimensions; ++i)
       {
-        spacingStream << image->GetSpacing()[i];
-      }
-      else
-      {
-        spacingStream << "1";
-      }
+        vtkImageData* image = trackedFrame0->GetImageData()->GetImage();
+        if (image)
+        {
+          spacingStream << image->GetSpacing()[i];
+        }
+        else
+        {
+          spacingStream << "1";
+        }
 
-      if (i != numSpaceDimensions - 1)
-      {
-        spacingStream << " ";
+        if (i != numSpaceDimensions - 1)
+        {
+          spacingStream << " ";
+        }
       }
+      elementSpacing = spacingStream.str();
     }
-    this->SetFrameField("ElementSpacing", spacingStream.str());
+    this->SetFrameField("ElementSpacing", elementSpacing);
   }
 
   if (GetCustomString("AnatomicalOrientation") == NULL)
@@ -887,7 +893,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::AppendImagesToHeader()
       TotalBytesWritten += field.length();
     }
     //Only write this field if the image is saved. If only the tracking pose is kept do not save this field to the header
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       // Add image status field
       std::string imageStatus("OK");
@@ -973,7 +979,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteCompressedImagePixelsToFile(int& c
   {
     igsioTrackedFrame* trackedFrame(NULL);
 
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
       if (trackedFrame == NULL)
@@ -985,7 +991,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::WriteCompressedImagePixelsToFile(int& c
     }
 
     igsioVideoFrame* videoFrame = &blankFrame;
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       if (trackedFrame->GetImageData()->IsImageValid())
       {
@@ -1318,20 +1324,23 @@ const char* vtkIGSIOMetaImageSequenceIO::GetDimensionKindsString()
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOMetaImageSequenceIO::Close()
 {
-  // Update fields that are known only at the end of the processing
-  if (this->GetUseCompression())
+  if (!this->WriteHeaderOnly)
   {
-    std::stringstream ss;
-    ss << this->CompressedBytesWritten;
-    this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, ss.str());
-    if (UpdateFieldInImageHeader(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) != IGSIO_SUCCESS)
+    // Update fields that are known only at the end of the processing
+    if (this->GetUseCompression())
     {
-      return IGSIO_FAIL;
+      std::stringstream ss;
+      ss << this->CompressedBytesWritten;
+      this->SetFrameField(SEQMETA_FIELD_COMPRESSED_DATA_SIZE, ss.str());
+      if (UpdateFieldInImageHeader(SEQMETA_FIELD_COMPRESSED_DATA_SIZE) != IGSIO_SUCCESS)
+      {
+        return IGSIO_FAIL;
+      }
+      deflateEnd(&this->CompressionStream);   // clean up
     }
-    deflateEnd(&this->CompressionStream);   // clean up
-  }
 
-  fclose(this->OutputImageFileHandle);
+    fclose(this->OutputImageFileHandle);
+  }
 
   return Superclass::Close();
 }
@@ -1394,7 +1403,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::SetFileName(const std::string& aFilenam
 //----------------------------------------------------------------------------
 igsioStatus vtkIGSIOMetaImageSequenceIO::UpdateDimensionsCustomStrings(int numberOfFrames, bool isData3D)
 {
-  if (this->EnableImageDataWrite && this->TrackedFrameList->IsContainingValidImageData())
+  if (!this->ReduceImageDataToOnePixel && this->TrackedFrameList->IsContainingValidImageData())
   {
     this->NumberOfScalarComponents = this->TrackedFrameList->GetNumberOfScalarComponents();
   }

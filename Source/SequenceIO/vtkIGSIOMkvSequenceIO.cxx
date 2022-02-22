@@ -460,7 +460,7 @@ igsioStatus vtkIGSIOMkvSequenceIO::WriteImages()
     igsioTrackedFrame* trackedFrame(NULL);
     igsioVideoFrame* videoFrame(NULL);
 
-    if (this->EnableImageDataWrite)
+    if (!this->ReduceImageDataToOnePixel)
     {
       trackedFrame = this->TrackedFrameList->GetTrackedFrame(frameNumber);
       if (!trackedFrame)
