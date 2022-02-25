@@ -1,0 +1,36 @@
+#include <winresrc.h>
+
+VS_VERSION_INFO VERSIONINFO
+  FILEVERSION @IGSIO_VERSION_MAJOR@, @IGSIO_VERSION_MINOR@, @IGSIO_VERSION_PATCH@, 0
+  PRODUCTVERSION @IGSIO_VERSION_MAJOR@, @IGSIO_VERSION_MINOR@, @IGSIO_VERSION_PATCH@, 0
+  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifndef NDEBUG
+  FILEFLAGS 0
+#else
+  FILEFLAGS VS_FF_DEBUG
+#endif
+  FILEOS VOS_NT_WINDOWS32
+#ifdef @target_name@_EXPORTS
+  FILETYPE VFT_DLL
+#else
+  FILETYPE VFT_APP
+#endif
+  FILESUBTYPE VFT2_UNKNOWN
+  BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+      BLOCK "04090000"
+      BEGIN
+        VALUE "FileDescription", "@description@"
+        VALUE "FileVersion", "@IGSIO_VERSION_MAJOR@.@IGSIO_VERSION_MINOR@.@IGSIO_VERSION_PATCH@.@IGSIO_REVISION@"
+        VALUE "InternalName", "@internal_name@"
+        VALUE "ProductName", "@product_name@"
+        VALUE "ProductVersion", "@IGSIO_VERSION_MAJOR@.@IGSIO_VERSION_MINOR@.@IGSIO_VERSION_PATCH@.@IGSIO_REVISION@"
+        VALUE "LegalCopyright", "https://github.com/PlusToolkit/PlusLib/blob/master/src/License.txt"
+      END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+      VALUE "Translation", 0x409, 1252
+    END
+  END

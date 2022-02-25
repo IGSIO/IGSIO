@@ -11,6 +11,8 @@
 #include "vtkXMLUtilities.h"
 #include "vtkXMLDataElement.h"
 
+#include "igsioCommon.h"
+
 /*!
   \class igsioXmlUtils
   \brief Utility methods for XML tree manipulation
