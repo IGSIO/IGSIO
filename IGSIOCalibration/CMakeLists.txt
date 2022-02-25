@@ -3,13 +3,17 @@ PROJECT(IGSIOCalibration)
 # --------------------------------------------------------------------------
 # Sources
 SET(${PROJECT_NAME}_SRCS
-  vtkIGSIOPivotCalibrationAlgo.cxx
+  vtkIGSIOAbstractStylusCalibrationAlgo.cxx
   vtkIGSIOLandmarkDetectionAlgo.cxx
+  vtkIGSIOPivotCalibrationAlgo.cxx
+  vtkIGSIOSpinCalibrationAlgo.cxx
   )
 
 SET(${PROJECT_NAME}_HDRS
+  vtkIGSIOAbstractStylusCalibrationAlgo.h
   vtkIGSIOPivotCalibrationAlgo.h
   vtkIGSIOLandmarkDetectionAlgo.h
+  vtkIGSIOSpinCalibrationAlgo.h
   )
 
 SET(${PROJECT_NAME}_INCLUDE_DIRS

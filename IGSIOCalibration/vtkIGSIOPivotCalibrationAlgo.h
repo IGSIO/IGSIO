@@ -10,21 +10,22 @@ See License.txt for details.
 // Local includes
 #include "igsioConfigure.h"
 #include "igsioCommon.h"
+#include "vtkIGSIOAbstractStylusCalibrationAlgo.h"
 #include "vtkIGSIOCalibrationExport.h"
 
 // VTK includes
+#include <vtkCommand.h>
 #include <vtkObject.h>
 #include <vtkMatrix4x4.h>
 
 // STL includes
-#include <list>
 #include <set>
+#include <deque>
 
 class vtkIGSIOTransformRepository;
 class vtkXMLDataElement;
 
 //-----------------------------------------------------------------------------
-
 /*!
   \class vtkIGSIOPivotCalibrationAlgo
   \brief Pivot calibration algorithm to calibrate a stylus. It determines the pose of the stylus tip relative to the marker attached to the stylus.
@@ -43,98 +44,52 @@ class vtkXMLDataElement;
 
   \ingroup igsioCalibrationAlgorithm
 */
-class vtkIGSIOCalibrationExport vtkIGSIOPivotCalibrationAlgo : public vtkObject
+class vtkIGSIOCalibrationExport vtkIGSIOPivotCalibrationAlgo : public vtkIGSIOAbstractStylusCalibrationAlgo
 {
 public:
-  vtkTypeMacro(vtkIGSIOPivotCalibrationAlgo, vtkObject);
+  vtkTypeMacro(vtkIGSIOPivotCalibrationAlgo, vtkIGSIOAbstractStylusCalibrationAlgo);
   static vtkIGSIOPivotCalibrationAlgo* New();
 
   /*!
   * Read configuration
   * \param aConfig Root element of the device set configuration
   */
-  virtual igsioStatus ReadConfiguration(vtkXMLDataElement* aConfig);
-
-  /*!
-    Remove all previously inserted calibration points.
-    Call this method to get rid of previously added calibration points
-    before starting a new calibration.
-  */
-  void RemoveAllCalibrationPoints();
-
-  /*!
-    Insert acquired point to calibration point list
-    \param aMarkerToReferenceTransformMatrix New calibration point (tool to reference transform)
-  */
-  igsioStatus InsertNextCalibrationPoint(vtkMatrix4x4* aMarkerToReferenceTransformMatrix);
+  igsioStatus ReadConfiguration(vtkXMLDataElement* aConfig) override;
 
   /*!
     Calibrate (call the minimizer and set the result)
     \param aTransformRepository Transform repository to save the results into
   */
-  igsioStatus DoPivotCalibration(vtkIGSIOTransformRepository* aTransformRepository = NULL);
+  igsioStatus DoPivotCalibration(vtkIGSIOTransformRepository* aTransformRepository = NULL, bool autoOrient = true);
 
-  /*!
-    Get calibration result string to display
-    \param aPrecision Number of decimals shown
-    \return Calibration result (e.g. stylus tip to stylus translation) string
-  */
-  std::string GetPivotPointToMarkerTranslationString(double aPrecision = 3);
-
-  /*!
-    Get the number of outlier points. It is recommended to display a warning to the user
-    if the percentage of outliers vs total number of points is larger than a few percent.
-  */
-  int GetNumberOfDetectedOutliers();
-
-public:
-  vtkGetMacro(CalibrationError, double);
-  vtkGetObjectMacro(PivotPointToMarkerTransformMatrix, vtkMatrix4x4);
-  vtkGetVector3Macro(PivotPointPosition_Reference, double);
-  vtkGetStringMacro(ObjectMarkerCoordinateFrame);
-  vtkGetStringMacro(ReferenceCoordinateFrame);
-  vtkGetStringMacro(ObjectPivotPointCoordinateFrame);
-
-protected:
-  vtkSetObjectMacro(PivotPointToMarkerTransformMatrix, vtkMatrix4x4);
-  vtkSetStringMacro(ObjectMarkerCoordinateFrame);
-  vtkSetStringMacro(ReferenceCoordinateFrame);
-  vtkSetStringMacro(ObjectPivotPointCoordinateFrame);
+  //@{
+  /// Mean error of the pivot calibration result in mm.
+  /// A value of -1.0 means that the error has not been calculated.
+  vtkGetMacro(PivotCalibrationErrorMm, double);
+  //@}
 
 protected:
   vtkIGSIOPivotCalibrationAlgo();
   virtual ~vtkIGSIOPivotCalibrationAlgo();
 
 protected:
-  /*! Compute the mean position error of the pivot point (in mm) */
-  void ComputeCalibrationError();
 
-  igsioStatus GetPivotPointPosition(double* pivotPoint_Marker, double* pivotPoint_Reference);
+  ////@{
+  /// Compute the mean position error of the pivot point (in mm)
+  void ComputePivotCalibrationError();
+  double ComputePivotCalibrationError(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, std::set<unsigned int>& outlierIndices, double* pivotPoint_Reference, vtkMatrix4x4* pivotPointToMarkerTransformMatrix);
+  ////@}
+
+  igsioStatus GetPivotPointPosition(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, std::set<unsigned int>& outlierIndices, double* pivotPoint_Marker, double* pivotPoint_Reference);
+
+  igsioStatus DoCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, double& error) override;
+  igsioStatus DoPivotCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, bool autoOrient, std::set<unsigned int>& outlierIndices, double pivotPoint_Marker[4], double pivotPoint_Reference[4], vtkMatrix4x4* pivotPointToMarkerTransformMatrix);
 
 protected:
-  /*! Pivot point to marker transform (eg. stylus tip to stylus) - the result of the calibration */
-  vtkMatrix4x4*             PivotPointToMarkerTransformMatrix;
+  double PivotCalibrationErrorMm;
 
-  /*! Mean error of the calibration result in mm */
-  double                    CalibrationError;
-
-  /*! Array of the input points */
-  std::list<vtkMatrix4x4*>  MarkerToReferenceTransformMatrixArray;
-
-  /*! Name of the object marker coordinate frame (eg. Stylus) */
-  char*                     ObjectMarkerCoordinateFrame;
-
-  /*! Name of the reference coordinate frame (eg. Reference) */
-  char*                     ReferenceCoordinateFrame;
-
-  /*! Name of the object pivot point coordinate frame (eg. StylusTip) */
-  char*                     ObjectPivotPointCoordinateFrame;
-
-  /*! Pivot point position in the Reference coordinate system */
-  double                    PivotPointPosition_Reference[4];
-
-  /*! List of outlier sample indices */
-  std::set<unsigned int>    OutlierIndices;
+  class vtkInternal;
+  vtkInternal* Internal;
 };
 
 #endif

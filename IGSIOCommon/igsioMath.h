@@ -264,6 +264,9 @@ public:
   /*! Print matrix into log as info */
   static void LogMatrix(const vnl_matrix_fixed<double, 4, 4>& matrix, int precision = 3);
 
+  /*! Helper method to compute the secondary axis, given a shaft axis */
+  static vnl_vector< double > ComputeSecondaryAxis(vnl_vector< double > shaftAxis_ToolTip, const double orthogonalAxis[3], const double backupAxis[3], const double parallelAngleThreshold);
+
 protected:
   igsioMath();
   ~igsioMath();

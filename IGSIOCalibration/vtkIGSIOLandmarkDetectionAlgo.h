@@ -90,7 +90,7 @@ public:
   vtkGetObjectMacro( DetectedLandmarkPoints_Reference, vtkPoints );
 
   /*! The minimum distance in between any two defined landmarks in the phantom, it will be a NEW landmark detected only if it is further away from any other already detected landmark. By default 15.0 [mm]. */
-  vtkSetMacro( MinimunDistanceBetweenLandmarksMm, double );
+  vtkSetMacro( MinimumDistanceBetweenLandmarksMm, double );
 
   /*!
     Once a landmark is detected (after DetectionTime) the stylus could still be pivoting in the same place, this function determines if it is a new landmark position
@@ -154,7 +154,7 @@ protected:
   */
   double StylusTipMaximumDisplacementThresholdMm;
   /*! The minimum distance in between any two defined landmarks in the phantom.*/
-  double MinimunDistanceBetweenLandmarksMm;
+  double MinimumDistanceBetweenLandmarksMm;
   /*!
     The bounding box is updated during the detection time covering the path of the stylus shaft position. A landmark could be detected only if the box's lengths norm is bigger than
     StylusShaftMinimumDisplacementThresholdMm.

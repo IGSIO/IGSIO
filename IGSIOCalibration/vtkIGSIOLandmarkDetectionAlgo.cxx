@@ -31,7 +31,7 @@ vtkIGSIOLandmarkDetectionAlgo::vtkIGSIOLandmarkDetectionAlgo()
   this->DetectionTimeSec = 1.0;
   this->StylusShaftMinimumDisplacementThresholdMm = 30;
   this->StylusTipMaximumDisplacementThresholdMm = 1.5;
-  this->MinimunDistanceBetweenLandmarksMm = 15.0;
+  this->MinimumDistanceBetweenLandmarksMm = 15.0;
 }
 
 //-----------------------------------------------------------------------------
@@ -321,7 +321,11 @@ int vtkIGSIOLandmarkDetectionAlgo::GetNearExistingLandmarkId( double stylusTipPo
     landmarkDifference_Reference[1] = detectedLandmark_Reference[1] - stylusTipPosition_Reference[1];
     landmarkDifference_Reference[2] = detectedLandmark_Reference[2] - stylusTipPosition_Reference[2];
     landmarkDifference_Reference[3] = detectedLandmark_Reference[3] - stylusTipPosition_Reference[3];
-    if( vtkMath::Norm( landmarkDifference_Reference ) < this->MinimunDistanceBetweenLandmarksMm / 3 )
+
+    // If the distance between landmarks is X then if we are X / 3 distance from a landmark we can be quite confident
+    // that we are actually at that landmark (other landmarks should be farther, at about X * 2 / 3 distance).
+    // If we used X / 2 as distance threshold then we may accept a point that is halfway between two landmarks.
+    if( vtkMath::Norm( landmarkDifference_Reference ) < this->MinimumDistanceBetweenLandmarksMm / 3 )
     {
       return id;
     }
@@ -446,7 +450,7 @@ igsioStatus vtkIGSIOLandmarkDetectionAlgo::ReadConfiguration( vtkXMLDataElement*
   }
 
   LOG_DEBUG( "AcquisitionRate = " << AcquisitionRate << "[fps] WindowTimeSec = " << FilterWindowTimeSec << "[s] DetectionTimeSec = " << DetectionTimeSec << "[s]" );
-  LOG_DEBUG( "NumberOfWindows = " << numberOfWindows << " WindowSize = " << filterWindowSize << " MinimunDistanceBetweenLandmarksMm = " << MinimunDistanceBetweenLandmarksMm << "[mm] LandmarkThreshold " << StylusTipMaximumDisplacementThresholdMm << "[mm]" );
+  LOG_DEBUG( "NumberOfWindows = " << numberOfWindows << " WindowSize = " << filterWindowSize << " MinimumDistanceBetweenLandmarksMm = " << MinimumDistanceBetweenLandmarksMm << "[mm] LandmarkThreshold " << StylusTipMaximumDisplacementThresholdMm << "[mm]" );
 
   return IGSIO_SUCCESS;
 }
