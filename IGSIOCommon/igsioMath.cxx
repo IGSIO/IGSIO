@@ -687,3 +687,26 @@ void igsioMath::LogMatrix(const vnl_matrix_fixed<double, 4, 4>& matrix, int prec
   ConvertVnlMatrixToVtkMatrix(matrix, matrixVtk);
   igsioMath::LogVtkMatrix(matrixVtk, precision);
 }
+
+//---------------------------------------------------------------------------
+vnl_vector< double > igsioMath::ComputeSecondaryAxis(vnl_vector< double > shaftAxis_ToolTip, const double orthogonalAxis[3], const double backupAxis[3], const double parallelAngleThreshold)
+{
+  // If the secondary axis 1 is parallel to the shaft axis in the tooltip frame, then use secondary axis 2
+  vnl_vector< double > orthogonalAxis_Shaft(3, 3, orthogonalAxis);
+  double angle = acos(dot_product(shaftAxis_ToolTip, orthogonalAxis_Shaft));
+  // Force angle to be between -pi/2 and +pi/2
+  if (angle > vtkMath::Pi() / 2)
+  {
+    angle -= vtkMath::Pi();
+  }
+  if (angle < -vtkMath::Pi() / 2)
+  {
+    angle += vtkMath::Pi();
+  }
+
+  if (fabs(angle) < vtkMath::RadiansFromDegrees(parallelAngleThreshold)) // If shaft axis and orthogonal axis are not parallel
+  {
+    return vnl_vector< double >(3, 3, backupAxis);
+  }
+  return orthogonalAxis_Shaft;
+}
