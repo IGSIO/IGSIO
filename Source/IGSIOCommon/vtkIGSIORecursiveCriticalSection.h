@@ -11,6 +11,7 @@
 
 // VTK includes
 #include <vtkCriticalSection.h>
+#include <vtkSimpleCriticalSection.h>
 
 #ifndef VTK_OVERRIDE
 #define VTK_OVERRIDE override
