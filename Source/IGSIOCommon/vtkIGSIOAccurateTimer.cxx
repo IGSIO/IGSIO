@@ -124,6 +124,7 @@ void vtkIGSIOAccurateTimer::Delay(double sec)
 #endif
 }
 
+//----------------------------------------------------------------------------
 void vtkIGSIOAccurateTimer::DelayWithEventProcessing(double waitTimeSec)
 {
 #ifdef _WIN32
@@ -131,7 +132,7 @@ void vtkIGSIOAccurateTimer::DelayWithEventProcessing(double waitTimeSec)
   const double commandQueuePollIntervalSec = 0.010;
   do
   {
-    // Need to process messages because some devices (such as the vtkIGSIOWin32VideoSource2) require event processing
+    // Need to process messages because some devices require event processing
     MSG Msg;
     while (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE))
     {
@@ -171,7 +172,7 @@ double vtkIGSIOAccurateTimer::GetUniversalTime()
 //----------------------------------------------------------------------------
 std::string vtkIGSIOAccurateTimer::GetDateAndTimeString(CurrentDateTimeFormat detailsNeeded, double currentTime)
 {
-  time_t timeSec = floor(currentTime);
+  time_t timeSec = std::floor(currentTime);
   // Obtain the time of day, and convert it to a tm struct.
 #ifdef _WIN32
   struct tm tmstruct;
@@ -203,7 +204,7 @@ std::string vtkIGSIOAccurateTimer::GetDateAndTimeString(CurrentDateTimeFormat de
     return timeStrSec;
   }
   // Get millisecond as well
-  long milliseconds = floor((currentTime - floor(currentTime)) * 1000.0);
+  long milliseconds = std::floor((currentTime - std::floor(currentTime)) * 1000.0);
 
   std::ostringstream mSecStream;
   mSecStream << timeStrSec << "." << std::setw(3) << std::setfill('0') << milliseconds;
