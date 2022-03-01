@@ -11,6 +11,7 @@
 #include "vtksys/SystemTools.hxx"
 #include <sstream>
 #include <time.h>
+#include <cmath>
 
 #ifdef _WIN32
 #include "WindowsAccurateTimer.h"
