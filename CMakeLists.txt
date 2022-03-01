@@ -160,15 +160,15 @@ ELSE()
     ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
     )
 
-  ADD_SUBDIRECTORY(Source/Codecs)
-  ADD_SUBDIRECTORY(Source/IGSIOCommon)
+  ADD_SUBDIRECTORY(Codecs)
+  ADD_SUBDIRECTORY(IGSIOCommon)
   IF(IGSIO_BUILD_SEQUENCEIO)
-    ADD_SUBDIRECTORY(Source/SequenceIO)
+    ADD_SUBDIRECTORY(SequenceIO)
   ENDIF()
   IF (IGSIO_BUILD_VOLUMERECONSTRUCTION)
-    ADD_SUBDIRECTORY(Source/VolumeReconstruction)
+    ADD_SUBDIRECTORY(VolumeReconstruction)
   ENDIF()
-  ADD_SUBDIRECTORY(Source/IGSIOCalibration)
+  ADD_SUBDIRECTORY(IGSIOCalibration)
 
   #-----------------------------------------------------------------------------
   # Export all targets at once from the build tree in their final configuration.
