@@ -3,19 +3,18 @@ PROJECT(IGSIOCalibration)
 # --------------------------------------------------------------------------
 # Sources
 SET(${PROJECT_NAME}_SRCS
-  vtkPivotCalibrationAlgo/vtkIGSIOPivotCalibrationAlgo.cxx
-  vtkLandmarkDetectionAlgo/vtkIGSIOLandmarkDetectionAlgo.cxx
+  vtkIGSIOPivotCalibrationAlgo.cxx
+  vtkIGSIOLandmarkDetectionAlgo.cxx
   )
 
 SET(${PROJECT_NAME}_HDRS
-  vtkPivotCalibrationAlgo/vtkIGSIOPivotCalibrationAlgo.h
-  vtkLandmarkDetectionAlgo/vtkIGSIOLandmarkDetectionAlgo.h
+  vtkIGSIOPivotCalibrationAlgo.h
+  vtkIGSIOLandmarkDetectionAlgo.h
   )
 
 SET(${PROJECT_NAME}_INCLUDE_DIRS
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/vtkPivotCalibrationAlgo
-  ${CMAKE_CURRENT_SOURCE_DIR}/vtkLandmarkDetectionAlgo
+  ${CMAKE_CURRENT_SOURCE_DIR}
   CACHE INTERNAL "" FORCE)
 
 # --------------------------------------------------------------------------
