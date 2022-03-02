@@ -20,35 +20,8 @@ SET(${PROJECT_NAME}_INCLUDE_DIRS
 # --------------------------------------------------------------------------
 # Build the library
 SET(${PROJECT_NAME}_LIBS
-  ITKCommon
-  ITKIOImageBase
-  ITKOptimizers
-  ITKTransform
   vtkIGSIOCommon
   )
-IF(TARGET MGHIO)
-  LIST(APPEND ${PROJECT_NAME}_LIBS
-    MGHIO
-    )
-ENDIF()
-IF(TARGET ITKIODCMTK)
-  LIST(APPEND ${PROJECT_NAME}_LIBS
-    ITKIODCMTK
-    )
-ENDIF()
-
-IF(${ITK_VERSION_MAJOR} GREATER 4)
-  LIST(APPEND ${PROJECT_NAME}_LIBS
-    ITKIOBruker
-    ITKIOJPEG2000
-    ITKIOMINC
-    )
-ENDIF()
-IF(IGSIO_RENDERING_ENABLED)
-  LIST(APPEND ${PROJECT_NAME}_LIBS
-    vtkIGSIORendering
-    )
-ENDIF()
 
 GENERATE_EXPORT_DIRECTIVE_FILE(vtk${PROJECT_NAME})
 
