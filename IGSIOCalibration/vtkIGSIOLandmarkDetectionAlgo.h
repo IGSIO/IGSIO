@@ -41,7 +41,7 @@ public:
     Read configuration.
     \param aConfig Root element of the device set configuration.
   */
-  igsioStatus ReadConfiguration( vtkXMLDataElement* aConfig );
+  virtual igsioStatus ReadConfiguration( vtkXMLDataElement* aConfig );
 
   /*!
     Insert acquired pose to the stylusTipToReferenceTransform double ended queue.

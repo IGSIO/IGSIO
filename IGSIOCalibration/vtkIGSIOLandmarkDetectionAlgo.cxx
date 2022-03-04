@@ -450,6 +450,3 @@ igsioStatus vtkIGSIOLandmarkDetectionAlgo::ReadConfiguration( vtkXMLDataElement*
 
   return IGSIO_SUCCESS;
 }
-
-
-
