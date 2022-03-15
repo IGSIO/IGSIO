@@ -203,7 +203,7 @@ vtkIGSIOLogger* vtkIGSIOLogger::Instance()
     strIGSIOVersion += " (debug build)";
 #endif
 
-    m_pInstance->LogMessage(LOG_LEVEL_INFO, strIGSIOVersion, "vtkIGSIOLogger", __LINE__);
+    m_pInstance->LogMessage(LOG_LEVEL_DEBUG, strIGSIOVersion, "vtkIGSIOLogger", __LINE__);
   }
 
   return m_pInstance;

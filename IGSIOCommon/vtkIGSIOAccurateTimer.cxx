@@ -52,7 +52,7 @@ vtkIGSIOAccurateTimer* vtkIGSIOAccurateTimer::GetInstance()
     }
     vtkIGSIOAccurateTimer::Instance->SystemStartTime = vtkIGSIOAccurateTimer::Instance->GetInternalSystemTime();
     vtkIGSIOAccurateTimer::Instance->UniversalStartTime = vtkTimerLog::GetUniversalTime();
-    LOG_INFO("System start timestamp: " << std::fixed << std::setprecision(0) << vtkIGSIOAccurateTimer::Instance->SystemStartTime);
+    LOG_DEBUG("System start timestamp: " << std::fixed << std::setprecision(0) << vtkIGSIOAccurateTimer::Instance->SystemStartTime);
     LOG_DEBUG("AccurateTimer universal start time: " << GetDateAndTimeString(DTF_DATE_TIME_MSEC, vtkIGSIOAccurateTimer::UniversalStartTime));
   }
   return vtkIGSIOAccurateTimer::Instance;
