@@ -640,6 +640,59 @@ public:
     } \
   }
 
+#define XML_READ_ENUM3_ATTRIBUTE_NONMEMBER_OPTIONAL(varName, var, xmlElementVar, enumString1, enumValue1, enumString2, enumValue2, enumString3, enumValue3)  \
+  { \
+    const char* strValue = xmlElementVar->GetAttribute(#varName); \
+    if (strValue != NULL) \
+    { \
+      if (igsioCommon::IsEqualInsensitive(strValue, enumString1))  \
+      { \
+        var = enumValue1; \
+      } \
+      else if (igsioCommon::IsEqualInsensitive(strValue, enumString2))  \
+      { \
+        var = enumValue2;  \
+      } \
+      else if (igsioCommon::IsEqualInsensitive(strValue, enumString3))  \
+      { \
+        var = enumValue3;  \
+      } \
+      else  \
+      { \
+        LOG_WARNING("Failed to read enumerated value from " << #varName \
+          << " attribute of element " << (xmlElementVar->GetName() ? xmlElementVar->GetName() : "(undefined)") \
+          << ": expected '" << enumString1 << "', '" << enumString2 << "', or '" << enumString3 << "', got '" << strValue << "'"); \
+      } \
+    } \
+  }
+
+#define XML_READ_ENUM3_ATTRIBUTE_NONMEMBER_REQUIRED(varName, var, xmlElementVar, enumString1, enumValue1, enumString2, enumValue2, enumString3, enumValue3)  \
+  { \
+    const char* strValue = xmlElementVar->GetAttribute(#varName); \
+    if (strValue != NULL) \
+    { \
+      if (igsioCommon::IsEqualInsensitive(strValue, enumString1))  \
+      { \
+        var = enumValue1; \
+      } \
+      else if (igsioCommon::IsEqualInsensitive(strValue, enumString2))  \
+      { \
+        var = enumValue2;  \
+      } \
+      else if (igsioCommon::IsEqualInsensitive(strValue, enumString3))  \
+      { \
+        var = enumValue3;  \
+      } \
+      else  \
+      { \
+        LOG_ERROR("Failed to read enumerated value from " << #varName \
+          << " attribute of element " << (xmlElementVar->GetName() ? xmlElementVar->GetName() : "(undefined)") \
+          << ": expected '" << enumString1 << "', '" << enumString2 << "', or '" << enumString3 << "', got '" << strValue << "'"); \
+        return IGSIO_FAIL; \
+      } \
+    } \
+  }
+
 #define XML_READ_ENUM4_ATTRIBUTE_OPTIONAL(memberVar, xmlElementVar, enumString1, enumValue1, enumString2, enumValue2, enumString3, enumValue3, enumString4, enumValue4)  \
   { \
     const char* strValue = xmlElementVar->GetAttribute(#memberVar); \
