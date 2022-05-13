@@ -325,6 +325,26 @@ igsioStatus vtkIGSIOPivotCalibrationAlgo::DoPivotCalibrationInternal(const std::
 }
 
 //-----------------------------------------------------------------------------
+std::string vtkIGSIOPivotCalibrationAlgo::GetPivotPointToMarkerTranslationString(double aPrecision/*=3*/)
+{
+  if (this->PivotPointToMarkerTransformMatrix == NULL)
+  {
+    LOG_ERROR("Tooltip to tool transform is not initialized!");
+    return "";
+  }
+
+  std::ostringstream s;
+  s << std::fixed << std::setprecision(aPrecision)
+    << this->PivotPointToMarkerTransformMatrix->GetElement(0, 3)
+    << " x " << this->PivotPointToMarkerTransformMatrix->GetElement(1, 3)
+    << " x " << this->PivotPointToMarkerTransformMatrix->GetElement(2, 3)
+    << std::ends;
+
+  return s.str();
+}
+
+
+//-----------------------------------------------------------------------------
 void vtkIGSIOPivotCalibrationAlgo::ComputePivotCalibrationError()
 {
   const std::vector<vtkMatrix4x4*> markerToTransformMatrixArray = this->GetAllMarkerToReferenceMatrices();

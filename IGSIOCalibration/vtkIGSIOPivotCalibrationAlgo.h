@@ -62,6 +62,13 @@ public:
   */
   igsioStatus DoPivotCalibration(vtkIGSIOTransformRepository* aTransformRepository = NULL, bool autoOrient = true);
 
+  /*!
+    Get calibration result string to display
+    \param aPrecision Number of decimals shown
+    \return Calibration result (e.g. stylus tip to stylus translation) string
+  */
+  std::string GetPivotPointToMarkerTranslationString(double aPrecision = 3);
+
   //@{
   /// Mean error of the pivot calibration result in mm.
   /// A value of -1.0 means that the error has not been calculated.
