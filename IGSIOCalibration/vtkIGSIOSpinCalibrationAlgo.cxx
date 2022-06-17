@@ -82,7 +82,20 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepo
   }
 
   std::vector<vtkMatrix4x4*> markerToTransformMatrixArray = this->GetAllMarkerToReferenceMatrices();
-  return this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
+
+  igsioStatus error = this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
+  if (error != IGSIO_SUCCESS)
+  {
+    return IGSIO_FAIL;
+  }
+
+  if (this->MaximumCalibrationErrorMm >= 0.0 && this->SpinCalibrationErrorMm > this->MaximumCalibrationErrorMm)
+  {
+    this->SetErrorCode(CALIBRATION_HIGH_ERROR);
+    return IGSIO_FAIL;
+  }
+
+  return IGSIO_SUCCESS;
 }
 
 //----------------------------------------------------------------------------
@@ -228,12 +241,6 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
   if (autoOrient)
   {
     this->UpdateShaftDirection(toolTipToToolMatrix); // Flip it if necessary
-  }
-
-  if (this->MaximumCalibrationErrorMm >= 0.0 && this->SpinCalibrationErrorMm > this->MaximumCalibrationErrorMm)
-  {
-    this->SetErrorCode(CALIBRATION_HIGH_ERROR);
-    return IGSIO_FAIL;
   }
 
   this->SetErrorCode(CALIBRATION_NO_ERROR);
