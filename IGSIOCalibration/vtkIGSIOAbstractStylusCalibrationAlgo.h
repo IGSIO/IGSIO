@@ -151,7 +151,14 @@ public:
   /// If this value is >= 0 and the calibration error is greater than the maximum, then the calibration method will return with failure.
   vtkSetMacro(MaximumCalibrationErrorMm, double);
   vtkGetMacro(MaximumCalibrationErrorMm, double);
-  vtkBooleanMacro(MaximumCalibrationErrorMm, double);
+  //@}
+
+  //@{
+  /// Flag that will enable/disable buffer validation.
+  /// Disabled by default.
+  vtkSetMacro(ValidateInputBufferEnabled, bool);
+  vtkGetMacro(ValidateInputBufferEnabled, bool);
+  vtkBooleanMacro(ValidateInputBufferEnabled, bool);
   //@}
 
 protected:
@@ -213,6 +220,8 @@ protected:
   double                    MaximumPoseBucketError;
 
   double                    MaximumCalibrationErrorMm;
+
+  bool                      ValidateInputBufferEnabled;
 
   struct MarkerToReferenceTransformMatrixBucket
   {

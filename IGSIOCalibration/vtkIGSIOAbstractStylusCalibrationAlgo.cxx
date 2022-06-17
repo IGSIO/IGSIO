@@ -50,6 +50,8 @@ vtkIGSIOAbstractStylusCalibrationAlgo::vtkIGSIOAbstractStylusCalibrationAlgo()
   this->MaximumPoseBucketError = 3.0;
 
   this->MaximumCalibrationErrorMm = 5.0;
+
+  this->ValidateInputBufferEnabled = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -92,7 +94,8 @@ igsioStatus vtkIGSIOAbstractStylusCalibrationAlgo::InsertNextCalibrationPoint(vt
     currentBucket = &this->MarkerToReferenceTransformMatrixBuckets[this->MarkerToReferenceTransformMatrixBuckets.size() - 1];
   }
 
-  if (this->PoseBucketSize > 0 && currentBucket && currentBucket->MarkerToReferenceCalibrationPoints.size() >= this->PoseBucketSize)
+  if (this->ValidateInputBufferEnabled && this->PoseBucketSize > 0 && currentBucket
+    && currentBucket->MarkerToReferenceCalibrationPoints.size() >= this->PoseBucketSize)
   {
     // If the current bucket is full, then we will need to create a new one.
     currentBucket = NULL;
@@ -103,7 +106,8 @@ igsioStatus vtkIGSIOAbstractStylusCalibrationAlgo::InsertNextCalibrationPoint(vt
     // Create a new bucket
     this->MarkerToReferenceTransformMatrixBuckets.push_back(MarkerToReferenceTransformMatrixBucket());
 
-    if (this->MaximumNumberOfPoseBuckets > 0 && this->MarkerToReferenceTransformMatrixBuckets.size() > this->MaximumNumberOfPoseBuckets)
+    if (this->ValidateInputBufferEnabled && this->MaximumNumberOfPoseBuckets > 0 &&
+      this->MarkerToReferenceTransformMatrixBuckets.size() > this->MaximumNumberOfPoseBuckets)
     {
       // Maximum number of buckets reached. Remove the oldest one.
       this->MarkerToReferenceTransformMatrixBuckets.pop_front();
@@ -118,7 +122,7 @@ igsioStatus vtkIGSIOAbstractStylusCalibrationAlgo::InsertNextCalibrationPoint(vt
   currentBucket->MarkerToReferenceCalibrationPoints.push_back(markerToReferenceTransformMatrixCopy);
   this->InvokeEvent(InputTransformAddedEvent);
 
-  if (this->PoseBucketSize >= 0 && currentBucket->MarkerToReferenceCalibrationPoints.size() == this->PoseBucketSize)
+  if (this->ValidateInputBufferEnabled && this->PoseBucketSize >= 0 && currentBucket->MarkerToReferenceCalibrationPoints.size() == this->PoseBucketSize)
   {
     // Bucket is filled. Validate the input buffer.
     this->ValidateInputBuffer();
