@@ -10,8 +10,24 @@
 #include "vtkigsiocommon_export.h"
 
 // VTK includes
-#include <vtkCriticalSection.h>
-#include <vtkSimpleCriticalSection.h>
+#include <vtkObject.h>
+#include <vtkThreads.h>
+
+#if defined(VTK_USE_PTHREADS)
+#include <pthread.h> // Needed for pthreads implementation of mutex
+typedef pthread_mutex_t igsioCritSecType;
+#endif
+
+#ifdef VTK_USE_WIN32_THREADS
+#include "vtkWindows.h" // Needed for win32 implementation of mutex
+typedef CRITICAL_SECTION igsioCritSecType;
+#endif
+
+#ifndef VTK_USE_PTHREADS
+#ifndef VTK_USE_WIN32_THREADS
+typedef int igsioCritSecType;
+#endif
+#endif
 
 #ifndef VTK_OVERRIDE
 #define VTK_OVERRIDE override
@@ -64,7 +80,7 @@ public:
   void Unlock();
 
 protected:
-  vtkCritSecType   CritSec;
+  igsioCritSecType   CritSec;
 };
 
 
