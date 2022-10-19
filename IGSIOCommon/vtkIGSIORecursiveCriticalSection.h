@@ -11,7 +11,10 @@
 
 // VTK includes
 #include <vtkObject.h>
+
+#if VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 1
 #include <vtkThreads.h>
+#endif
 
 #if defined(VTK_USE_PTHREADS)
 #include <pthread.h> // Needed for pthreads implementation of mutex
