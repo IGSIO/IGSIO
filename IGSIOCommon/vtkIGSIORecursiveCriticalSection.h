@@ -11,7 +11,7 @@
 
 // VTK includes
 #include <vtkObject.h>
-
+#include <vtkVersion.h>
 #if VTK_MAJOR_VERSION >= 9 && VTK_MINOR_VERSION >= 1
 #include <vtkThreads.h>
 #endif
