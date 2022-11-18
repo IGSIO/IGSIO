@@ -29,12 +29,12 @@ ELSE()
       /DWIN32
       )
   ENDIF()
-  
+
   IF(NOT DEFINED(vtkAddon_GIT_REPOSITORY))
     SET(vtkAddon_GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git" CACHE STRING "Set vtkAddon desired git url")
   ENDIF()
   IF(NOT DEFINED(vtkAddon_GIT_REVISION))
-    SET(vtkAddon_GIT_REVISION "master" CACHE STRING "Set vtkAddon desired git hash (master means latest)")
+    SET(vtkAddon_GIT_REVISION "main" CACHE STRING "Set vtkAddon desired git hash (main means latest)")
   ENDIF()
 
   ExternalProject_Add(vtkAddon
