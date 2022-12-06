@@ -23,7 +23,7 @@ ELSE()
       SET(VP9_GIT_REPOSITORY "https://github.com/webmproject/libvpx/" CACHE STRING "Set VP9 desired git url")
     ENDIF()
     IF(NOT DEFINED(VP9_GIT_REVISION))
-      SET(VP9_GIT_REVISION "v1.8.2" CACHE STRING "Set VP9 desired git hash (master means latest)")
+      SET(VP9_GIT_REVISION "v1.12.0" CACHE STRING "Set VP9 desired git hash (master means latest)")
     ENDIF()
 
     MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")
@@ -44,9 +44,10 @@ ELSE()
     if( ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v120*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v140*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*") OR
-        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*"))
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*"))
       SET (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
-      SET (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.8.2/libvpx_v1.8.2_")
+      SET (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.12.0/libvpx_v1.12.0_")
 
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
@@ -62,6 +63,8 @@ ELSE()
       SET (BinaryURL "${BinaryURL}msvc15.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*")
       SET (BinaryURL "${BinaryURL}msvc16.zip")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*")
+      SET (BinaryURL "${BinaryURL}msvc17.zip")
     endif()
 
       MESSAGE(STATUS "Downloading VP9 from ${BinaryURL}")
