@@ -11,7 +11,6 @@ See License.txt for details.
 #include "igsioConfigure.h"
 #include "igsioCommon.h"
 #include "vtkIGSIOAbstractStylusCalibrationAlgo.h"
-#include "vtkIGSIOCalibrationExport.h"
 
 // VTK includes
 #include <vtkCommand.h>
@@ -44,7 +43,7 @@ class vtkXMLDataElement;
 
   \ingroup igsioCalibrationAlgorithm
 */
-class vtkIGSIOCalibrationExport vtkIGSIOPivotCalibrationAlgo : public vtkIGSIOAbstractStylusCalibrationAlgo
+class VTKIGSIOCALIBRATION_EXPORT vtkIGSIOPivotCalibrationAlgo : public vtkIGSIOAbstractStylusCalibrationAlgo
 {
 public:
   vtkTypeMacro(vtkIGSIOPivotCalibrationAlgo, vtkIGSIOAbstractStylusCalibrationAlgo);

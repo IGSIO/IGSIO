@@ -9,7 +9,7 @@ See License.txt for details.
 
 #include "igsioConfigure.h"
 #include "igsioCommon.h"
-#include "vtkIGSIOCalibrationExport.h"
+#include "vtkigsiocalibration_export.h"
 
 #include "vtkObject.h"
 #include "vtkPoints.h"
@@ -31,7 +31,7 @@ class vtkXMLDataElement;
 The stylus pivoting point (landmark) is computed assuming that the stylus is calibrated.
 \ingroup IGSIOLibCalibrationAlgorithm
 */
-class vtkIGSIOCalibrationExport vtkIGSIOLandmarkDetectionAlgo : public vtkObject
+class VTKIGSIOCALIBRATION_EXPORT vtkIGSIOLandmarkDetectionAlgo : public vtkObject
 {
 public:
   vtkTypeMacro( vtkIGSIOLandmarkDetectionAlgo, vtkObject );
