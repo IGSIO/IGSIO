@@ -35,7 +35,7 @@ ELSE()
     SET(libwebm_GIT_REPOSITORY "https://github.com/Sunderlandkyl/libwebm.git" CACHE STRING "Set libwebm desired git url")
   ENDIF()
   IF(NOT DEFINED(libwebm_GIT_REVISION))
-    SET(libwebm_GIT_REVISION "master" CACHE STRING "Set libwebm desired git hash (master means latest)")
+    SET(libwebm_GIT_REVISION "f0072f4a22bb259c99b39d1870af2c0c511207ca" CACHE STRING "Set libwebm desired git hash") # Sunderlandkyl/libwebm_d1b981b79
   ENDIF()
 
  ExternalProject_Add( libwebm
