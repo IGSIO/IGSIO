@@ -48,16 +48,18 @@ else()
     #--Configure step-------------
     CMAKE_ARGS
       ${ep_common_args}
+      # Compiler settings
+      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_MACOSX_RPATH:BOOL=${CMAKE_MACOSX_RPATH}
+      # Output directories
       -DEXECUTABLE_OUTPUT_PATH:PATH=${${PROJECT_NAME}_INSTALL_BIN_DIR}
       -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${vtkAddon_CMAKE_RUNTIME_OUTPUT_DIRECTORY}
       -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${vtkAddon_CMAKE_LIBRARY_OUTPUT_DIRECTORY}
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-      -DCMAKE_MACOSX_RPATH:BOOL=${CMAKE_MACOSX_RPATH}
-
-      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
-      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      # Options
       -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
-
+      # Dependencies
       -DVTK_DIR:PATH=${VTK_DIR}
       -DvtkAddon_INSTALL_BIN_DIR:PATH=${vtkAddon_INSTALL_BIN_DIR}
       -DvtkAddon_INSTALL_LIB_DIR:PATH=${vtkAddon_INSTALL_LIB_DIR}
