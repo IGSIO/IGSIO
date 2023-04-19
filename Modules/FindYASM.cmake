@@ -11,7 +11,7 @@
 #  pkg_check_modules(PC_YASM QUIET YASM)
 #endif()
 
-SET( YASM_PATH_HINTS 
+set( YASM_PATH_HINTS 
 		${YASM_ROOT} 
     ${CMAKE_BINARY_DIR}/Deps/yasm
     ${CMAKE_BINARY_DIR}/Deps/yasm-bin

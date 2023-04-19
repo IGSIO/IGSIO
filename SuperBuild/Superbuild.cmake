@@ -1,34 +1,34 @@
 #---------------------------------------------------
-SET(IGSIO_DEPENDENCIES)
+set(IGSIO_DEPENDENCIES)
 
 include(ExternalProject)
 
 #---------------------------------------------------
 # Codecs
-IF(IGSIO_USE_VP9)
-  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/External_VP9.cmake)
-  IF(NOT VP9_FOUND)
-    LIST(APPEND IGSIO_DEPENDENCIES VP9)
-  ENDIF()
-ENDIF()
+if(IGSIO_USE_VP9)
+  include(${CMAKE_CURRENT_LIST_DIR}/External_VP9.cmake)
+  if(NOT VP9_FOUND)
+    list(APPEND IGSIO_DEPENDENCIES VP9)
+  endif()
+endif()
 
 #---------------------------------------------------
 # libwebm
-IF(IGSIO_SEQUENCEIO_ENABLE_MKV)
-  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/External_libwebm.cmake)
-  IF(NOT libwebm_FOUND)
-    LIST(APPEND IGSIO_DEPENDENCIES libwebm)
-  ENDIF()
-ENDIF()
+if(IGSIO_SEQUENCEIO_ENABLE_MKV)
+  include(${CMAKE_CURRENT_LIST_DIR}/External_libwebm.cmake)
+  if(NOT libwebm_FOUND)
+    list(APPEND IGSIO_DEPENDENCIES libwebm)
+  endif()
+endif()
 
 #---------------------------------------------------
 # vtkAddon
-IF (NOT IGSIO_USE_3DSlicer)
-  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/External_vtkAddon.cmake)
-  IF(NOT vtkAddon_FOUND)
-    LIST(APPEND IGSIO_DEPENDENCIES vtkAddon)
-  ENDIF()
-ENDIF()
+if (NOT IGSIO_USE_3DSlicer)
+  include(${CMAKE_CURRENT_LIST_DIR}/External_vtkAddon.cmake)
+  if(NOT vtkAddon_FOUND)
+    list(APPEND IGSIO_DEPENDENCIES vtkAddon)
+  endif()
+endif()
 
 set(BUILD_OPTIONS
   -DIGSIO_SUPERBUILD:BOOL=OFF

@@ -3,38 +3,38 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 include(${IGSIO_SOURCE_DIR}/Modules/FindYASM.cmake)
 include(${CMAKE_ROOT}/Modules/FindPythonInterp.cmake)
 
-IF(YASM_FOUND)
+if(YASM_FOUND)
   # YASM has been built already
-  MESSAGE(STATUS "Using YASM available at: ${YASM_BINARY_DIR}")
-ELSE()
-  SET(YASM_PYTHON_EXECUTABLE "" CACHE STRING "Python Interpreter")
+  message(STATUS "Using YASM available at: ${YASM_BINARY_DIR}")
+else()
+  set(YASM_PYTHON_EXECUTABLE "" CACHE STRING "Python Interpreter")
   if("${YASM_PYTHON_EXECUTABLE}" STREQUAL "")
     find_package(PythonInterp "2.7" REQUIRED)
-    SET(YASM_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+    set(YASM_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
   endif()
 
-  IF(NOT DEFINED(YASM_GIT_REPOSITORY))
-    SET(YASM_GIT_REPOSITORY "https://github.com/yasm/yasm.git" CACHE STRING "Set YASM desired git url")
-  ENDIF()
+  if(NOT DEFINED(YASM_GIT_REPOSITORY))
+    set(YASM_GIT_REPOSITORY "https://github.com/yasm/yasm.git" CACHE STRING "Set YASM desired git url")
+  endif()
 
-  IF(NOT DEFINED(YASM_GIT_REVISION))
-    SET(YASM_GIT_REVISION "master" CACHE STRING "Set YASM desired git hash (master means latest)")
-  ENDIF()
+  if(NOT DEFINED(YASM_GIT_REVISION))
+    set(YASM_GIT_REVISION "master" CACHE STRING "Set YASM desired git hash (master means latest)")
+  endif()
 
   # yas has not been built yet, so download and build it as an external project
-  SET(GIT_REPOSITORY ${YASM_GIT_REPOSITORY})
-  SET(GIT_TAG ${YASM_GIT_REVISION})
-  IF(MSVC)
-    LIST(APPEND PLATFORM_SPECIFIC_ARGS -DCMAKE_CXX_MP_FLAG:BOOL=ON)
-  ENDIF()
+  set(GIT_REPOSITORY ${YASM_GIT_REPOSITORY})
+  set(GIT_TAG ${YASM_GIT_REVISION})
+  if(MSVC)
+    list(APPEND PLATFORM_SPECIFIC_ARGS -DCMAKE_CXX_MP_FLAG:BOOL=ON)
+  endif()
 
-  MESSAGE(STATUS "Downloading yasm ${GIT_TAG} from: ${GIT_REPOSITORY}")
+  message(STATUS "Downloading yasm ${GIT_TAG} from: ${GIT_REPOSITORY}")
 
-  SET (YASM_SOURCE_DIR "${CMAKE_BINARY_DIR}/yasm" CACHE PATH "YASM source directory" FORCE)
-  SET (YASM_BINARY_DIR "${CMAKE_BINARY_DIR}/yasm-bin" CACHE PATH "YASM library directory" FORCE)
-  IF(TARGET YASM)
+  set (YASM_SOURCE_DIR "${CMAKE_BINARY_DIR}/yasm" CACHE PATH "YASM source directory" FORCE)
+  set (YASM_BINARY_DIR "${CMAKE_BINARY_DIR}/yasm-bin" CACHE PATH "YASM library directory" FORCE)
+  if(TARGET YASM)
     return()
-  ENDIF()
+  endif()
   ExternalProject_Add( YASM
     PREFIX "${CMAKE_BINARY_DIR}/yasm-prefix"
     SOURCE_DIR "${YASM_SOURCE_DIR}"
@@ -59,4 +59,4 @@ ELSE()
     BUILD_ALWAYS 1
     INSTALL_COMMAND ""
     )
-ENDIF()
+endif()

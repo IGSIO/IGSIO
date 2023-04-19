@@ -1,32 +1,32 @@
 set(proj "VP9")
 
-SET(${proj}_DEPENDENCIES)
+set(${proj}_DEPENDENCIES)
 
-IF(VP9_DIR)
-  FIND_PACKAGE(VP9 REQUIRED)
-  SET(IGSIO_VP9_DIR ${VP9_DIR})
-ELSE()
+if(VP9_DIR)
+  find_package(VP9 REQUIRED)
+  set(IGSIO_VP9_DIR ${VP9_DIR})
+else()
 
-  SET(IGSIO_VP9_DIR "${CMAKE_BINARY_DIR}/VP9")
+  set(IGSIO_VP9_DIR "${CMAKE_BINARY_DIR}/VP9")
 
   # VP9 has not been built yet, so download and build it as an external project
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    INCLUDE(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
-    IF(NOT YASM_FOUND)
-      LIST(APPEND ${proj}_DEPENDENCIES YASM)
-    ENDIF()
+    include(${IGSIO_SOURCE_DIR}/SuperBuild/External_YASM.cmake)
+    if(NOT YASM_FOUND)
+      list(APPEND ${proj}_DEPENDENCIES YASM)
+    endif()
 
-    SET (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
-    SET (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
+    set (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
+    set (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
 
-    IF(NOT DEFINED(VP9_GIT_REPOSITORY))
-      SET(VP9_GIT_REPOSITORY "https://github.com/webmproject/libvpx/" CACHE STRING "Set VP9 desired git url")
-    ENDIF()
-    IF(NOT DEFINED(VP9_GIT_REVISION))
-      SET(VP9_GIT_REVISION "v1.12.0" CACHE STRING "Set VP9 desired git hash (master means latest)")
-    ENDIF()
+    if(NOT DEFINED(VP9_GIT_REPOSITORY))
+      set(VP9_GIT_REPOSITORY "https://github.com/webmproject/libvpx/" CACHE STRING "Set VP9 desired git url")
+    endif()
+    if(NOT DEFINED(VP9_GIT_REVISION))
+      set(VP9_GIT_REVISION "v1.12.0" CACHE STRING "Set VP9 desired git hash (master means latest)")
+    endif()
 
-    MESSAGE(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")
+    message(STATUS "Downloading and compiling VP9 from https://github.com/webmproject/libvpx.git")
     ExternalProject_Add(VP9
       PREFIX "${CMAKE_BINARY_DIR}/VP9-prefix"
       GIT_REPOSITORY ${VP9_GIT_REPOSITORY}
@@ -46,28 +46,28 @@ ELSE()
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*"))
-      SET (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
-      SET (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.12.0/libvpx_v1.12.0_")
+      set (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
+      set (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.12.0/libvpx_v1.12.0_")
 
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
+      set (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x64" CACHE PATH "VP9 library directory" FORCE)
     else()
-      SET (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
+      set (VP9_LIBRARY_DIR "${IGSIO_VP9_DIR}/lib/x86" CACHE PATH "VP9 library directory" FORCE)
     endif()
 
     if("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v120*")
-      SET (BinaryURL "${BinaryURL}msvc12.zip")
+      set (BinaryURL "${BinaryURL}msvc12.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v140*")
-      SET (BinaryURL "${BinaryURL}msvc14.zip")
+      set (BinaryURL "${BinaryURL}msvc14.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*")
-      SET (BinaryURL "${BinaryURL}msvc15.zip")
+      set (BinaryURL "${BinaryURL}msvc15.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*")
-      SET (BinaryURL "${BinaryURL}msvc16.zip")
+      set (BinaryURL "${BinaryURL}msvc16.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*")
-      SET (BinaryURL "${BinaryURL}msvc17.zip")
+      set (BinaryURL "${BinaryURL}msvc17.zip")
     endif()
 
-      MESSAGE(STATUS "Downloading VP9 from ${BinaryURL}")
+      message(STATUS "Downloading VP9 from ${BinaryURL}")
       ExternalProject_Add(VP9
         URL               ${BinaryURL}
         SOURCE_DIR        "${IGSIO_VP9_DIR}"
@@ -81,4 +81,4 @@ ELSE()
       message(FATAL_ERROR "Unsupported version of Visual Studio for VP9. Supported versions are: MSVC12, MSVC14, MSVC15, MSVC16")
     endif()
   endif()
-ENDIF()
+endif()
