@@ -38,29 +38,29 @@ else()
     set(libwebm_GIT_REVISION "f0072f4a22bb259c99b39d1870af2c0c511207ca" CACHE STRING "Set libwebm desired git hash") # Sunderlandkyl/libwebm_d1b981b79
   endif()
 
- ExternalProject_Add( libwebm
-   SOURCE_DIR ${IGSIO_libwebm_SRC_DIR}
-   BINARY_DIR ${IGSIO_libwebm_DIR}
-   #--Download step--------------
-   GIT_REPOSITORY ${libwebm_GIT_REPOSITORY}
-   GIT_TAG ${libwebm_GIT_REVISION}
-   #--Configure step-------------
-   CMAKE_ARGS
-     ${ep_common_args}
-     -DEXECUTABLE_OUTPUT_PATH:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-     -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-     -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-     -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-     -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
-     -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
-     -DCMAKE_MACOSX_RPATH:BOOL=${CMAKE_MACOSX_RPATH}
-     -DBUILD_SHARED_LIBS:BOOL=OFF
-     # Options
-     ${BUILD_OPTIONS}
-   #--Build step-----------------
-   BUILD_ALWAYS 1
-   #--Install step-----------------
-   INSTALL_COMMAND ""
-   )
+  ExternalProject_Add( libwebm
+    SOURCE_DIR ${IGSIO_libwebm_SRC_DIR}
+    BINARY_DIR ${IGSIO_libwebm_DIR}
+    #--Download step--------------
+    GIT_REPOSITORY ${libwebm_GIT_REPOSITORY}
+    GIT_TAG ${libwebm_GIT_REVISION}
+    #--Configure step-------------
+    CMAKE_ARGS
+      ${ep_common_args}
+      -DEXECUTABLE_OUTPUT_PATH:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+      -DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+      -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_MACOSX_RPATH:BOOL=${CMAKE_MACOSX_RPATH}
+      -DBUILD_SHARED_LIBS:BOOL=OFF
+      # Options
+      ${BUILD_OPTIONS}
+    #--Build step-----------------
+    BUILD_ALWAYS 1
+    #--Install step-----------------
+    INSTALL_COMMAND ""
+    )
 endif()
