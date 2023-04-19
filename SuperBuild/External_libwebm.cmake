@@ -48,7 +48,9 @@ else()
     CMAKE_ARGS
       ${ep_common_args}
       # Compiler settings
-      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      # Not used -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+      # Not used -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
       -DCMAKE_MACOSX_RPATH:BOOL=${CMAKE_MACOSX_RPATH}
