@@ -1,192 +1,192 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.3.0)
-PROJECT(IGSIO)
+cmake_minimum_required(VERSION 3.3.0)
+project(IGSIO)
 
-SET(IGSIO_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-SET(IGSIO_BINARY_DIR "${CMAKE_BINARY_DIR}")
+set(IGSIO_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(IGSIO_BINARY_DIR "${CMAKE_BINARY_DIR}")
 
 # ------------------------------------------------------------------------
 # Set project version number
-SET(IGSIO_VERSION_MAJOR "1")
-SET(IGSIO_VERSION_MINOR "0")
-SET(IGSIO_VERSION_PATCH "0")
-SET(IGSIO_VERSION ${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}.${IGSIO_VERSION_PATCH})
+set(IGSIO_VERSION_MAJOR "1")
+set(IGSIO_VERSION_MINOR "0")
+set(IGSIO_VERSION_PATCH "0")
+set(IGSIO_VERSION ${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}.${IGSIO_VERSION_PATCH})
 
-SET(CMAKE_MODULE_PATH
+set(CMAKE_MODULE_PATH
   ${CMAKE_CURRENT_SOURCE_DIR}/Modules
   ${CMAKE_MODULE_PATH}
   )
 
 # --------------------------------------------------------------------------
 # System Settings
-IF(WIN32)
+if(WIN32)
   # This method adds the necessary compiler flag
-  SET(RUNTIME_MINIMUM_WINDOWS_VERSION "0x0602")
-  ADD_DEFINITIONS(-D_MSC_PLATFORM_TOOLSET_$(PlatformToolset))
-  IF((NOT CMAKE_GENERATOR_TOOLSET OR NOT ${CMAKE_GENERATOR_TOOLSET} MATCHES .*xp) AND
+  set(RUNTIME_MINIMUM_WINDOWS_VERSION "0x0602")
+  add_definitions(-D_MSC_PLATFORM_TOOLSET_$(PlatformToolset))
+  if((NOT CMAKE_GENERATOR_TOOLSET OR NOT ${CMAKE_GENERATOR_TOOLSET} MATCHES .*xp) AND
      (NOT CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION OR CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION VERSION_GREATER_EQUAL 8.1))
-    ADD_DEFINITIONS(-DIGSIO_USE_VERSION_HELPER)
-  ENDIF()
-ENDIF()
+    add_definitions(-DIGSIO_USE_VERSION_HELPER)
+  endif()
+endif()
 
 # --------------------------------------------------------------------------
 # Configure output paths for libraries and executables.
-IF(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-  SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-ENDIF()
+if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endif()
 
-IF(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-ENDIF()
+if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+endif()
 
-IF(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-  SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-ENDIF()
+if(NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endif()
 
-IF(NOT IGSIO_INSTALL_BIN_DIR)
-  SET(IGSIO_INSTALL_BIN_DIR "bin")
-ENDIF()
+if(NOT IGSIO_INSTALL_BIN_DIR)
+  set(IGSIO_INSTALL_BIN_DIR "bin")
+endif()
 
-IF(NOT IGSIO_INSTALL_LIB_DIR)
-  SET(IGSIO_INSTALL_LIB_DIR "lib")
-ENDIF()
+if(NOT IGSIO_INSTALL_LIB_DIR)
+  set(IGSIO_INSTALL_LIB_DIR "lib")
+endif()
 
-IF(NOT IGSIO_INSTALL_DATA_DIR)
-  SET(IGSIO_INSTALL_DATA_DIR "share")
-ENDIF()
+if(NOT IGSIO_INSTALL_DATA_DIR)
+  set(IGSIO_INSTALL_DATA_DIR "share")
+endif()
 
-SET(IGSIO_INSTALL_FOLDERNAME "IGSIO-${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}")
-IF(NOT IGSIO_INCLUDE_INSTALL )
-  SET(IGSIO_INCLUDE_INSTALL "include/${IGSIO_INSTALL_FOLDERNAME}")
-ENDIF()
+set(IGSIO_INSTALL_FOLDERNAME "IGSIO-${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}")
+if(NOT IGSIO_INCLUDE_INSTALL )
+  set(IGSIO_INCLUDE_INSTALL "include/${IGSIO_INSTALL_FOLDERNAME}")
+endif()
 
-IF(NOT DEFINED BUILD_SHARED_LIBS)
-  SET(BUILD_SHARED_LIBS ON)
-ENDIF()
-OPTION(BUILD_SHARED_LIBS "Build shared libraries" ${BUILD_SHARED_LIBS})
+if(NOT DEFINED BUILD_SHARED_LIBS)
+  set(BUILD_SHARED_LIBS ON)
+endif()
+option(BUILD_SHARED_LIBS "Build shared libraries" ${BUILD_SHARED_LIBS})
 
-SET(IGSIO_EXECUTABLE_OUTPUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-IF(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
-  SET(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Release/Output")
-ELSE()
-  SET(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Output")
-ENDIF()
+set(IGSIO_EXECUTABLE_OUTPUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+if(MSVC OR ${CMAKE_GENERATOR} MATCHES "Xcode")
+  set(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Release/Output")
+else()
+  set(TEST_OUTPUT_PATH "${IGSIO_EXECUTABLE_OUTPUT_PATH}/Output")
+endif()
 
-OPTION(COPY_EXTERNAL_LIBS "Copy external libraries to output directory." OFF)
+option(COPY_EXTERNAL_LIBS "Copy external libraries to output directory." OFF)
 
 #-----------------------------------------------------------------------------
 # Specify common external project properties
 #-----------------------------------------------------------------------------
-INCLUDE(${CMAKE_ROOT}/Modules/GenerateExportHeader.cmake)
-INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/CMake/IGSIOMacros.cmake)
+include(${CMAKE_ROOT}/Modules/GenerateExportHeader.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/IGSIOMacros.cmake)
 
 # --------------------------------------------------------------------------
-OPTION(IGSIO_USE_3DSlicer "" OFF)
-IF (IGSIO_USE_3DSlicer)
-  FIND_PACKAGE(Slicer REQUIRED)
-  SET(IGSIO_Slicer_DIR ${Slicer_DIR} CACHE STRING "")
-ENDIF()
+option(IGSIO_USE_3DSlicer "" OFF)
+if (IGSIO_USE_3DSlicer)
+  find_package(Slicer REQUIRED)
+  set(IGSIO_Slicer_DIR ${Slicer_DIR} CACHE STRING "")
+endif()
 
 # --------------------------------------------------------------------------
 # Try to find VTK and include its settings (otherwise complain)
-FIND_PACKAGE(VTK NO_MODULE REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
-IF(VTK_FOUND AND VTK_VERSION VERSION_LESS 8.9.0)
-  INCLUDE(${VTK_USE_FILE})
-ENDIF()
+find_package(VTK NO_MODULE REQUIRED PATHS ${VTK_DIR} NO_DEFAULT_PATH)
+if(VTK_FOUND AND VTK_VERSION VERSION_LESS 8.9.0)
+  include(${VTK_USE_FILE})
+endif()
 
-IF(TARGET VTK::CommonCore)
-  SET(IGSIO_VTK_PREFIX VTK::)
-ELSE()
-  SET(IGSIO_VTK_PREFIX vtk)
-ENDIF()
+if(TARGET VTK::CommonCore)
+  set(IGSIO_VTK_PREFIX VTK::)
+else()
+  set(IGSIO_VTK_PREFIX vtk)
+endif()
 
-FIND_PACKAGE(ITK REQUIRED NO_MODULE)
-INCLUDE(${ITK_USE_FILE})
+find_package(ITK REQUIRED NO_MODULE)
+include(${ITK_USE_FILE})
 
-IF (COPY_EXTERNAL_LIBS)
+if (COPY_EXTERNAL_LIBS)
   CopyLibrariesToDirectory(${CMAKE_RUNTIME_OUTPUT_DIRECTORY} ${VTK_LIBRARIES})
-ENDIF()
+endif()
 
-OPTION(IGSIO_USE_SYSTEM_ZLIB "Use system zlib" OFF)
-OPTION(BUILD_TESTING "Enable tests" ON)
-IF(BUILD_TESTING)
-  INCLUDE(CTest)
-ENDIF()
+option(IGSIO_USE_SYSTEM_ZLIB "Use system zlib" OFF)
+option(BUILD_TESTING "Enable tests" ON)
+if(BUILD_TESTING)
+  include(CTest)
+endif()
 
-OPTION(IGSIO_BUILD_SEQUENCEIO "Build classes for reading/writing sequence files" ON)
-OPTION(IGSIO_BUILD_VOLUMERECONSTRUCTION "Build classes for volume reconstruction" OFF)
-OPTION(IGSIO_SEQUENCEIO_ENABLE_MKV "Enable MKV reading/writing" OFF)
-OPTION(IGSIO_BUILD_CODECS "Build classes for Video codecs" OFF)
-OPTION(IGSIO_USE_VP9 "Enable VP9 codec" OFF)
-IF(IGSIO_USE_VP9)
-  SET(IGSIO_BUILD_CODECS ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
-ENDIF()
+option(IGSIO_BUILD_SEQUENCEIO "Build classes for reading/writing sequence files" ON)
+option(IGSIO_BUILD_VOLUMERECONSTRUCTION "Build classes for volume reconstruction" OFF)
+option(IGSIO_SEQUENCEIO_ENABLE_MKV "Enable MKV reading/writing" OFF)
+option(IGSIO_BUILD_CODECS "Build classes for Video codecs" OFF)
+option(IGSIO_USE_VP9 "Enable VP9 codec" OFF)
+if(IGSIO_USE_VP9)
+  set(IGSIO_BUILD_CODECS ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
+endif()
 
-IF(IGSIO_SEQUENCEIO_ENABLE_MKV)
-  SET(IGSIO_BUILD_SEQUENCEIO ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
-ENDIF()
+if(IGSIO_SEQUENCEIO_ENABLE_MKV)
+  set(IGSIO_BUILD_SEQUENCEIO ON CACHE BOOL "Build classes for reading/writing sequence files" FORCE)
+endif()
 
-SET(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY} CACHE STRING "")
-SET(IGSIO_ZLIB_INCLUDE_DIR CACHE STRING "")
-IF(IGSIO_USE_SYSTEM_ZLIB) # setting IGSIOZLib needs to come before Superbuild
-  SET(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY})
-  SET(IGSIO_ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR})
-ELSE()
-  SET(IGSIO_ZLIB_LIBRARY vtkzlib)
-  SET(IGSIO_ZLIB_INCLUDE_DIR "")
-ENDIF()
+set(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY} CACHE STRING "")
+set(IGSIO_ZLIB_INCLUDE_DIR CACHE STRING "")
+if(IGSIO_USE_SYSTEM_ZLIB) # setting IGSIOZLib needs to come before Superbuild
+  set(IGSIO_ZLIB_LIBRARY ${ZLIB_LIBRARY})
+  set(IGSIO_ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIR})
+else()
+  set(IGSIO_ZLIB_LIBRARY vtkzlib)
+  set(IGSIO_ZLIB_INCLUDE_DIR "")
+endif()
 
 # Enable GPU support. Requires OpenCL to be installed
 option(IGSIO_USE_GPU "GPU acceleration via OpenCL" OFF)
 mark_as_advanced(IGSIO_USE_GPU)
 
 if(IGSIO_USE_GPU)
-  FIND_PACKAGE(OpenCL REQUIRED)
+  find_package(OpenCL REQUIRED)
 endif()
 
 #-----------------------------------------------------------------------------
 # Run superbuild script instead of library script
-IF (${CMAKE_VERSION} VERSION_GREATER 3.4)
-  OPTION(IGSIO_SUPERBUILD "Build IGSIO as Superbuild." OFF)
-ENDIF()
+if (${CMAKE_VERSION} VERSION_GREATER 3.4)
+  option(IGSIO_SUPERBUILD "Build IGSIO as Superbuild." OFF)
+endif()
 
-IF(IGSIO_SUPERBUILD)
-  INCLUDE(SuperBuild/Superbuild.cmake)
-ELSE()
+if(IGSIO_SUPERBUILD)
+  include(SuperBuild/Superbuild.cmake)
+else()
 
   # --------------------------------------------------------------------------
   # Configure include file
-  CONFIGURE_FILE(
+  configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/igsioConfigure.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
     )
 
-  ADD_SUBDIRECTORY(Codecs)
-  ADD_SUBDIRECTORY(IGSIOCommon)
-  IF(IGSIO_BUILD_SEQUENCEIO)
-    ADD_SUBDIRECTORY(SequenceIO)
-  ENDIF()
-  IF (IGSIO_BUILD_VOLUMERECONSTRUCTION)
-    ADD_SUBDIRECTORY(VolumeReconstruction)
-  ENDIF()
-  ADD_SUBDIRECTORY(IGSIOCalibration)
+  add_subdirectory(Codecs)
+  add_subdirectory(IGSIOCommon)
+  if(IGSIO_BUILD_SEQUENCEIO)
+    add_subdirectory(SequenceIO)
+  endif()
+  if (IGSIO_BUILD_VOLUMERECONSTRUCTION)
+    add_subdirectory(VolumeReconstruction)
+  endif()
+  add_subdirectory(IGSIOCalibration)
 
   #-----------------------------------------------------------------------------
   # Export all targets at once from the build tree in their final configuration.
   get_property(_igsio_targets GLOBAL PROPERTY IGSIO_TARGETS)
   if (_igsio_targets)
     list(REMOVE_DUPLICATES _igsio_targets)
-    EXPORT(TARGETS ${_igsio_targets} FILE ${IGSIO_BINARY_DIR}/IGSIOTargets.cmake)
+    export(TARGETS ${_igsio_targets} FILE ${IGSIO_BINARY_DIR}/IGSIOTargets.cmake)
   endif()
   unset(_igsio_targets)
 
   # Create an IGSIOConfig.cmake and IGSIOConfig Version.cmake file for the use from the build tree
   #-----------------------------------------------------------------------------
-  INCLUDE(CMakePackageConfigHelpers)
+  include(CMakePackageConfigHelpers)
   write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake"
     VERSION ${IGSIO_VERSION}
     COMPATIBILITY ExactVersion)
-  LIST(APPEND IGSIO_INSTALL_CMAKE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake")
-  INCLUDE(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
+  list(APPEND IGSIO_INSTALL_CMAKE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake")
+  include(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
 
-ENDIF()
+endif()

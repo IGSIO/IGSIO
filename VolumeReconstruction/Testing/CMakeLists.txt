@@ -1,17 +1,17 @@
-SET( TestDataDir ${CMAKE_CURRENT_SOURCE_DIR}/Data )
-SET( TestConfigDir ${CMAKE_CURRENT_SOURCE_DIR}/Config )
+set( TestDataDir ${CMAKE_CURRENT_SOURCE_DIR}/Data )
+set( TestConfigDir ${CMAKE_CURRENT_SOURCE_DIR}/Config )
 
-ADD_EXECUTABLE(VolumeReconstructorTest VolumeReconstructorTest.cxx)
-SET_TARGET_PROPERTIES(VolumeReconstructorTest PROPERTIES FOLDER Tools)
-TARGET_LINK_LIBRARIES(VolumeReconstructorTest
+add_executable(VolumeReconstructorTest VolumeReconstructorTest.cxx)
+set_target_properties(VolumeReconstructorTest PROPERTIES FOLDER Tools)
+target_link_libraries(VolumeReconstructorTest
   vtkIGSIOCommon
   vtkSequenceIO
   vtkVolumeReconstruction
   )
-FILE(MAKE_DIRECTORY ${TEST_OUTPUT_PATH})
+file(MAKE_DIRECTORY ${TEST_OUTPUT_PATH})
 
 function(VolRecRegressionTest TestName ConfigFileNameFragment InputSeqFile OutNameFragment)
-  ADD_TEST(VolumeReconstructorTestRun${TestName}
+  add_test(VolumeReconstructorTestRun${TestName}
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/VolumeReconstructorTest
     --config-file=${TestConfigDir}/Config_VolumeReconstruction_${ConfigFileNameFragment}.xml
     --source-seq-file=${TestDataDir}/${InputSeqFile}.igs.mha
@@ -20,28 +20,28 @@ function(VolRecRegressionTest TestName ConfigFileNameFragment InputSeqFile OutNa
     --importance-mask-file=${TestDataDir}/ImportanceMask.png
     --disable-compression
     )
-  SET_TESTS_PROPERTIES( VolumeReconstructorTestRun${TestName} PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING" )
+  set_tests_properties( VolumeReconstructorTestRun${TestName} PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING" )
 
   # If expected filename is specified in a platform-specific directory then use that
-  IF(WIN32)
-    SET(PLATFORM "Windows")
-  ELSE()
-    SET(PLATFORM "Linux")
-  ENDIF()
-  SET(CommonExpectedVolumeFileName "${TestDataDir}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
-  SET(PlatformSpecificExpectedVolumeFileName "${TestDataDir}/${PLATFORM}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
+  if(WIN32)
+    set(PLATFORM "Windows")
+  else()
+    set(PLATFORM "Linux")
+  endif()
+  set(CommonExpectedVolumeFileName "${TestDataDir}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
+  set(PlatformSpecificExpectedVolumeFileName "${TestDataDir}/${PLATFORM}/VolumeReconstructorTest${OutNameFragment}volumeRef.mha")
   if(EXISTS "${PlatformSpecificExpectedVolumeFileName}")
-    SET(ExpectedVolumeFileName ${PlatformSpecificExpectedVolumeFileName})
-  ELSE()
-    SET(ExpectedVolumeFileName ${CommonExpectedVolumeFileName})
+    set(ExpectedVolumeFileName ${PlatformSpecificExpectedVolumeFileName})
+  else()
+    set(ExpectedVolumeFileName ${CommonExpectedVolumeFileName})
   endif()
 
-  ADD_TEST(VolumeReconstructorTestCompare${TestName}
+  add_test(VolumeReconstructorTestCompare${TestName}
     ${CMAKE_COMMAND} -E compare_files
     ${ExpectedVolumeFileName}
     ${TEST_OUTPUT_PATH}/VolumeReconstructorTest${OutNameFragment}volume.mha
     )
-  SET_TESTS_PROPERTIES(VolumeReconstructorTestCompare${TestName} PROPERTIES DEPENDS VolumeReconstructorTestRun${TestName})
+  set_tests_properties(VolumeReconstructorTestCompare${TestName} PROPERTIES DEPENDS VolumeReconstructorTestRun${TestName})
 endfunction()
 
 VolRecRegressionTest(NearLateUChar SonixRP_TRUS_D70mm_NN_LATE SpinePhantomFreehand NNLATE)
@@ -51,10 +51,10 @@ VolRecRegressionTest(LinrLateFloat SpinePhantom_LN_LATE SpinePhantomFreehand3Fra
 VolRecRegressionTest(LinrMeanUChar SonixRP_TRUS_D70mm_LN_MEAN SpinePhantomFreehand LNMEAN)
 VolRecRegressionTest(LinrMaxiUChar SpinePhantom_LN_MAXI SpinePhantomFreehand LNMAXI)
 
-IF(IGSIO_USE_GPU)
+if(IGSIO_USE_GPU)
   VolRecRegressionTest(NearMaxiFloatOpenCL SpinePhantom_NN_MAXI_OpenCL SpinePhantomFreehand3FramesFloat NNMAXIO)
   VolRecRegressionTest(LinrMaxiUCharOpenCL SpinePhantom_LN_MAXI_OpenCL SpinePhantomFreehand LNMAXIO)
-ENDIF()
+endif()
 
 # Importance mask tests
 VolRecRegressionTest(IMLinearFull ImportanceMaskLinearFull ImportanceMaskInput IMLiF)

@@ -1,76 +1,76 @@
-SET( TestDataDir ${CMAKE_CURRENT_SOURCE_DIR}/Data )
+set( TestDataDir ${CMAKE_CURRENT_SOURCE_DIR}/Data )
 
 #--------------------------------------------------------------------------------------------
 function(ADD_COMPARE_FILES_TEST TestName DependsOnTestName TestFileName)
 
   # If a platform-specific reference file is found then use that
-  IF(WIN32)
-    SET(PLATFORM "Windows")
-  ELSE()
-    SET(PLATFORM "Linux")
-  ENDIF()
-  SET(CommonFilePath "${TestDataDir}/${TestFileName}")
-  SET(PlatformSpecificFilePath "${TestDataDir}/${PLATFORM}/${TestFileName}")
+  if(WIN32)
+    set(PLATFORM "Windows")
+  else()
+    set(PLATFORM "Linux")
+  endif()
+  set(CommonFilePath "${TestDataDir}/${TestFileName}")
+  set(PlatformSpecificFilePath "${TestDataDir}/${PLATFORM}/${TestFileName}")
   if(EXISTS "${PlatformSpecificFilePath}")
-    SET(FoundReferenceFilePath ${PlatformSpecificFilePath})
-  ELSE()
-    SET(FoundReferenceFilePath ${CommonFilePath})
+    set(FoundReferenceFilePath ${PlatformSpecificFilePath})
+  else()
+    set(FoundReferenceFilePath ${CommonFilePath})
   endif()
 
-  ADD_TEST(${TestName} ${CMAKE_COMMAND} -E compare_files "${TEST_OUTPUT_PATH}/${TestFileName}" "${FoundReferenceFilePath}")
-  SET_TESTS_PROPERTIES(${TestName} PROPERTIES DEPENDS ${DependsOnTestName})
+  add_test(${TestName} ${CMAKE_COMMAND} -E compare_files "${TEST_OUTPUT_PATH}/${TestFileName}" "${FoundReferenceFilePath}")
+  set_tests_properties(${TestName} PROPERTIES DEPENDS ${DependsOnTestName})
 
 endfunction()
 
 #--------------------------------------------------------------------------------------------
-ADD_EXECUTABLE(vtkIGSIOLoggerTest vtkIGSIOLoggerTest.cxx )
-SET_TARGET_PROPERTIES(vtkIGSIOLoggerTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(vtkIGSIOLoggerTest vtkIGSIOCommon vtkIGSIOCommon )
+add_executable(vtkIGSIOLoggerTest vtkIGSIOLoggerTest.cxx )
+set_target_properties(vtkIGSIOLoggerTest PROPERTIES FOLDER Tests)
+target_link_libraries(vtkIGSIOLoggerTest vtkIGSIOCommon vtkIGSIOCommon )
 
-ADD_TEST(vtkIGSIOLoggerTest
+add_test(vtkIGSIOLoggerTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkIGSIOLoggerTest
   --verbose=5
   )
 
 #--------------------------------------------------------------------------------------------
-ADD_EXECUTABLE(igsioCommonTest igsioCommonTest.cxx )
-SET_TARGET_PROPERTIES(igsioCommonTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(igsioCommonTest vtkIGSIOCommon vtkIGSIOCommon )
+add_executable(igsioCommonTest igsioCommonTest.cxx )
+set_target_properties(igsioCommonTest PROPERTIES FOLDER Tests)
+target_link_libraries(igsioCommonTest vtkIGSIOCommon vtkIGSIOCommon )
 
-ADD_TEST(igsioCommonTest
+add_test(igsioCommonTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/igsioCommonTest
   )
 
 #--------------------------------------------------------------------------------------------
-ADD_EXECUTABLE(igsioMathTest igsioMathTest.cxx )
-SET_TARGET_PROPERTIES(igsioMathTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(igsioMathTest vtkIGSIOCommon vtkIGSIOCommon )
+add_executable(igsioMathTest igsioMathTest.cxx )
+set_target_properties(igsioMathTest PROPERTIES FOLDER Tests)
+target_link_libraries(igsioMathTest vtkIGSIOCommon vtkIGSIOCommon )
 
-ADD_TEST(igsioMathTest
+add_test(igsioMathTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/igsioMathTest
   --xml-file=${TestDataDir}/igsioMathTestData.xml
   )
 
 #--------------------------------------------------------------------------------------------
-ADD_EXECUTABLE(AccurateTimerTest AccurateTimerTest.cxx )
-SET_TARGET_PROPERTIES(AccurateTimerTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(AccurateTimerTest vtkIGSIOCommon vtkIGSIOCommon )
+add_executable(AccurateTimerTest AccurateTimerTest.cxx )
+set_target_properties(AccurateTimerTest PROPERTIES FOLDER Tests)
+target_link_libraries(AccurateTimerTest vtkIGSIOCommon vtkIGSIOCommon )
 
-ADD_TEST(AccurateTimerTest
+add_test(AccurateTimerTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AccurateTimerTest
   --testTimeSec=10
   --averageIntendedDelaySec=0.005
   --numberOfThreads=3
   --verbose=3
   )
-SET_TESTS_PROPERTIES(AccurateTimerTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
+set_tests_properties(AccurateTimerTest PROPERTIES FAIL_REGULAR_EXPRESSION "ERROR;WARNING")
 
 #--------------------------------------------------------------------------------------------
-ADD_EXECUTABLE(vtkTransformRepositoryTest vtkTransformRepositoryTest.cxx )
-SET_TARGET_PROPERTIES(vtkTransformRepositoryTest PROPERTIES FOLDER Tests)
-TARGET_LINK_LIBRARIES(vtkTransformRepositoryTest vtkIGSIOCommon vtkIGSIOCommon )
+add_executable(vtkTransformRepositoryTest vtkTransformRepositoryTest.cxx )
+set_target_properties(vtkTransformRepositoryTest PROPERTIES FOLDER Tests)
+target_link_libraries(vtkTransformRepositoryTest vtkIGSIOCommon vtkIGSIOCommon )
 
-ADD_TEST(vtkTransformRepositoryTest
+add_test(vtkTransformRepositoryTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkTransformRepositoryTest
   --verbose=3
   )
@@ -79,7 +79,7 @@ ADD_TEST(vtkTransformRepositoryTest
 #--------------------------------------------------------------------------------------------
 # Install
 #
-INSTALL(
+install(
   TARGETS
     AccurateTimerTest
   DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"

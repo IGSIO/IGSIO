@@ -1,41 +1,41 @@
-IF(vtkAddon_DIR)
+if(vtkAddon_DIR)
   # vtkAddon has been built already
-  FIND_PACKAGE(vtkAddon REQUIRED NO_MODULE)
-  MESSAGE(STATUS "Using vtkAddon available at: ${vtkAddon_DIR}")
-  SET(IGSIO_vtkAddon_DIR ${vtkAddon_DIR})
-ELSE()
+  find_package(vtkAddon REQUIRED NO_MODULE)
+  message(STATUS "Using vtkAddon available at: ${vtkAddon_DIR}")
+  set(IGSIO_vtkAddon_DIR ${vtkAddon_DIR})
+else()
 
-  IF (NOT vtkAddon_INSTALL_BIN_DIR)
+  if (NOT vtkAddon_INSTALL_BIN_DIR)
     set(vtkAddon_INSTALL_BIN_DIR ${IGSIO_INSTALL_BIN_DIR})
-  ENDIF()
-  IF (NOT vtkAddon_INSTALL_LIB_DIR)
+  endif()
+  if (NOT vtkAddon_INSTALL_LIB_DIR)
     set(vtkAddon_INSTALL_LIB_DIR ${IGSIO_INSTALL_LIB_DIR})
-  ENDIF()
+  endif()
 
-  IF (NOT vtkAddon_CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  if (NOT vtkAddon_CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(vtkAddon_CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-  ENDIF()
+  endif()
 
-  IF (NOT vtkAddon_CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if (NOT vtkAddon_CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(vtkAddon_CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  ENDIF()
+  endif()
 
-  SET (IGSIO_vtkAddon_SRC_DIR ${CMAKE_BINARY_DIR}/vtkAddon CACHE INTERNAL "Path to store vtkAddon contents.")
-  SET (IGSIO_vtkAddon_PREFIX_DIR ${CMAKE_BINARY_DIR}/vtkAddon-prefix CACHE INTERNAL "Path to store vtkAddon prefix data.")
-  SET (IGSIO_vtkAddon_DIR ${CMAKE_BINARY_DIR}/vtkAddon-bin CACHE INTERNAL "Path to store vtkAddon binaries")
+  set (IGSIO_vtkAddon_SRC_DIR ${CMAKE_BINARY_DIR}/vtkAddon CACHE INTERNAL "Path to store vtkAddon contents.")
+  set (IGSIO_vtkAddon_PREFIX_DIR ${CMAKE_BINARY_DIR}/vtkAddon-prefix CACHE INTERNAL "Path to store vtkAddon prefix data.")
+  set (IGSIO_vtkAddon_DIR ${CMAKE_BINARY_DIR}/vtkAddon-bin CACHE INTERNAL "Path to store vtkAddon binaries")
 
-  IF(WIN32)
+  if(WIN32)
     set(ep_common_cxx_flags
       /DWIN32
       )
-  ENDIF()
+  endif()
 
-  IF(NOT DEFINED(vtkAddon_GIT_REPOSITORY))
-    SET(vtkAddon_GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git" CACHE STRING "Set vtkAddon desired git url")
-  ENDIF()
-  IF(NOT DEFINED(vtkAddon_GIT_REVISION))
-    SET(vtkAddon_GIT_REVISION "main" CACHE STRING "Set vtkAddon desired git hash (main means latest)")
-  ENDIF()
+  if(NOT DEFINED(vtkAddon_GIT_REPOSITORY))
+    set(vtkAddon_GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git" CACHE STRING "Set vtkAddon desired git url")
+  endif()
+  if(NOT DEFINED(vtkAddon_GIT_REVISION))
+    set(vtkAddon_GIT_REVISION "main" CACHE STRING "Set vtkAddon desired git hash (main means latest)")
+  endif()
 
   ExternalProject_Add(vtkAddon
     PREFIX ${PLUS_IGSIO_PREFIX_DIR}
@@ -70,5 +70,5 @@ ELSE()
     DEPENDS ${IGSIO_DEPENDENCIES}
     )
 
-  SET(IGSIO_vtkAddon_DIR "${CMAKE_BINARY_DIR}/vtkAddon-bin")
-ENDIF()
+  set(IGSIO_vtkAddon_DIR "${CMAKE_BINARY_DIR}/vtkAddon-bin")
+endif()
