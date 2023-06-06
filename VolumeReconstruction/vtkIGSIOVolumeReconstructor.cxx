@@ -430,14 +430,11 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
     return IGSIO_FAIL;
   }
 
-  // Adjust the output origin  so it falls on a multiple of voxel spacing.
-  // This ensures the same voxel lattice when multiple sweeps are volume-reconstructed independently.
-  // If the multi-sweep volume reconstructions are later merged, no resampling will be necessary.
   double* outputSpacing = this->Reconstructor->GetOutputSpacing();
   double outputOrigin_Ref[3] = { 0.0, 0.0, 0.0 };
   for (int d = 0; d < 3; d++)
   {
-    outputOrigin_Ref[d] = std::floor(extent_Ref[d * 2] / outputSpacing[d]) * outputSpacing[d];
+    outputOrigin_Ref[d] = extent_Ref[d * 2];
   }
 
   // Set the output extent from the current min and max values, using the user-defined image resolution.
