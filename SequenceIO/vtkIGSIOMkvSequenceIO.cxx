@@ -50,7 +50,8 @@ struct MetaData
     , Value(value)
   {};
 };
-typedef std::map<double, std::vector<MetaData> > MetaDataInfo;
+typedef std::vector<MetaData> MetaDataVector;
+typedef std::map<double, MetaDataVector> MetaDataInfo;
 
 struct FrameInfo
 {
@@ -967,19 +968,16 @@ bool vtkIGSIOMkvSequenceIO::vtkInternal::ReadMetadata()
   for (unsigned int i = 0; i < this->External->TrackedFrameList->GetNumberOfTrackedFrames(); ++i)
   {
     igsioTrackedFrame* trackedFrame = this->External->TrackedFrameList->GetTrackedFrame(i);
-    for (MetaDataInfo::iterator metaDataInfoIt = metaDataInfo.begin(); metaDataInfoIt != metaDataInfo.end(); ++metaDataInfoIt)
+    MetaDataInfo::iterator metaDataIt = metaDataInfo.find(trackedFrame->GetTimestamp());
+    if (metaDataIt == metaDataInfo.end())
     {
-      double timestampSeconds = metaDataInfoIt->first;
-      if (trackedFrame->GetTimestamp() != timestampSeconds)
-      {
-        continue;
-      }
+      continue;
+    }
 
-      std::vector<MetaData> metaDataList = metaDataInfoIt->second;
-      for (std::vector<MetaData>::iterator metaDataIt = metaDataList.begin(); metaDataIt != metaDataList.end(); ++metaDataIt)
-      {
-        trackedFrame->SetFrameField(metaDataIt->Name, metaDataIt->Value);
-      }
+    MetaDataVector* metaDataList = &metaDataIt->second;
+    for (MetaDataVector::iterator metaDataIt = metaDataList->begin(); metaDataIt != metaDataList->end(); ++metaDataIt)
+    {
+      trackedFrame->SetFrameField(metaDataIt->Name, metaDataIt->Value);
     }
   }
 
