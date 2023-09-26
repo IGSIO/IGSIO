@@ -588,7 +588,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::UpdateReconstructedVolume()
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOVolumeReconstructor::GetReconstructedVolume(vtkImageData* volume)
+igsioStatus vtkIGSIOVolumeReconstructor::GetReconstructedVolume(vtkImageData* volume, bool deepCopy/*=false*/)
 {
   if (this->UpdateReconstructedVolume() != IGSIO_SUCCESS)
   {
@@ -596,7 +596,15 @@ igsioStatus vtkIGSIOVolumeReconstructor::GetReconstructedVolume(vtkImageData* vo
     return IGSIO_FAIL;
   }
 
-  volume->ShallowCopy(this->ReconstructedVolume);
+  if (deepCopy)
+  {
+    volume->DeepCopy(this->ReconstructedVolume);
+  }
+  else
+  {
+    volume->ShallowCopy(this->ReconstructedVolume);
+  }
+
 
   return IGSIO_SUCCESS;
 }

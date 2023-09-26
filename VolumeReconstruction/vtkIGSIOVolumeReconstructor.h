@@ -81,7 +81,7 @@ public:
   virtual igsioStatus UpdateReconstructedVolume();
 
   /*! Load the reconstructed volume into the volume pointer */
-  virtual igsioStatus GetReconstructedVolume(vtkImageData* volume);
+  virtual igsioStatus GetReconstructedVolume(vtkImageData* volume, bool deepCopy=false);
 
   /*! Apply hole filling to the reconstructed image, is called by UpdateReconstructedVolume so an explicit call is not needed */
   virtual igsioStatus GenerateHoleFilledVolume();
