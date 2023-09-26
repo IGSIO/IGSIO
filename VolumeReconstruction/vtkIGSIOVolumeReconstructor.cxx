@@ -579,7 +579,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::UpdateReconstructedVolume()
   }
   else
   {
-    this->ReconstructedVolume->DeepCopy(this->Reconstructor->GetReconstructedVolume());
+    this->ReconstructedVolume->ShallowCopy(this->Reconstructor->GetReconstructedVolume());
   }
 
   this->ReconstructedVolumeUpdatedTime = this->GetMTime();
@@ -596,7 +596,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::GetReconstructedVolume(vtkImageData* vo
     return IGSIO_FAIL;
   }
 
-  volume->DeepCopy(this->ReconstructedVolume);
+  volume->ShallowCopy(this->ReconstructedVolume);
 
   return IGSIO_SUCCESS;
 }
@@ -610,7 +610,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::GenerateHoleFilledVolume()
   this->HoleFiller->Update();
   LOG_INFO("Hole Filling has finished");
 
-  this->ReconstructedVolume->DeepCopy(HoleFiller->GetOutput());
+  this->ReconstructedVolume->ShallowCopy(HoleFiller->GetOutput());
 
   return IGSIO_SUCCESS;
 }
@@ -630,7 +630,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::ExtractGrayLevels(vtkImageData* reconst
   extract->SetInputData(this->ReconstructedVolume);
   extract->Update();
 
-  reconstructedVolume->DeepCopy(extract->GetOutput());
+  reconstructedVolume->ShallowCopy(extract->GetOutput());
 
   return IGSIO_SUCCESS;
 }
@@ -650,7 +650,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::ExtractAccumulation(vtkImageData* accum
   extract->SetInputData(this->Reconstructor->GetAccumulationBuffer());
   extract->Update();
 
-  accumulationBuffer->DeepCopy(extract->GetOutput());
+  accumulationBuffer->ShallowCopy(extract->GetOutput());
 
   return IGSIO_SUCCESS;
 }
@@ -695,7 +695,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::SaveReconstructedVolumeToFile(vtkImageD
   igsioTrackedFrame frame;
   igsioVideoFrame image;
   image.AllocateFrame(frameSize, volumeToSave->GetScalarType(), volumeToSave->GetNumberOfScalarComponents());
-  image.GetImage()->DeepCopy(volumeToSave);
+  image.GetImage()->ShallowCopy(volumeToSave);
   image.SetImageOrientation(US_IMG_ORIENT_MFA);
   image.SetImageType(US_IMG_BRIGHTNESS);
   frame.SetImageData(image);
