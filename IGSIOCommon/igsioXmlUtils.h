@@ -757,6 +757,40 @@ public:
     } \
   }
 
+#define XML_READ_ENUM_ATTRIBUTE_NONMEMBER_OPTIONAL(varName, var, xmlElementVar, numberToStringConverter, startValue, numberOfValues)  \
+  { \
+    const char* strValue = xmlElementVar->GetAttribute(#varName); \
+    if (strValue != NULL) \
+    { \
+      bool strValueValid = false; \
+      for (int value = startValue; value < startValue+numberOfValues; value++) \
+      { \
+        if (igsioCommon::IsEqualInsensitive(strValue, numberToStringConverter(value)))  \
+        { \
+          var = value; \
+          strValueValid = true; \
+          break; \
+        } \
+      } \
+      if (!strValueValid) \
+      { \
+        std::ostringstream ss; \
+        ss << "Failed to read enumerated value from " << #var \
+          << " attribute of element " << (xmlElementVar->GetName() ? xmlElementVar->GetName() : "(undefined)") \
+          << ": expected "; \
+        for (int value = startValue; value < startValue + numberOfValues; value++) \
+        { \
+          if (value > startValue) \
+          { \
+            ss << ", ";  \
+          } \
+          ss << "'" << numberToStringConverter(value) << "'";  \
+        } \
+        LOG_WARNING(ss.str()); \
+      } \
+    } \
+  }
+
 #define XML_REMOVE_ATTRIBUTE(attributeName, xmlElementVar)  xmlElementVar->RemoveAttribute(attributeName);
 
 #define XML_WRITE_STRING_ATTRIBUTE(memberVar, xmlElementVar)  \
