@@ -732,6 +732,7 @@ int* vtkIGSIOVolumeReconstructor::GetClipRectangleSize()
 //----------------------------------------------------------------------------
 void vtkIGSIOVolumeReconstructor::Reset()
 {
+  this->ReconstructedVolume->Initialize();
   this->Reconstructor->ResetOutput();
 }
 
