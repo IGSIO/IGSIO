@@ -42,15 +42,19 @@ POSSIBILITY OF SUCH DAMAGES.
 
 #include "igsioConfigure.h"
 
+// VTK includes
+#include <vtkDataArray.h>
+#include <vtkImageData.h>
+#include <vtkIndent.h>
+#include <vtkMath.h>
+#include <vtkMultiThreader.h>
 #include <vtkObjectFactory.h>
-#include "vtkImageData.h"
-#include "vtkIndent.h"
-#include "vtkMath.h"
-#include "vtkMultiThreader.h"
-#include "vtkTransform.h"
-#include "vtkXMLUtilities.h"
-#include "vtkXMLDataElement.h"
+#include <vtkPointData.h>
+#include <vtkTransform.h>
+#include <vtkXMLUtilities.h>
+#include <vtkXMLDataElement.h>
 
+// VolumeReconstruction includes
 #include "vtkIGSIOPasteSliceIntoVolume.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 #include "vtkIGSIOPasteSliceIntoVolumeHelperUnoptimized.h"
@@ -59,6 +63,7 @@ POSSIBILITY OF SUCH DAMAGES.
 #  include "vtkIGSIOPasteSliceIntoVolumeHelperOpenCL.h"
 #endif
 
+// std includes
 #include <chrono>
 
 vtkStandardNewMacro( vtkIGSIOPasteSliceIntoVolume );
@@ -218,39 +223,38 @@ void vtkIGSIOPasteSliceIntoVolume::PrintSelf( ostream& os, vtkIndent indent )
   }
 }
 
-
 //----------------------------------------------------------------------------
 vtkImageData* vtkIGSIOPasteSliceIntoVolume::GetReconstructedVolume()
 {
 #ifdef IGSIO_USE_GPU
-	if (this->OpenCLContext)
-	{
-		// Get output volume extent and pointer
-		vtkImageData* outData = this->ReconstructedVolume;
+  if (this->OpenCLContext)
+  {
+    // Get output volume extent and pointer
+    vtkImageData* outData = this->ReconstructedVolume;
 
-		vtkIGSIOPasteSliceIntoVolumeInsertSliceParams insertionParams;
-		int* outExtent = this->OutputExtent;
-		void* outPtr = outData->GetScalarPointerForExtent(outExtent);
+    vtkIGSIOPasteSliceIntoVolumeInsertSliceParams insertionParams;
+    int* outExtent = this->OutputExtent;
+    void* outPtr = outData->GetScalarPointerForExtent(outExtent);
 
-		insertionParams.outData = this->ReconstructedVolume;
-		insertionParams.outPtr = outPtr;
+    insertionParams.outData = this->ReconstructedVolume;
+    insertionParams.outPtr = outPtr;
 
-		// If we are not interested in the Acculumation buffer at this point, you can replace the following with NULL
-		// And the Accumulation buffer data will not be copied from the GPU. 
-		insertionParams.accPtr = static_cast<unsigned short*>(this->AccumulationBuffer->GetScalarPointerForExtent(outExtent));
+    // If we are not interested in the Acculumation buffer at this point, you can replace the following with NULL
+    // And the Accumulation buffer data will not be copied from the GPU.
+    insertionParams.accPtr = static_cast<unsigned short*>(this->AccumulationBuffer->GetScalarPointerForExtent(outExtent));
 
-		// Similarly, if we don't cane about accumulation overflows, replace this with NULL
-		// and remove the overflow warning below
-		unsigned int accOverflowCount;
-		insertionParams.accOverflowCount = &accOverflowCount;
+    // Similarly, if we don't cane about accumulation overflows, replace this with NULL
+    // and remove the overflow warning below
+    unsigned int accOverflowCount;
+    insertionParams.accOverflowCount = &accOverflowCount;
 
-		vtkOpenCLReadOutput(&insertionParams, this->OpenCLContext);
+    vtkOpenCLReadOutput(&insertionParams, this->OpenCLContext);
 
-		if (accOverflowCount && !EnableAccumulationBufferOverflowWarning)
-		{
-			LOG_WARNING(accOverflowCount << " voxels have had too many pixels inserted. This can result in errors in the final volume. It is recommended that the output volume resolution be increased.");
-		}
-	}
+    if (accOverflowCount && !EnableAccumulationBufferOverflowWarning)
+    {
+      LOG_WARNING(accOverflowCount << " voxels have had too many pixels inserted. This can result in errors in the final volume. It is recommended that the output volume resolution be increased.");
+    }
+  }
 #endif
 
   return this->ReconstructedVolume;
@@ -681,11 +685,11 @@ VTK_THREAD_RETURN_TYPE vtkIGSIOPasteSliceIntoVolume::InsertSliceThreadFunction( 
     {
       // GPU acceleration using OpenCL
 #ifdef IGSIO_USE_GPU
-		vtkOpenCLInsertSlice(&insertionParams, inData->GetScalarType(), str->OpenCLContext);
+      vtkOpenCLInsertSlice(&insertionParams, inData->GetScalarType(), str->OpenCLContext);
 #else
-		LOG_ERROR("InsertSlice: GPU Acceleration was chosen but is not supported");
+      LOG_ERROR("InsertSlice: GPU Acceleration was chosen but is not supported");
 #endif
-	}
+    }
     else
     {
       // no optimization
@@ -795,8 +799,7 @@ int vtkIGSIOPasteSliceIntoVolume::SplitSliceExtent( int splitExt[6], int fullExt
   return maxThreadIdUsed + 1;
 }
 
-//****************************************************************************
-
+//----------------------------------------------------------------------------
 const char* vtkIGSIOPasteSliceIntoVolume::GetInterpolationModeAsString( InterpolationType type )
 {
   switch ( type )
@@ -811,6 +814,7 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetInterpolationModeAsString( Interpol
   }
 }
 
+//----------------------------------------------------------------------------
 const char* vtkIGSIOPasteSliceIntoVolume::GetOutputScalarModeAsString( int type )
 {
   switch ( type )
@@ -846,6 +850,7 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetOutputScalarModeAsString( int type 
   }
 }
 
+//----------------------------------------------------------------------------
 const char* vtkIGSIOPasteSliceIntoVolume::GetCompoundingModeAsString( CompoundingType type )
 {
   switch ( type )
@@ -866,6 +871,7 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetCompoundingModeAsString( Compoundin
   }
 }
 
+//----------------------------------------------------------------------------
 const char* vtkIGSIOPasteSliceIntoVolume::GetCalculationAsString( CalculationTypeDeprecated type )
 {
   switch ( type )
@@ -882,6 +888,7 @@ const char* vtkIGSIOPasteSliceIntoVolume::GetCalculationAsString( CalculationTyp
   }
 }
 
+//----------------------------------------------------------------------------
 const char* vtkIGSIOPasteSliceIntoVolume::GetOptimizationModeAsString( OptimizationType type )
 {
   switch ( type )
@@ -915,7 +922,7 @@ bool vtkIGSIOPasteSliceIntoVolume::IsPixelRejectionEnabled()
 //----------------------------------------------------------------------------
 void vtkIGSIOPasteSliceIntoVolume::SetPixelRejectionDisabled()
 {
-	this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
+  this->PixelRejectionThreshold = PIXEL_REJECTION_DISABLED;
 }
 
 //----------------------------------------------------------------------------
