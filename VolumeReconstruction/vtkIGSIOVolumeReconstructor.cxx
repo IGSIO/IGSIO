@@ -41,6 +41,7 @@ vtkIGSIOVolumeReconstructor::vtkIGSIOVolumeReconstructor()
   , FanAngleDetector(vtkIGSIOFanAngleDetectorAlgo::New())
   , FillHoles(false)
   , EnableFanAnglesAutoDetect(false)
+  , RecomputeOutputSpacing(false)
   , SkipInterval(1)
   , ReconstructedVolumeUpdatedTime(0)
 {
@@ -132,6 +133,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::ReadConfiguration(vtkXMLDataElement* co
 
   XML_READ_ENUM2_ATTRIBUTE_OPTIONAL(FillHoles, reconConfig, "ON", true, "OFF", false);
   XML_READ_BOOL_ATTRIBUTE_OPTIONAL(EnableFanAnglesAutoDetect, reconConfig);
+  XML_READ_BOOL_ATTRIBUTE_OPTIONAL(RecomputeOutputSpacing, reconConfig);
 
   // Find and read kernels. First for loop counts the number of kernels to allocate, second for loop stores them
   if (this->FillHoles)
@@ -248,6 +250,10 @@ igsioStatus vtkIGSIOVolumeReconstructor::WriteConfiguration(vtkXMLDataElement* c
   reconConfig->SetAttribute("Interpolation", this->Reconstructor->GetInterpolationModeAsString(this->Reconstructor->GetInterpolationMode()));
   reconConfig->SetAttribute("Optimization", this->Reconstructor->GetOptimizationModeAsString(this->Reconstructor->GetOptimization()));
   reconConfig->SetAttribute("CompoundingMode", this->Reconstructor->GetCompoundingModeAsString(this->Reconstructor->GetCompoundingMode()));
+  if (this->RecomputeOutputSpacing)
+  {
+    XML_WRITE_BOOL_ATTRIBUTE(RecomputeOutputSpacing, reconConfig);
+  }
 
   if (this->Reconstructor->GetNumberOfThreads() > 0)
   {
@@ -441,9 +447,17 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
   int outputExtent[ 6 ] = { 0, 0, 0, 0, 0, 0 };
   for (int d = 0; d < 3; d++)
   {
-    // in general, this would be computed as int(std::floor((extent_Ref[d * 2] - outputOrigin_Ref[d]) / outputSpacing[d]));
-    // we set outputExtent so that this will be always 0
-    outputExtent[d * 2 + 1] = int(std::ceil((extent_Ref[d * 2 + 1] - outputOrigin_Ref[d]) / outputSpacing[d]));
+    if (this->RecomputeOutputSpacing)
+    {
+      if (d == 2)
+      {
+        // Change the output spacing slightly so the output extent contains all frames without exceeding the voxel lattice.
+        // The output extent can extend beyond existing data when using ceil, or not include some of the data when using floor.
+        // This is more evident in the third dimension when the frame spacing is large and the number of frames is small.
+        outputSpacing[d] = (extent_Ref[d * 2 + 1] - outputOrigin_Ref[d]) / int(std::floor((extent_Ref[d * 2 + 1] - outputOrigin_Ref[d]) / outputSpacing[d]));
+      }
+    }
+    outputExtent[d * 2 + 1] = int(std::round((extent_Ref[d * 2 + 1] - outputOrigin_Ref[d]) / outputSpacing[d]));
   }
 
   this->Reconstructor->SetOutputScalarMode(trackedFrameList->GetTrackedFrame(0)->GetImageData()->GetImage()->GetScalarType());
