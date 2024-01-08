@@ -125,6 +125,10 @@ public:
   vtkGetMacro(EnableFanAnglesAutoDetect, bool);
   vtkSetMacro(EnableFanAnglesAutoDetect, bool);
 
+  /*! Get/set RecomputeOutputSpacing. If true, recompute output spacing so reconstruction grid matches data exactly. */
+  vtkGetMacro(RecomputeOutputSpacing, bool);
+  vtkSetMacro(RecomputeOutputSpacing, bool);
+
   /*!
     Get the clip rectangle origin to apply to the image in pixel coordinates.
   */
@@ -238,6 +242,9 @@ protected:
 
   /*! Automatically reduce the fan angle to only sector that has proper acoustic coupling */
   bool EnableFanAnglesAutoDetect;
+
+  /*! Recompute output spacing so reconstruction grid matches data exactly. */
+  bool RecomputeOutputSpacing;
 
   /*! only every [SkipInterval] images from the input will be used in the reconstruction (Ie this is the number of frames that are skipped when the index is increased) */
   int SkipInterval;
