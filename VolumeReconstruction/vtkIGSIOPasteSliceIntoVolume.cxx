@@ -303,6 +303,16 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::ResetOutput()
                          size_t( accExtent[5] - accExtent[4] + 1 ) *
                          accData->GetScalarSize()*accData->GetNumberOfScalarComponents() ) );
   }
+
+  vtkPointData* pointData = accData->GetPointData();
+  vtkDataArray* scalars = pointData ? pointData->GetScalars() : nullptr;
+  if (scalars)
+  {
+    // Mark scalars as modified
+    // This is required for getting up-to-date scalar range.
+    scalars->Modified();
+  }
+
   // Allocate memory for the reconstructed image and set all pixels to 0
 
   vtkImageData* outData = this->ReconstructedVolume;
@@ -330,6 +340,15 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::ResetOutput()
                          size_t( outExtent[3] - outExtent[2] + 1 ) *
                          size_t( outExtent[5] - outExtent[4] + 1 ) *
                          outData->GetScalarSize()*outData->GetNumberOfScalarComponents() ) );
+  }
+
+  pointData = outData->GetPointData();
+  scalars = pointData ? pointData->GetScalars() : nullptr;
+  if (scalars)
+  {
+    // Mark scalars as modified
+    // This is required for getting up-to-date scalar range.
+    scalars->Modified();
   }
 
   return IGSIO_SUCCESS;
@@ -425,8 +444,26 @@ igsioStatus vtkIGSIOPasteSliceIntoVolume::InsertSlice( vtkImageData* image, vtkM
     LOG_WARNING( sumAccOverflowErrors << " voxels have had too many pixels inserted. This can result in errors in the final volume. It is recommended that the output volume resolution be increased." );
   }
 
+  vtkPointData* pointData = this->ReconstructedVolume->GetPointData();
+  vtkDataArray* scalars = pointData ? pointData->GetScalars() : nullptr;
+  if (scalars)
+  {
+    // Mark scalars as modified
+    // This is required for getting up-to-date scalar range.
+    scalars->Modified();
+  }
   this->ReconstructedVolume->Modified();
+
+  pointData = this->AccumulationBuffer->GetPointData();
+  scalars = pointData ? pointData->GetScalars() : nullptr;
+  if (scalars)
+  {
+    // Mark scalars as modified
+    // This is required for getting up-to-date scalar range.
+    scalars->Modified();
+  }
   this->AccumulationBuffer->Modified();
+
   this->Modified();
 
   return IGSIO_SUCCESS;

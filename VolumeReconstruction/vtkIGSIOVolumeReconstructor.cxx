@@ -619,7 +619,6 @@ igsioStatus vtkIGSIOVolumeReconstructor::GetReconstructedVolume(vtkImageData* vo
     volume->ShallowCopy(this->ReconstructedVolume);
   }
 
-
   return IGSIO_SUCCESS;
 }
 
