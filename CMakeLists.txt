@@ -54,9 +54,13 @@ if(NOT IGSIO_INSTALL_DATA_DIR)
   set(IGSIO_INSTALL_DATA_DIR "share")
 endif()
 
-set(IGSIO_INSTALL_FOLDERNAME "IGSIO-${IGSIO_VERSION_MAJOR}.${IGSIO_VERSION_MINOR}")
-if(NOT IGSIO_INCLUDE_INSTALL )
-  set(IGSIO_INCLUDE_INSTALL "include/${IGSIO_INSTALL_FOLDERNAME}")
+if(NOT IGSIO_INSTALL_CMAKE_DIR)
+  set(IGSIO_INSTALL_CMAKE_DIR "${IGSIO_INSTALL_LIB_DIR}/cmake")
+endif()
+
+if(NOT IGSIOLIB_INCLUDE_INSTALL)
+  set(IGSIOLIB_INCLUDE_INSTALL "include")
+  set(IGSIO_INCLUDE_INSTALL "include")
 endif()
 
 if(NOT DEFINED BUILD_SHARED_LIBS)
@@ -155,10 +159,11 @@ else()
 
   # --------------------------------------------------------------------------
   # Configure include file
+  set(IGSIO_CONFIGURE_DIR ${CMAKE_CURRENT_BINARY_DIR})
   configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/igsioConfigure.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/igsioConfigure.h
-    )
+     ${CMAKE_CURRENT_SOURCE_DIR}/igsioConfigure.h.in
+     ${IGSIO_CONFIGURE_DIR}/igsioConfigure.h
+  )
 
   add_subdirectory(Codecs)
   add_subdirectory(IGSIOCommon)
@@ -187,6 +192,6 @@ else()
     VERSION ${IGSIO_VERSION}
     COMPATIBILITY ExactVersion)
   list(APPEND IGSIO_INSTALL_CMAKE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/IGSIOConfigVersion.cmake")
-  include(${CMAKE_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/GenerateIGSIOConfig.cmake)
 
 endif()
