@@ -1,0 +1,182 @@
+name: Continuous integration
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  schedule:
+    - cron: "43 5 * * *" # Run nightly at 5:43 UTC. Picked a time when the load may be lower. https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule
+
+env:
+  # Specify VTK version
+  VTK_HASH: 6b6b89ee577e6c6a5ee6f5220b9c6a12513c30b4 # v9.4.1
+  # Specify ITK version
+  ITK_HASH: 898def645183e6a2d3293058ade451ec416c4514 # v5.4.2
+  # IGSIO build options
+  BUILD_OPTIONS: -DIGSIO_BUILD_VOLUMERECONSTRUCTION=ON
+
+jobs:
+  ########
+  # BUILD AND CACHE VTK
+  update_vtk:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release]
+
+    steps:
+    - name: Cache VTK Build
+      id: cache-vtk
+      uses: actions/cache@v4
+      with:
+        path: vtk-install
+        lookup-only: true
+        key: vtk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.VTK_HASH }}
+
+    - name: Install Dependencies
+      if: contains(matrix.os, 'ubuntu') && steps.cache-vtk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Clone VTK
+      if: steps.cache-vtk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir vtk
+        cd vtk
+        git init
+        git remote add origin https://gitlab.kitware.com/vtk/vtk.git
+        git fetch --depth 1 origin $VTK_HASH
+        git checkout FETCH_HEAD
+
+    - name: Configure VTK
+      if: steps.cache-vtk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake -S vtk -B vtk-build -DCMAKE_INSTALL_PREFIX=vtk-install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_SHARED_LIBS=ON -DVTK_BUILD_TESTING=OFF -DVTK_VERSIONED_INSTALL=OFF
+
+    - name: Build VTK
+      if: steps.cache-vtk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake --build vtk-build --parallel 4 --config ${{ matrix.build_type }}
+
+    - name: Install VTK
+      if: steps.cache-vtk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake --install vtk-build
+
+  update_itk:
+    ########
+    # BUILD AND CACHE ITK
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release]
+
+    steps:
+    - name: Cache ITK Build
+      id: cache-itk
+      uses: actions/cache@v4
+      with:
+        lookup-only: true
+        path: itk-install
+        key: itk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.ITK_HASH }}
+
+    - name: Install Dependencies
+      if: contains(matrix.os, 'ubuntu') && steps.cache-itk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Clone ITK
+      if: steps.cache-itk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "Cloning ITK..."
+        mkdir itk
+        cd itk
+        git init
+        git remote add origin https://github.com/InsightSoftwareConsortium/ITK.git
+        git fetch --depth 1 origin $ITK_HASH
+        git checkout FETCH_HEAD
+
+    - name: Configure ITK
+      if: steps.cache-itk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake -S itk -B itk-build -DCMAKE_INSTALL_PREFIX=itk-install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF
+
+    - name: Build ITK
+      if: steps.cache-itk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake --build itk-build --parallel 4 --config ${{ matrix.build_type }}
+
+    - name: Install ITK
+      if: steps.cache-itk.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cmake --install itk-build
+
+  build:
+    ########
+    # BUILD AND TEST IGSIO
+    needs: [update_vtk, update_itk]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release]
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      if: contains(matrix.os, 'ubuntu')
+      shell: bash
+      run: |
+        echo "Installing system dependencies..."
+        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Restore VTK Cache
+      id: cache-vtk
+      uses: actions/cache/restore@v4
+      with:
+        path: vtk-install
+        key: vtk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.VTK_HASH }}
+
+    - name: Restore ITK Cache
+      id: cache-itk
+      uses: actions/cache/restore@v4
+      with:
+        path: itk-install
+        key: itk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.ITK_HASH }}
+
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}
+      run: |
+        cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVTK_DIR='${{github.workspace}}/vtk-install/lib/cmake/vtk' -DITK_DIR='${{github.workspace}}/itk-install/lib/cmake/ITK-5.4' -DIGSIO_SUPERBUILD=ON ${{ env.BUILD_OPTIONS }} -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }}"
+
+    - name: Experimental Build
+      if: ${{ github.event_name != 'schedule' }}
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest -C ${{ matrix.build_type }} -D Experimental -V
+
+    - name: Nightly Build
+      if: ${{ github.event_name == 'schedule' }}
+      working-directory: ${{github.workspace}}/build
+      run: |
+        ctest -C ${{ matrix.build_type }} -D Nightly -V
+        cd inner-build
+        ctest -C ${{ matrix.build_type }} -D Nightly -V

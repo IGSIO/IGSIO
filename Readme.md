@@ -2,6 +2,8 @@
 
 A collection of tools and algorithms for image guided systems
 
+![CI workflow badge](https://github.com/IGSIO/IGSIO/actions/workflows/ci.yml/badge.svg?event=push)
+
 ## Prerequisites
 
 - C++ compiler
