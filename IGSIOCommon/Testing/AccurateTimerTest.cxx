@@ -14,6 +14,7 @@
 #include "vtkIGSIORecursiveCriticalSection.h"
 #include "vtkIGSIOAccurateTimer.h"
 #include "igsioCommon.h"
+#include <cmath>
 
 //----------------------------------------------------------------------------
 // Global variables for communicating with the threads

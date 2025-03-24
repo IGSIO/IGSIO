@@ -13,6 +13,9 @@ See License.txt for details.
 #include <vtkSmartPointer.h>
 #include <vtksys/CommandLineArguments.hxx>
 
+// C includes
+#include <cmath>
+
 namespace
 {
   static const double DOUBLE_THRESHOLD = 0.0001;
