@@ -162,6 +162,11 @@ jobs:
         path: itk-install
         key: itk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.ITK_HASH }}
 
+    - name: Update Path
+      run: |
+        echo "${{github.workspace}}/vtk-install/bin" >> $GITHUB_PATH
+        echo "${{github.workspace}}/itk-install/bin" >> $GITHUB_PATH
+
     - name: Configure CMake
       working-directory: ${{github.workspace}}
       run: |
