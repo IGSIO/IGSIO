@@ -1,5 +1,7 @@
 project(vtkIGSIOCommon)
 
+set(${PROJECT_NAME}_INSTALL_INCLUDE_DIR ${IGSIOLIB_INCLUDE_INSTALL} CACHE INTERNAL "")
+
 if (IGSIO_USE_3DSlicer)
   find_package(Slicer REQUIRED)
 else()
@@ -39,7 +41,7 @@ set(${PROJECT_NAME}_SRCS
 set(${PROJECT_NAME}_HDRS
   igsioCommon.h
   igsioCommon.txx
-  igsioXMLUtils.h
+  igsioXmlUtils.h
   vtkIGSIOLogger.h
   igsioMath.h
   vtkIGSIOAccurateTimer.h
@@ -50,6 +52,8 @@ set(${PROJECT_NAME}_HDRS
   vtkIGSIOTrackedFrameList.h
   vtkIGSIOTransformRepository.h
   vtkIGSIORecursiveCriticalSection.h
+  ${CMAKE_CURRENT_BINARY_DIR}/vtkigsiocommon_export.h
+  ${IGSIO_CONFIGURE_DIR}/igsioConfigure.h
   )
 
 set(${PROJECT_NAME}_LIBS
@@ -95,7 +99,7 @@ target_link_libraries(${PROJECT_NAME}
   PRIVATE ${${PROJECT_NAME}_LIBS_PRIVATE}
   )
 
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} EXPORT IGSIOTargets
   RUNTIME DESTINATION ${IGSIO_INSTALL_BIN_DIR} COMPONENT RuntimeLibraries
   LIBRARY DESTINATION ${IGSIO_INSTALL_LIB_DIR} COMPONENT RuntimeLibraries
   ARCHIVE DESTINATION ${IGSIO_INSTALL_LIB_DIR} COMPONENT Development)
@@ -103,9 +107,14 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
 foreach(p IN LISTS ${PROJECT_NAME}_INCLUDE_DIRS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${p}>)
 endforeach()
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${IGSIO_CONFIGURE_DIR}>)
 target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}>)
 
-GENERATE_EXPORT_HEADER(${PROJECT_NAME})
+GENERATE_EXPORT_HEADER(
+    ${PROJECT_NAME}
+    EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/vtkigsiocommon_export.h)
+
+INSTALL(FILES ${${PROJECT_NAME}_HDRS} DESTINATION ${${PROJECT_NAME}_INSTALL_INCLUDE_DIR})
 
 set_property(GLOBAL APPEND PROPERTY IGSIO_TARGETS ${PROJECT_NAME})
 
