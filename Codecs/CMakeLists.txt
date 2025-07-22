@@ -5,6 +5,7 @@ set(${PROJECT_NAME}_EXPORT_DIRECTIVE "VTK_IGSIO_CODECS_EXPORT")
 if (NOT IGSIO_USE_3DSlicer)
   find_package(vtkAddon REQUIRED)
 else()
+  unset(RapidJSON_DIR)
   find_package(Slicer REQUIRED)
 endif()
 

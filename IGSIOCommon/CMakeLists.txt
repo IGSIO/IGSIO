@@ -1,6 +1,7 @@
 project(vtkIGSIOCommon)
 
 if (IGSIO_USE_3DSlicer)
+  unset(RapidJSON_DIR)
   find_package(Slicer REQUIRED)
 else()
   find_package(vtkAddon REQUIRED)
