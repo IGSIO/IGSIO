@@ -73,7 +73,7 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoCalibrationInternal(const std::vector
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepository* aTransformRepository /* = NULL*/, bool snapRotation /*=false*/, bool autoOrient /*=true*/)
+igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepository* aTransformRepository/* = NULL*/, bool snapRotation/*=false*/, bool autoOrient/*=true*/)
 {
   if (!this->PivotPointToMarkerTransformMatrix)
   {
@@ -83,8 +83,7 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepo
 
   std::vector<vtkMatrix4x4*> markerToTransformMatrixArray = this->GetAllMarkerToReferenceMatrices();
 
-  igsioStatus error =
-    this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
+  igsioStatus error = this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
   if (error != IGSIO_SUCCESS)
   {
     return IGSIO_FAIL;
@@ -100,11 +99,7 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepo
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray,
-                                                                   bool snapRotation,
-                                                                   bool autoOrient,
-                                                                   vtkMatrix4x4* toolTipToToolMatrix,
-                                                                   double& error)
+igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, bool snapRotation, bool autoOrient, vtkMatrix4x4* toolTipToToolMatrix, double& error)
 {
   if (markerToTransformMatrixArray.size() < 10)
   {
@@ -126,8 +121,8 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
 
   vnl_matrix<double> RI(rows, columns);
 
-  std::vector<vtkMatrix4x4*>::const_iterator previt = markerToTransformMatrixArray.end();
-  for (std::vector<vtkMatrix4x4*>::const_iterator it = markerToTransformMatrixArray.begin(); it != markerToTransformMatrixArray.end(); it++)
+  std::vector< vtkMatrix4x4* >::const_iterator previt = markerToTransformMatrixArray.end();
+  for (std::vector< vtkMatrix4x4* >::const_iterator it = markerToTransformMatrixArray.begin(); it != markerToTransformMatrixArray.end(); it++)
   {
     if (previt == markerToTransformMatrixArray.end())
     {
@@ -135,10 +130,10 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
       continue; // No comparison to make for the first matrix
     }
 
-    vtkSmartPointer<vtkMatrix4x4> itinverse = vtkSmartPointer<vtkMatrix4x4>::New();
+    vtkSmartPointer< vtkMatrix4x4 > itinverse = vtkSmartPointer< vtkMatrix4x4 >::New();
     vtkMatrix4x4::Invert((*it), itinverse);
 
-    vtkSmartPointer<vtkMatrix4x4> instRotation = vtkSmartPointer<vtkMatrix4x4>::New();
+    vtkSmartPointer< vtkMatrix4x4 > instRotation = vtkSmartPointer< vtkMatrix4x4 >::New();
     vtkMatrix4x4::Multiply4x4(itinverse, (*previt), instRotation);
 
     for (int i = 0; i < 3; i++)
