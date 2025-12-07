@@ -124,7 +124,7 @@ static int TestPivotCalibration(vtkIGSIOPivotCalibrationAlgo* pivotAlgo, double 
 
   // Feed marker transforms
   pivotAlgo->RemoveAllCalibrationPoints();
-  const int maxIterations = 500; // pivotAlgo can reject points, so we keep trying at most maxIterations times
+  const int maxIterations = 5 * targetNumberOfPoints; // pivotAlgo can reject points, so we keep trying at most maxIterations times
   for (int iteration = 0; iteration < maxIterations && pivotAlgo->GetNumberOfCalibrationPoints() < targetNumberOfPoints; ++iteration)
   {
     const vtkVector3d tipNoise = noiseDist(rng) * GenerateRandomDirection(rng);
