@@ -29,23 +29,23 @@ static GroundTruth GenerateGroundTruth(double stylusLength, double markerRadius,
   // The marker origin is at perpendicular distance markerRadius from the spin axis
   const double h = std::sqrt(stylusLength * stylusLength - markerRadius * markerRadius);
   const vtkVector3d perpDir = GenerateRandomPerpendicularDirection(spinAxis, rng);
-  const vtkVector3d tipPositionMarker = h * spinAxis + markerRadius * perpDir;
+  const vtkVector3d tipPosition_Marker = h * spinAxis + markerRadius * perpDir;
 
   GroundTruth gt;
   gt.TipPosition_World = vtkVector3d(dist(rng), dist(rng), dist(rng));
-  gt.TipPosition_Marker = tipPositionMarker;
+  gt.TipPosition_Marker = tipPosition_Marker;
   gt.SpinAxis_Marker = spinAxis;
   gt.MarkerRadius = markerRadius;
   return gt;
 }
 
-static vtkVector3d ComputeSpinAxisWorld(vtkMatrix4x4* markerToWorld, const vtkVector3d& spinAxisMarker)
+static vtkVector3d ComputeSpinAxisWorld(vtkMatrix4x4* markerToWorld, const vtkVector3d& spinAxis_Marker)
 {
-  const vtkVector4d axisMarker(spinAxisMarker[0], spinAxisMarker[1], spinAxisMarker[2], 0);
-  double axisWorld[4];
-  markerToWorld->MultiplyPoint(axisMarker.GetData(), axisWorld);
+  const vtkVector4d axis_Marker(spinAxis_Marker[0], spinAxis_Marker[1], spinAxis_Marker[2], 0);
+  double axis_World[4];
+  markerToWorld->MultiplyPoint(axis_Marker.GetData(), axis_World);
 
-  return vtkVector3d(axisWorld);
+  return vtkVector3d(axis_World);
 }
 
 static vtkNew<vtkMatrix4x4> GenerateInitialMarkerTransform(const GroundTruth& gt, std::mt19937& rng)
@@ -53,17 +53,17 @@ static vtkNew<vtkMatrix4x4> GenerateInitialMarkerTransform(const GroundTruth& gt
   vtkNew<vtkMatrix4x4> markerToWorld = GenerateRandomRotationMatrix(rng);
 
   // Transform tip from marker to world and compute marker origin position
-  const vtkVector4d tipMarker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 0);
-  double tipWorldOffset[4];
-  markerToWorld->MultiplyPoint(tipMarker.GetData(), tipWorldOffset);
+  const vtkVector4d tip_Marker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 0);
+  double tipOffset_World[4];
+  markerToWorld->MultiplyPoint(tip_Marker.GetData(), tipOffset_World);
 
-  // markerOriginWorld + tipWorldOffset = tipPositionWorld
-  // markerOriginWorld = tipPositionWorld - tipWorldOffset
-  const vtkVector3d markerOriginWorld = gt.TipPosition_World - vtkVector3d(tipWorldOffset);
+  // markerOrigin_World + tipOffset_World = tipPosition_World
+  // markerOrigin_World = tipPosition_World - tipOffset_World
+  const vtkVector3d markerOrigin_World = gt.TipPosition_World - vtkVector3d(tipOffset_World);
 
-  markerToWorld->SetElement(0, 3, markerOriginWorld[0]);
-  markerToWorld->SetElement(1, 3, markerOriginWorld[1]);
-  markerToWorld->SetElement(2, 3, markerOriginWorld[2]);
+  markerToWorld->SetElement(0, 3, markerOrigin_World[0]);
+  markerToWorld->SetElement(1, 3, markerOrigin_World[1]);
+  markerToWorld->SetElement(2, 3, markerOrigin_World[2]);
 
   return markerToWorld;
 }
@@ -80,12 +80,12 @@ static int TestGenerateInitialMarkerTransform(std::mt19937& rng)
   const vtkNew<vtkMatrix4x4> markerToWorld = GenerateInitialMarkerTransform(gt, rng);
 
   // Verify tip in marker coordinates maps to tip in world coordinates
-  const vtkVector4d tipMarker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 1.0);
-  vtkVector4d tipWorld;
-  markerToWorld->MultiplyPoint(tipMarker.GetData(), tipWorld.GetData());
+  const vtkVector4d tip_Marker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 1.0);
+  vtkVector4d tip_World;
+  markerToWorld->MultiplyPoint(tip_Marker.GetData(), tip_World.GetData());
 
   const double tolerance = 1e-9;
-  const double distance = (vtkVector3d(tipWorld.GetData()) - gt.TipPosition_World).Norm();
+  const double distance = (vtkVector3d(tip_World.GetData()) - gt.TipPosition_World).Norm();
 
   if (distance > tolerance)
   {
@@ -111,7 +111,7 @@ static int TestSpinCalibration(vtkIGSIOSpinCalibrationAlgo* spinAlgo,
 
   // Generate initial marker transform
   const vtkNew<vtkMatrix4x4> initialMarkerToWorld = GenerateInitialMarkerTransform(gt, rng);
-  const vtkVector3d spinAxisWorld = ComputeSpinAxisWorld(initialMarkerToWorld, gt.SpinAxis_Marker);
+  const vtkVector3d spinAxis_World = ComputeSpinAxisWorld(initialMarkerToWorld, gt.SpinAxis_Marker);
 
   // Clear previous calibration points
   spinAlgo->RemoveAllCalibrationPoints();
@@ -124,7 +124,7 @@ static int TestSpinCalibration(vtkIGSIOSpinCalibrationAlgo* spinAlgo,
   for (int i = 0; i < maxIterations && spinAlgo->GetNumberOfCalibrationPoints() < targetNumberOfPoints; ++i)
   {
     const double angle = i * angleIncrementDegrees;
-    const vtkNew<vtkMatrix4x4> markerToWorld = RotateAroundAxisAtPoint(initialMarkerToWorld, spinAxisWorld, gt.TipPosition_World, angle);
+    const vtkNew<vtkMatrix4x4> markerToWorld = RotateAroundAxisAtPoint(initialMarkerToWorld, spinAxis_World, gt.TipPosition_World, angle);
     const vtkNew<vtkMatrix4x4> markerToWorldPlusNoise = ApplyRandomPerturbation(markerToWorld, rotationNoise, 0, rng);
 
     spinAlgo->InsertNextCalibrationPoint(markerToWorldPlusNoise);

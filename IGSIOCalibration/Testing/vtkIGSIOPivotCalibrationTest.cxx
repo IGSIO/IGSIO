@@ -38,18 +38,18 @@ static vtkNew<vtkMatrix4x4> GenerateRandomMarkerTransform(const GroundTruth& gt,
 {
   vtkNew<vtkMatrix4x4> markerToWorld = GenerateRandomRotationMatrix(rng);
 
-  const vtkVector4d markerToTipDir(gt.TipDir_Marker[0], gt.TipDir_Marker[1], gt.TipDir_Marker[2], 0);
-  double markerToTipDirWorldData[4];
+  const vtkVector4d tipDir_Marker(gt.TipDir_Marker[0], gt.TipDir_Marker[1], gt.TipDir_Marker[2], 0);
+  double tipDirData_World[4];
 
-  markerToWorld->MultiplyPoint(markerToTipDir.GetData(), markerToTipDirWorldData);
+  markerToWorld->MultiplyPoint(tipDir_Marker.GetData(), tipDirData_World);
 
-  const vtkVector3d markerToTipWorld(markerToTipDirWorldData[0], markerToTipDirWorldData[1], markerToTipDirWorldData[2]);
-  const vtkVector3d tipToMarkerWorld = -markerToTipWorld;
-  const vtkVector3d markerPosWorld = gt.TipPosition_World + gt.StylusLength * tipToMarkerWorld;
+  const vtkVector3d tipDir_World(tipDirData_World[0], tipDirData_World[1], tipDirData_World[2]);
+  const vtkVector3d tipToMarker_World = -tipDir_World;
+  const vtkVector3d markerPos_World = gt.TipPosition_World + gt.StylusLength * tipToMarker_World;
 
-  markerToWorld->SetElement(0, 3, markerPosWorld[0]);
-  markerToWorld->SetElement(1, 3, markerPosWorld[1]);
-  markerToWorld->SetElement(2, 3, markerPosWorld[2]);
+  markerToWorld->SetElement(0, 3, markerPos_World[0]);
+  markerToWorld->SetElement(1, 3, markerPos_World[1]);
+  markerToWorld->SetElement(2, 3, markerPos_World[2]);
 
   return markerToWorld;
 }
@@ -65,12 +65,12 @@ static int TestGenerateRandomMarkerTransform(std::mt19937& rng)
   const vtkNew<vtkMatrix4x4> markerToWorld = GenerateRandomMarkerTransform(gt, rng);
 
   // The stylus tip in marker coordinates should map to the ground truth tip position in world coordinates
-  const vtkVector4d tipMarker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 1.0);
-  vtkVector4d tipWorld;
-  markerToWorld->MultiplyPoint(tipMarker.GetData(), tipWorld.GetData());
+  const vtkVector4d tip_Marker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 1.0);
+  vtkVector4d tip_World;
+  markerToWorld->MultiplyPoint(tip_Marker.GetData(), tip_World.GetData());
 
   const double tolerance = 1e-9;
-  const double distance = (vtkVector3d(tipWorld.GetData()) - gt.TipPosition_World).Norm();
+  const double distance = (vtkVector3d(tip_World.GetData()) - gt.TipPosition_World).Norm();
 
   if (distance > tolerance)
   {

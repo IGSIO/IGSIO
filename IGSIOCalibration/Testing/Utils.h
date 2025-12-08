@@ -77,17 +77,17 @@ static vtkNew<vtkMatrix4x4> ApplyRandomPerturbation(vtkMatrix4x4* matrix, double
   return result;
 }
 
-static vtkNew<vtkMatrix4x4> RotateAroundAxisAtPoint(vtkMatrix4x4* markerToWorld, const vtkVector3d& axisWorld, const vtkVector3d& pointWorld, double angleDegrees)
+// Craetes a new matrix that applies the original matrix, then rotates its result around `axis` at `point` by `angleDegrees`.
+static vtkNew<vtkMatrix4x4> RotateAroundAxisAtPoint(vtkMatrix4x4* matrix, const vtkVector3d& axis, const vtkVector3d& point, double angleDegrees)
 {
   vtkNew<vtkTransform> transform;
 
-  // Translate to origin, rotate, translate back
-  transform->Translate(pointWorld[0], pointWorld[1], pointWorld[2]);
-  transform->RotateWXYZ(angleDegrees, axisWorld.GetData());
-  transform->Translate(-pointWorld[0], -pointWorld[1], -pointWorld[2]);
-
-  // Apply to markerToWorld
-  transform->Concatenate(markerToWorld);
+  // Apply the original matrix, translate to origin, rotate, then translate back
+  // Note that vtkTransform is PreMultiply by default, so the last transform is applied first
+  transform->Translate(point[0], point[1], point[2]);
+  transform->RotateWXYZ(angleDegrees, axis.GetData());
+  transform->Translate(-point[0], -point[1], -point[2]);
+  transform->Concatenate(matrix);
 
   vtkNew<vtkMatrix4x4> result;
   transform->GetMatrix(result);
