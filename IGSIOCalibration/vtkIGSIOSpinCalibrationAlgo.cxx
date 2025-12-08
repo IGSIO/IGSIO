@@ -187,7 +187,7 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
   const double tolerance = 1e-9;
   if (minEigenvalue < -tolerance)
   {
-    LOG_WARNING("Expected the minimum eigenvalue of the aggregate instantaneous rotation matrices to be positive. Instead got: " << eigenvalues(0));
+    LOG_WARNING("Expected the minimum eigenvalue of the aggregate instantaneous rotation matrices to be positive. Instead got: " << minEigenvalue);
   }
 
   minEigenvalue = std::max(tolerance, std::abs(minEigenvalue));
