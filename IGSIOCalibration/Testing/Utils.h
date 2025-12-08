@@ -2,6 +2,7 @@
 #define __vtkIGSIOCalibrationTestingUtils
 
 #include <vtkVector.h>
+#include <vtkVectorOperators.h>
 #include <vtkMatrix4x4.h>
 #include <vtkTransform.h>
 #include <vtkMath.h>
@@ -56,17 +57,21 @@ static vtkNew<vtkMatrix4x4> GenerateRandomRotationMatrix(std::mt19937& rng)
 }
 
 // Applies a small random rotation to a matrix to simulate tracking noise
-static vtkNew<vtkMatrix4x4> ApplyRandomPerturbation(vtkMatrix4x4* matrix, double maxAngleDegrees, std::mt19937& rng)
+static vtkNew<vtkMatrix4x4> ApplyRandomPerturbation(vtkMatrix4x4* matrix, double angleSigma, double translationSigma, std::mt19937& rng)
 {
-  std::uniform_real_distribution<double> angleDist(0.0, maxAngleDegrees);
-  vtkVector3d perturbAxis = GenerateRandomDirection(rng);
-  double perturbAngle = angleDist(rng);
+  std::uniform_real_distribution<double> angleDist(0.0, angleSigma);
+  std::uniform_real_distribution<double> translationDist(0.0, translationSigma);
+
+  const vtkVector3d perturbAxis = GenerateRandomDirection(rng);
+  const double perturbAngle = angleDist(rng);
+  const vtkVector3d perturbTranslation = translationDist(rng) * GenerateRandomDirection(rng);
 
   vtkNew<vtkTransform> transform;
   vtkNew<vtkMatrix4x4> result;
 
   transform->SetMatrix(matrix);
   transform->RotateWXYZ(perturbAngle, perturbAxis.GetData());
+  transform->Translate(perturbTranslation.GetData());
   transform->GetMatrix(result);
 
   return result;

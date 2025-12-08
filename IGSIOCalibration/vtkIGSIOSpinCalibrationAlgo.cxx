@@ -73,7 +73,7 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoCalibrationInternal(const std::vector
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepository* aTransformRepository/* = NULL*/, bool snapRotation/*=false*/, bool autoOrient/*=true*/)
+igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepository* aTransformRepository /* = NULL*/, bool snapRotation /*=false*/, bool autoOrient /*=true*/)
 {
   if (!this->PivotPointToMarkerTransformMatrix)
   {
@@ -83,7 +83,8 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepo
 
   std::vector<vtkMatrix4x4*> markerToTransformMatrixArray = this->GetAllMarkerToReferenceMatrices();
 
-  igsioStatus error = this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
+  igsioStatus error =
+    this->DoSpinCalibrationInternal(markerToTransformMatrixArray, snapRotation, autoOrient, this->PivotPointToMarkerTransformMatrix, this->SpinCalibrationErrorMm);
   if (error != IGSIO_SUCCESS)
   {
     return IGSIO_FAIL;
@@ -99,7 +100,11 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibration(vtkIGSIOTransformRepo
 }
 
 //----------------------------------------------------------------------------
-igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray, bool snapRotation, bool autoOrient, vtkMatrix4x4* toolTipToToolMatrix, double& error)
+igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::vector<vtkMatrix4x4*>& markerToTransformMatrixArray,
+                                                                   bool snapRotation,
+                                                                   bool autoOrient,
+                                                                   vtkMatrix4x4* toolTipToToolMatrix,
+                                                                   double& error)
 {
   if (markerToTransformMatrixArray.size() < 10)
   {
@@ -121,8 +126,8 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
 
   vnl_matrix<double> RI(rows, columns);
 
-  std::vector< vtkMatrix4x4* >::const_iterator previt = markerToTransformMatrixArray.end();
-  for (std::vector< vtkMatrix4x4* >::const_iterator it = markerToTransformMatrixArray.begin(); it != markerToTransformMatrixArray.end(); it++)
+  std::vector<vtkMatrix4x4*>::const_iterator previt = markerToTransformMatrixArray.end();
+  for (std::vector<vtkMatrix4x4*>::const_iterator it = markerToTransformMatrixArray.begin(); it != markerToTransformMatrixArray.end(); it++)
   {
     if (previt == markerToTransformMatrixArray.end())
     {
@@ -130,10 +135,10 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
       continue; // No comparison to make for the first matrix
     }
 
-    vtkSmartPointer< vtkMatrix4x4 > itinverse = vtkSmartPointer< vtkMatrix4x4 >::New();
+    vtkSmartPointer<vtkMatrix4x4> itinverse = vtkSmartPointer<vtkMatrix4x4>::New();
     vtkMatrix4x4::Invert((*it), itinverse);
 
-    vtkSmartPointer< vtkMatrix4x4 > instRotation = vtkSmartPointer< vtkMatrix4x4 >::New();
+    vtkSmartPointer<vtkMatrix4x4> instRotation = vtkSmartPointer<vtkMatrix4x4>::New();
     vtkMatrix4x4::Multiply4x4(itinverse, (*previt), instRotation);
 
     for (int i = 0; i < 3; i++)
@@ -176,11 +181,19 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
     shaftAxis_ToolTip.put(closestCoordinateAxis, 1); // Doesn't matter the direction, will be sorted out later
   }
 
+  // Make sure that the minimum eigenvalue is positive
+  double minEigenvalue = eigenvalues(0);
+
+  const double tolerance = 1e-9;
+  if (minEigenvalue < -tolerance)
+  {
+    LOG_WARNING("Expected the minimum eigenvalue of the aggregate instantaneous rotation matrices to be positive. Instead got: " << eigenvalues(0));
+  }
+
+  minEigenvalue = std::max(tolerance, std::abs(minEigenvalue));
+
   // Set the RMSE
-  // "A" is a positive semidefinite matrix by construction (as it's the summation of positive semidefinite matrices in the form R^t * R)
-  // This means that all eigenvalues have to be >= 0. But due to precision errors in vnl_symmetric_eigensystem_compute, a negative eigenvalue
-  // might be computed that is very close to zero. So we just approximate them to zero.
-  error = sqrt(std::max(eigenvalues(0), 0.0) / markerToTransformMatrixArray.size());
+  error = sqrt(minEigenvalue / markerToTransformMatrixArray.size());
   // Note: This error is the RMS distance from the ideal axis of rotation to the axis of rotation for each instantaneous rotation
   // This RMS distance can be computed to an angle in the following way: angle = arccos( 1 - SpinRMSE^2 / 2 )
   // Here we elect to return the RMS distance because this is the quantity that was actually minimized in the calculation

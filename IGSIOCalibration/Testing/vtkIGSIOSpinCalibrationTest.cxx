@@ -12,10 +12,10 @@
 
 struct GroundTruth
 {
-  vtkVector3d TipPositionWorld;  // Fixed tip position in world coordinates
-  vtkVector3d TipPositionMarker; // Tip position in marker coordinates (on spin axis)
-  vtkVector3d SpinAxisMarker;    // Unit spin axis in marker coordinates
-  double MarkerRadius;           // Perpendicular distance from marker origin to spin axis
+  vtkVector3d TipPosition_World;  // Fixed tip position in world coordinates
+  vtkVector3d TipPosition_Marker; // Tip position in marker coordinates (on spin axis)
+  vtkVector3d SpinAxis_Marker;    // Unit spin axis in marker coordinates
+  double MarkerRadius;            // Perpendicular distance from marker origin to spin axis
 };
 
 static GroundTruth GenerateGroundTruth(double stylusLength, double markerRadius, std::mt19937& rng)
@@ -32,9 +32,9 @@ static GroundTruth GenerateGroundTruth(double stylusLength, double markerRadius,
   const vtkVector3d tipPositionMarker = h * spinAxis + markerRadius * perpDir;
 
   GroundTruth gt;
-  gt.TipPositionWorld = vtkVector3d(dist(rng), dist(rng), dist(rng));
-  gt.TipPositionMarker = tipPositionMarker;
-  gt.SpinAxisMarker = spinAxis;
+  gt.TipPosition_World = vtkVector3d(dist(rng), dist(rng), dist(rng));
+  gt.TipPosition_Marker = tipPositionMarker;
+  gt.SpinAxis_Marker = spinAxis;
   gt.MarkerRadius = markerRadius;
   return gt;
 }
@@ -53,13 +53,13 @@ static vtkNew<vtkMatrix4x4> GenerateInitialMarkerTransform(const GroundTruth& gt
   vtkNew<vtkMatrix4x4> markerToWorld = GenerateRandomRotationMatrix(rng);
 
   // Transform tip from marker to world and compute marker origin position
-  const vtkVector4d tipMarker(gt.TipPositionMarker[0], gt.TipPositionMarker[1], gt.TipPositionMarker[2], 0);
+  const vtkVector4d tipMarker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 0);
   double tipWorldOffset[4];
   markerToWorld->MultiplyPoint(tipMarker.GetData(), tipWorldOffset);
 
   // markerOriginWorld + tipWorldOffset = tipPositionWorld
   // markerOriginWorld = tipPositionWorld - tipWorldOffset
-  const vtkVector3d markerOriginWorld = gt.TipPositionWorld - vtkVector3d(tipWorldOffset);
+  const vtkVector3d markerOriginWorld = gt.TipPosition_World - vtkVector3d(tipWorldOffset);
 
   markerToWorld->SetElement(0, 3, markerOriginWorld[0]);
   markerToWorld->SetElement(1, 3, markerOriginWorld[1]);
@@ -80,12 +80,12 @@ static int TestGenerateInitialMarkerTransform(std::mt19937& rng)
   const vtkNew<vtkMatrix4x4> markerToWorld = GenerateInitialMarkerTransform(gt, rng);
 
   // Verify tip in marker coordinates maps to tip in world coordinates
-  const vtkVector4d tipMarker(gt.TipPositionMarker[0], gt.TipPositionMarker[1], gt.TipPositionMarker[2], 1.0);
+  const vtkVector4d tipMarker(gt.TipPosition_Marker[0], gt.TipPosition_Marker[1], gt.TipPosition_Marker[2], 1.0);
   vtkVector4d tipWorld;
   markerToWorld->MultiplyPoint(tipMarker.GetData(), tipWorld.GetData());
 
   const double tolerance = 1e-9;
-  const double distance = (vtkVector3d(tipWorld.GetData()) - gt.TipPositionWorld).Norm();
+  const double distance = (vtkVector3d(tipWorld.GetData()) - gt.TipPosition_World).Norm();
 
   if (distance > tolerance)
   {
@@ -111,7 +111,7 @@ static int TestSpinCalibration(vtkIGSIOSpinCalibrationAlgo* spinAlgo,
 
   // Generate initial marker transform
   const vtkNew<vtkMatrix4x4> initialMarkerToWorld = GenerateInitialMarkerTransform(gt, rng);
-  const vtkVector3d spinAxisWorld = ComputeSpinAxisWorld(initialMarkerToWorld, gt.SpinAxisMarker);
+  const vtkVector3d spinAxisWorld = ComputeSpinAxisWorld(initialMarkerToWorld, gt.SpinAxis_Marker);
 
   // Clear previous calibration points
   spinAlgo->RemoveAllCalibrationPoints();
@@ -124,8 +124,8 @@ static int TestSpinCalibration(vtkIGSIOSpinCalibrationAlgo* spinAlgo,
   for (int i = 0; i < maxIterations && spinAlgo->GetNumberOfCalibrationPoints() < targetNumberOfPoints; ++i)
   {
     const double angle = i * angleIncrementDegrees;
-    const vtkNew<vtkMatrix4x4> markerToWorld = RotateAroundAxisAtPoint(initialMarkerToWorld, spinAxisWorld, gt.TipPositionWorld, angle);
-    const vtkNew<vtkMatrix4x4> markerToWorldPlusNoise = ApplyRandomPerturbation(markerToWorld, rotationNoise, rng);
+    const vtkNew<vtkMatrix4x4> markerToWorld = RotateAroundAxisAtPoint(initialMarkerToWorld, spinAxisWorld, gt.TipPosition_World, angle);
+    const vtkNew<vtkMatrix4x4> markerToWorldPlusNoise = ApplyRandomPerturbation(markerToWorld, rotationNoise, 0, rng);
 
     spinAlgo->InsertNextCalibrationPoint(markerToWorldPlusNoise);
   }
@@ -151,13 +151,13 @@ static int TestSpinCalibration(vtkIGSIOSpinCalibrationAlgo* spinAlgo,
 
   // Extract Z-axis from tipToMarker by transforming (0, 0, 1, 0) - this is the spin axis in marker coordinates
   const double zAxis[4] = { 0, 0, 1, 0 };
-  double computedSpinAxisMarkerData[4];
-  tipToMarker->MultiplyPoint(zAxis, computedSpinAxisMarkerData);
-  const vtkVector3d computedSpinAxisMarker(computedSpinAxisMarkerData);
+  double computedSpinAxis_MarkerData[4];
+  tipToMarker->MultiplyPoint(zAxis, computedSpinAxis_MarkerData);
+  const vtkVector3d computedSpinAxis_Marker(computedSpinAxis_MarkerData);
 
   // Compare with ground truth: compute angle between axes in degrees
   // Axes should be parallel (either same or opposite direction)
-  const double dotProduct = computedSpinAxisMarker.Dot(gt.SpinAxisMarker);
+  const double dotProduct = computedSpinAxis_Marker.Dot(gt.SpinAxis_Marker);
   const double axisErrorDegrees = vtkMath::DegreesFromRadians(std::acos(std::min(1.0, std::abs(dotProduct))));
 
   const double rmse = spinAlgo->GetSpinCalibrationErrorMm();
