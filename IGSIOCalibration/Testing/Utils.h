@@ -57,10 +57,10 @@ static vtkNew<vtkMatrix4x4> GenerateRandomRotationMatrix(std::mt19937& rng)
 }
 
 // Applies a small random rotation to a matrix to simulate tracking noise
-static vtkNew<vtkMatrix4x4> ApplyRandomPerturbation(vtkMatrix4x4* matrix, double angleSigma, double translationSigma, std::mt19937& rng)
+static vtkNew<vtkMatrix4x4> ApplyRandomPerturbation(vtkMatrix4x4* matrix, double maxAngle, double translationSigma, std::mt19937& rng)
 {
-  std::uniform_real_distribution<double> angleDist(0.0, angleSigma);
-  std::uniform_real_distribution<double> translationDist(0.0, translationSigma);
+  std::uniform_real_distribution<double> angleDist(0.0, maxAngle);
+  std::normal_distribution<double> translationDist(0.0, translationSigma);
 
   const vtkVector3d perturbAxis = GenerateRandomDirection(rng);
   const double perturbAngle = angleDist(rng);
