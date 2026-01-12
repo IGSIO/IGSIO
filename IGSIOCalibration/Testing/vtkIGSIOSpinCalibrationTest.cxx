@@ -27,9 +27,8 @@ static GroundTruth GenerateGroundTruth(double stylusLength, double markerRadius,
 
   // Compute tip position in marker coordinates
   // The marker origin is at perpendicular distance markerRadius from the spin axis
-  const double h = std::sqrt(stylusLength * stylusLength - markerRadius * markerRadius);
   const vtkVector3d perpDir = GenerateRandomPerpendicularDirection(spinAxis, rng);
-  const vtkVector3d tipPosition_Marker = h * spinAxis + markerRadius * perpDir;
+  const vtkVector3d tipPosition_Marker = stylusLength * spinAxis + markerRadius * perpDir;
 
   GroundTruth gt;
   gt.TipPosition_World = vtkVector3d(dist(rng), dist(rng), dist(rng));
