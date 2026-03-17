@@ -31,6 +31,9 @@
 #include <vtkTransform.h>
 #include <vtkXMLUtilities.h>
 
+// STD includes
+#include <iostream>
+
 vtkStandardNewMacro(vtkIGSIOVolumeReconstructor);
 
 //----------------------------------------------------------------------------
@@ -460,7 +463,7 @@ igsioStatus vtkIGSIOVolumeReconstructor::SetOutputExtentFromFrameList(vtkIGSIOTr
   }
   catch (std::bad_alloc& e)
   {
-    cerr << e.what() << endl;
+    std::cerr << e.what() << endl;
     errorDescription = "StartReconstruction failed due to out of memory. Try to reduce the size or increase spacing of the output volume.";
     LOG_ERROR(errorDescription);
     return IGSIO_FAIL;
