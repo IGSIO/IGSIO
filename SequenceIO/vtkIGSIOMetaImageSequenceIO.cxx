@@ -367,7 +367,7 @@ igsioStatus vtkIGSIOMetaImageSequenceIO::ReadImagePixels()
     }
     catch (std::bad_alloc& e)
     {
-      cerr << e.what() << endl;
+      std::cerr << e.what() << endl;
       LOG_ERROR("vtkIGSIOMetaImageSequenceIO::ReadImagePixels failed due to out of memory. Try to reduce image buffer sizes or use a 64-bit build of Plus.");
       return IGSIO_FAIL;
     }
