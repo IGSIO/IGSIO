@@ -176,8 +176,14 @@ igsioStatus vtkIGSIOSpinCalibrationAlgo::DoSpinCalibrationInternal(const std::ve
     shaftAxis_ToolTip.put(closestCoordinateAxis, 1); // Doesn't matter the direction, will be sorted out later
   }
 
+  const double tolerance = 1e-9;
+  const double minEigenvalue = eigenvalues(0);
+  if (minEigenvalue < -tolerance) {
+    LOG_WARNING("Expected the minimum eigenvalue of the aggregate instantaneous rotation matrices to be positive. Instead got: " << minEigenvalue);
+  }
+
   //set the RMSE
-  error = sqrt(eigenvalues(0) / markerToTransformMatrixArray.size());
+  error = sqrt(std::max(std::abs(minEigenvalue), tolerance) / markerToTransformMatrixArray.size());
   // Note: This error is the RMS distance from the ideal axis of rotation to the axis of rotation for each instantaneous rotation
   // This RMS distance can be computed to an angle in the following way: angle = arccos( 1 - SpinRMSE^2 / 2 )
   // Here we elect to return the RMS distance because this is the quantity that was actually minimized in the calculation

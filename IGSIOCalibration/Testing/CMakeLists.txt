@@ -1,0 +1,13 @@
+add_executable(vtkIGSIOPivotCalibrationTest vtkIGSIOPivotCalibrationTest.cxx Utils.h)
+target_link_libraries(vtkIGSIOPivotCalibrationTest vtkIGSIOCalibration vtkIGSIOCommon)
+
+add_executable(vtkIGSIOSpinCalibrationTest vtkIGSIOSpinCalibrationTest.cxx Utils.h)
+target_link_libraries(vtkIGSIOSpinCalibrationTest vtkIGSIOCalibration vtkIGSIOCommon)
+
+add_test(vtkIGSIOPivotCalibrationTest
+  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkIGSIOPivotCalibrationTest
+)
+
+add_test(vtkIGSIOSpinCalibrationTest
+  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/vtkIGSIOSpinCalibrationTest
+)
