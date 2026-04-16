@@ -13,11 +13,11 @@ else()
     set(YASM_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
   endif()
 
-  if(NOT DEFINED(YASM_GIT_REPOSITORY))
+  if(NOT DEFINED YASM_GIT_REPOSITORY)
     set(YASM_GIT_REPOSITORY "https://github.com/yasm/yasm.git" CACHE STRING "Set YASM desired git url")
   endif()
 
-  if(NOT DEFINED(YASM_GIT_REVISION))
+  if(NOT DEFINED YASM_GIT_REVISION)
     set(YASM_GIT_REVISION "master" CACHE STRING "Set YASM desired git hash (master means latest)")
   endif()
 

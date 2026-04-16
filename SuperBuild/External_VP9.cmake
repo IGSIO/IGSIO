@@ -19,10 +19,10 @@ else()
     set (VP9_INCLUDE_DIR "${CMAKE_BINARY_DIR}/VP9/vpx" CACHE PATH "VP9 source directory" FORCE)
     set (VP9_LIBRARY_DIR "${CMAKE_BINARY_DIR}/VP9" CACHE PATH "VP9 library directory" FORCE)
 
-    if(NOT DEFINED(VP9_GIT_REPOSITORY))
+    if(NOT DEFINED VP9_GIT_REPOSITORY)
       set(VP9_GIT_REPOSITORY "https://github.com/webmproject/libvpx/" CACHE STRING "Set VP9 desired git url")
     endif()
-    if(NOT DEFINED(VP9_GIT_REVISION))
+    if(NOT DEFINED VP9_GIT_REVISION)
       set(VP9_GIT_REVISION "v1.12.0" CACHE STRING "Set VP9 desired git hash (master means latest)")
     endif()
 

@@ -31,10 +31,10 @@ else()
       )
   endif()
 
-  if(NOT DEFINED(vtkAddon_GIT_REPOSITORY))
+  if(NOT DEFINED vtkAddon_GIT_REPOSITORY)
     set(vtkAddon_GIT_REPOSITORY "https://github.com/Slicer/vtkAddon.git" CACHE STRING "Set vtkAddon desired git url")
   endif()
-  if(NOT DEFINED(vtkAddon_GIT_REVISION))
+  if(NOT DEFINED vtkAddon_GIT_REVISION)
     set(vtkAddon_GIT_REVISION "main" CACHE STRING "Set vtkAddon desired git hash (main means latest)")
   endif()
 
