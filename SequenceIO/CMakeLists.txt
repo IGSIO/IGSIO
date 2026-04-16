@@ -40,6 +40,12 @@ else()
   list(APPEND ${PROJECT_NAME}_LIBS VTK::vtksys)
 endif()
 
+if(VTK_VERSION VERSION_LESS 8.9.0)
+  list(APPEND ${PROJECT_NAME}_LIBS vtkzlib)
+else()
+  list(APPEND ${PROJECT_NAME}_LIBS VTK::zlib)
+endif()
+
 set(${PROJECT_NAME}_LIBS_PRIVATE
   )
 
