@@ -75,6 +75,12 @@ else()
     #--Build step-----------------
     BUILD_ALWAYS 1
     #--Install step-----------------
+    INSTALL_COMMAND
+      ${CMAKE_COMMAND} --build . --target install
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/vtkAddon-bin/vtkAddonTargets.cmake"
+        "${CMAKE_BINARY_DIR}/vtkAddon-install/lib/cmake/vtkAddon/vtkAddonTargets.cmake"
+    #--Dependencies-----------------
     DEPENDS ${IGSIO_DEPENDENCIES}
     )
 endif()
