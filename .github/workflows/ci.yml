@@ -163,24 +163,29 @@ jobs:
         key: itk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.ITK_HASH }}
 
     - name: Update Path
+      shell: bash
       run: |
         echo "${{github.workspace}}/vtk-install/bin" >> $GITHUB_PATH
         echo "${{github.workspace}}/itk-install/bin" >> $GITHUB_PATH
 
     - name: Configure CMake
       working-directory: ${{github.workspace}}
+      shell: bash
       run: |
-        cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVTK_DIR='${{github.workspace}}/vtk-install/lib/cmake/vtk' -DITK_DIR='${{github.workspace}}/itk-install/lib/cmake/ITK-5.4' -DIGSIO_SUPERBUILD=ON ${{ env.BUILD_OPTIONS }} -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }}"
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVTK_DIR="${{github.workspace}}/vtk-install/lib/cmake/vtk" -DITK_DIR="${{github.workspace}}/itk-install/lib/cmake/ITK-5.4" -DIGSIO_SUPERBUILD=ON ${{ env.BUILD_OPTIONS }} -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }}"
 
     - name: Experimental Build
       if: ${{ github.event_name != 'schedule' }}
       working-directory: ${{github.workspace}}/build
+      shell: bash
       run: |
+        cmake --build . --config ${{ matrix.build_type }} --parallel 4
         ctest -C ${{ matrix.build_type }} -D Experimental -V
 
     - name: Nightly Build
       if: ${{ github.event_name == 'schedule' }}
       working-directory: ${{github.workspace}}/build
+      shell: bash
       run: |
         ctest -C ${{ matrix.build_type }} -D Nightly -V
         cd inner-build
