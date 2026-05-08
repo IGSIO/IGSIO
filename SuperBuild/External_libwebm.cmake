@@ -47,6 +47,7 @@ else()
     #--Configure step-------------
     CMAKE_ARGS
       ${ep_common_args}
+      -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5
       # Compiler settings
       # Not used -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       # Not used -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
