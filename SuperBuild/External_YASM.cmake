@@ -55,7 +55,7 @@ else()
       # Install directories
       -DYASM_INSTALL_BIN_DIR:STRING=bin
       # Options
-      -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+      -DBUILD_SHARED_LIBS:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF
       -DBUILD_EXAMPLES:BOOL=OFF
       # Dependencies
