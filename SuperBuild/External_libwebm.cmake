@@ -32,10 +32,10 @@ else()
   endif()
 
   if(NOT DEFINED libwebm_GIT_REPOSITORY)
-    set(libwebm_GIT_REPOSITORY "https://github.com/Sunderlandkyl/libwebm.git" CACHE STRING "Set libwebm desired git url")
+    set(libwebm_GIT_REPOSITORY "https://github.com/jamesobutler/libwebm.git" CACHE STRING "Set libwebm desired git url")
   endif()
   if(NOT DEFINED libwebm_GIT_REVISION)
-    set(libwebm_GIT_REVISION "f0072f4a22bb259c99b39d1870af2c0c511207ca" CACHE STRING "Set libwebm desired git hash") # Sunderlandkyl/libwebm_d1b981b79
+    set(libwebm_GIT_REVISION "dcb9244a18aaea105e10153e2fd67c33b18cb5d3" CACHE STRING "Set libwebm desired git hash") # igsio-1.0.0.32-2026-04-21-6184f44
   endif()
 
   ExternalProject_Add( libwebm
@@ -47,7 +47,6 @@ else()
     #--Configure step-------------
     CMAKE_ARGS
       ${ep_common_args}
-      -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5
       # Compiler settings
       # Not used -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       # Not used -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
