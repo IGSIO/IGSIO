@@ -1,6 +1,5 @@
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 include(${IGSIO_SOURCE_DIR}/Modules/FindYASM.cmake)
-include(${CMAKE_ROOT}/Modules/FindPythonInterp.cmake)
 
 if(YASM_FOUND)
   # YASM has been built already
@@ -8,8 +7,8 @@ if(YASM_FOUND)
 else()
   set(YASM_PYTHON_EXECUTABLE "" CACHE STRING "Python Interpreter")
   if("${YASM_PYTHON_EXECUTABLE}" STREQUAL "")
-    find_package(PythonInterp "2.7" REQUIRED)
-    set(YASM_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE})
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    set(YASM_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
   endif()
 
   if(NOT DEFINED YASM_GIT_REPOSITORY)
