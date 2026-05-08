@@ -41,7 +41,13 @@ jobs:
       if: contains(matrix.os, 'ubuntu') && steps.cache-vtk.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+        sudo apt update && sudo apt install -y g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Install CMake
+      if: steps.cache-vtk.outputs.cache-hit != 'true'
+      uses: lukka/get-cmake@7bfc9baacbbdcb5e37957ad05c3546b3e222be3c # v4.3.2
+      with:
+        cmakeVersion: 4.3.2
 
     - name: Clone VTK
       if: steps.cache-vtk.outputs.cache-hit != 'true'
@@ -96,7 +102,13 @@ jobs:
       if: contains(matrix.os, 'ubuntu') && steps.cache-itk.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+        sudo apt update && sudo apt install -y g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Install CMake
+      if: steps.cache-itk.outputs.cache-hit != 'true'
+      uses: lukka/get-cmake@7bfc9baacbbdcb5e37957ad05c3546b3e222be3c # v4.3.2
+      with:
+        cmakeVersion: 4.3.2
 
     - name: Clone ITK
       if: steps.cache-itk.outputs.cache-hit != 'true'
@@ -146,7 +158,12 @@ jobs:
       shell: bash
       run: |
         echo "Installing system dependencies..."
-        sudo apt update && sudo apt install -y cmake g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+        sudo apt update && sudo apt install -y g++ libgl1-mesa-dev libxt-dev libxrender-dev libxext-dev libglu1-mesa-dev make
+
+    - name: Install CMake
+      uses: lukka/get-cmake@7bfc9baacbbdcb5e37957ad05c3546b3e222be3c # v4.3.2
+      with:
+        cmakeVersion: 4.3.2
 
     - name: Restore VTK Cache
       id: cache-vtk
