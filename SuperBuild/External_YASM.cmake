@@ -13,11 +13,11 @@ else()
   endif()
 
   if(NOT DEFINED YASM_GIT_REPOSITORY)
-    set(YASM_GIT_REPOSITORY "https://github.com/yasm/yasm.git" CACHE STRING "Set YASM desired git url")
+    set(YASM_GIT_REPOSITORY "https://github.com/jamesobutler/yasm.git" CACHE STRING "Set YASM desired git url")
   endif()
 
   if(NOT DEFINED YASM_GIT_REVISION)
-    set(YASM_GIT_REVISION "master" CACHE STRING "Set YASM desired git hash (master means latest)")
+    set(YASM_GIT_REVISION "81d067aa35343cd18727f8843db3e0c044c930e6" CACHE STRING "Set YASM desired git hash (master means latest)") # igsio-v1.3.0-2026-01-03-a2f8bdf
   endif()
 
   # yas has not been built yet, so download and build it as an external project
@@ -44,7 +44,6 @@ else()
     #--Configure step-------------
     CMAKE_ARGS
       ${PLATFORM_SPECIFIC_ARGS}
-      -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5
       # Compiler settings
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
