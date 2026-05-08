@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8.2)
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 include(${IGSIO_SOURCE_DIR}/Modules/FindYASM.cmake)
 include(${CMAKE_ROOT}/Modules/FindPythonInterp.cmake)
