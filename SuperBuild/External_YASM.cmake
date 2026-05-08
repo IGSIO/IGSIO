@@ -44,6 +44,7 @@ else()
     #--Configure step-------------
     CMAKE_ARGS
       ${PLATFORM_SPECIFIC_ARGS}
+      -DCMAKE_POLICY_VERSION_MINIMUM:STRING=3.5
       # Compiler settings
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
       -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
