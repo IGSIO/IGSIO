@@ -12,6 +12,7 @@ See License.txt for details.
 
 // VTK includes
 #include <vtkXMLDataElement.h>
+#include <vtksys/Encoding.hxx>
 #include <vtksys/SystemTools.hxx>
 
 // STL includes
@@ -247,7 +248,7 @@ igsioStatus igsioCommon::CreateTemporaryFilename(std::string& aString, const std
 
 #ifdef _WIN32
     // Get output directory
-    char candidateFilename[MAX_PATH] = "";
+    wchar_t candidateFilenameW[MAX_PATH] = L"";
     std::string path;
     if (!anOutputDirectory.empty())
     {
@@ -255,19 +256,22 @@ igsioStatus igsioCommon::CreateTemporaryFilename(std::string& aString, const std
     }
     else
     {
-      char tempPath[MAX_PATH] = "";
-      if (GetTempPath(MAX_PATH, tempPath) == 0)
+      wchar_t tempPathW[MAX_PATH] = L"";
+      if (GetTempPathW(MAX_PATH, tempPathW) == 0)
       {
         LOG_ERROR("Unable to retrieve temp path: " << GetLastError());
         return IGSIO_FAIL;
       }
-      path = tempPath;
+      path = vtksys::Encoding::ToNarrow(tempPathW);
     }
 
+    std::wstring pathW = vtksys::Encoding::ToWide(path);
+
     // Get full output file path
-    UINT uRetVal = GetTempFileName(path.c_str(), "tmp", 0, candidateFilename);   // buffer for name
+    UINT uRetVal = GetTempFileNameW(pathW.c_str(), L"tmp", 0, candidateFilenameW);   // buffer for name
     if (uRetVal == ERROR_BUFFER_OVERFLOW)
     {
+      std::string candidateFilename = vtksys::Encoding::ToNarrow(candidateFilenameW);
       if (vtksys::SystemTools::FileExists(candidateFilename))
       {
         vtksys::SystemTools::RemoveFile(candidateFilename);
@@ -281,7 +285,7 @@ igsioStatus igsioCommon::CreateTemporaryFilename(std::string& aString, const std
       continue;
     }
 
-    aString = candidateFilename;
+    aString = vtksys::Encoding::ToNarrow(candidateFilenameW);
     return IGSIO_SUCCESS;
 #else
     std::string path;
