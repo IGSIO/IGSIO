@@ -45,7 +45,8 @@ else()
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v140*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v141*") OR
         ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v142*") OR
-        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*"))
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*") OR
+        ("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v145*"))
       set (VP9_INCLUDE_DIR "${IGSIO_VP9_DIR}/include/vpx" CACHE PATH "VP9 source directory" FORCE)
       set (BinaryURL "https://github.com/ShiftMediaProject/libvpx/releases/download/v1.12.0/libvpx_v1.12.0_")
 
@@ -65,6 +66,9 @@ else()
       set (BinaryURL "${BinaryURL}msvc16.zip")
     elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v143*")
       set (BinaryURL "${BinaryURL}msvc17.zip")
+    elseif("${CMAKE_VS_PLATFORM_TOOLSET}" MATCHES "v145*")
+      # No binaries available for VS2026 MSVC 145, but due to abi compatibility with MSVC 143, we can use the same binaries as for VS2022 MSVC 143.
+      set (BinaryURL "${BinaryURL}msvc17.zip")
     endif()
 
       message(STATUS "Downloading VP9 from ${BinaryURL}")
@@ -78,7 +82,7 @@ else()
         TEST_COMMAND      ""
       )
     else()
-      message(FATAL_ERROR "Unsupported version of Visual Studio for VP9. Supported versions are: MSVC12, MSVC14, MSVC15, MSVC16")
+      message(FATAL_ERROR "Unsupported version of Visual Studio for VP9. Supported versions are: MSVC12, MSVC14, MSVC15, MSVC16, MSVC17")
     endif()
   endif()
 endif()
