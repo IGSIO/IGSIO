@@ -8,6 +8,7 @@ See License.txt for details.
 #include "vtkObjectFactory.h"
 #include "vtkIGSIOSequenceIOBase.h"
 #include "vtkIGSIOTrackedFrameList.h"
+#include "vtksys/Encoding.hxx"
 #include "vtksys/SystemTools.hxx"
 #include "igsioTrackedFrame.h"
 
@@ -194,7 +195,7 @@ const char* vtkIGSIOSequenceIOBase::GetCustomString(const char* fieldName)
     return NULL;
   }
   // Can't return this->GetFrameField(fieldName).c_str(), since the string object would be deleted,
-  // leaving a dangling char* pointer. 
+  // leaving a dangling char* pointer.
   return this->TrackedFrameList->GetCustomString(fieldName);
 }
 
@@ -444,6 +445,8 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
   // Adopted from CMake's cmSystemTools.cxx
   bool success = false;
 #ifdef _WIN32
+  std::wstring oldnameW = vtksys::Encoding::ToWide(oldname);
+  std::wstring newnameW = vtksys::Encoding::ToWide(newname);
   // On Windows the move functions will not replace existing files. Check if the destination exists.
   if (vtksys::SystemTools::FileExists(newname, true))
   {
@@ -453,10 +456,10 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
     DWORD attrs;
 
     // Make sure the destination is not read only.
-    attrs = GetFileAttributes(newname);
+    attrs = GetFileAttributesW(newnameW.c_str());
     if (attrs & FILE_ATTRIBUTE_READONLY)
     {
-      SetFileAttributes(newname, attrs & ~FILE_ATTRIBUTE_READONLY);
+      SetFileAttributesW(newnameW.c_str(), attrs & ~FILE_ATTRIBUTE_READONLY);
     }
 
 #ifdef IGSIO_USE_VERSION_HELPER
@@ -472,19 +475,19 @@ igsioStatus vtkIGSIOSequenceIOBase::MoveFileInternal(const char* oldname, const 
       // This is Win9x.  There is no MoveFileEx implementation.  We
       // cannot quite rename the file atomically.  Just delete the
       // destination and then move the file.
-      DeleteFile(newname);
-      success = (MoveFile(oldname, newname) != 0);
+      DeleteFileW(newnameW.c_str());
+      success = (MoveFileW(oldnameW.c_str(), newnameW.c_str()) != 0);
     }
     else
     {
       // This is not Win9x.  Use the MoveFileEx implementation.
-      success = (MoveFileEx(oldname, newname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0);
+      success = (MoveFileExW(oldnameW.c_str(), newnameW.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) != 0);
     }
   }
   else
   {
     // The destination does not exist.  Just move the file.
-    success = (MoveFile(oldname, newname) != 0);
+    success = (MoveFileW(oldnameW.c_str(), newnameW.c_str()) != 0);
   }
   if (!success)
   {
