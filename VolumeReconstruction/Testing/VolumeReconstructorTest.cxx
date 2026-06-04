@@ -16,6 +16,106 @@
 #include "vtkXMLUtilities.h"
 #include "vtksys/CommandLineArguments.hxx"
 
+#include <cmath>
+
+//----------------------------------------------------------------------------
+// Reads a reconstructed volume file (written as a single-frame IGSIO sequence
+// file by vtkIGSIOVolumeReconstructor::SaveReconstructedVolumeToFile) into a
+// vtkImageData.
+static igsioStatus ReadVolumeFromFile(const std::string& filename, vtkImageData* volume)
+{
+  vtkSmartPointer<vtkIGSIOTrackedFrameList> list = vtkSmartPointer<vtkIGSIOTrackedFrameList>::New();
+  if (vtkIGSIOSequenceIO::Read(filename, list) != IGSIO_SUCCESS)
+  {
+    LOG_ERROR("Failed to read volume file: " << filename);
+    return IGSIO_FAIL;
+  }
+  if (list->GetNumberOfTrackedFrames() < 1)
+  {
+    LOG_ERROR("No frames found in volume file: " << filename);
+    return IGSIO_FAIL;
+  }
+  vtkImageData* image = list->GetTrackedFrame(0)->GetImageData()->GetImage();
+  if (image == NULL)
+  {
+    LOG_ERROR("No image data in volume file: " << filename);
+    return IGSIO_FAIL;
+  }
+  volume->DeepCopy(image);
+  return IGSIO_SUCCESS;
+}
+
+//----------------------------------------------------------------------------
+// Compares a reconstructed volume against a reference volume, allowing for
+// small per-voxel differences (e.g. last-bit floating-point rounding that
+// varies between CPU architectures). Returns IGSIO_SUCCESS if the geometry
+// matches and the maximum absolute voxel difference is within threshold.
+static igsioStatus CompareVolumeToReference(const std::string& volumeFileName, const std::string& referenceFileName, double threshold)
+{
+  vtkSmartPointer<vtkImageData> volume = vtkSmartPointer<vtkImageData>::New();
+  vtkSmartPointer<vtkImageData> reference = vtkSmartPointer<vtkImageData>::New();
+  if (ReadVolumeFromFile(volumeFileName, volume) != IGSIO_SUCCESS
+    || ReadVolumeFromFile(referenceFileName, reference) != IGSIO_SUCCESS)
+  {
+    return IGSIO_FAIL;
+  }
+
+  int volumeExtent[6] = { 0 };
+  int referenceExtent[6] = { 0 };
+  volume->GetExtent(volumeExtent);
+  reference->GetExtent(referenceExtent);
+  for (int i = 0; i < 6; ++i)
+  {
+    if (volumeExtent[i] != referenceExtent[i])
+    {
+      LOG_ERROR("Volume extent [" << volumeExtent[0] << " " << volumeExtent[1] << " " << volumeExtent[2] << " "
+        << volumeExtent[3] << " " << volumeExtent[4] << " " << volumeExtent[5] << "] does not match reference extent ["
+        << referenceExtent[0] << " " << referenceExtent[1] << " " << referenceExtent[2] << " "
+        << referenceExtent[3] << " " << referenceExtent[4] << " " << referenceExtent[5] << "]");
+      return IGSIO_FAIL;
+    }
+  }
+
+  int numberOfComponents = volume->GetNumberOfScalarComponents();
+  if (numberOfComponents != reference->GetNumberOfScalarComponents())
+  {
+    LOG_ERROR("Volume has " << numberOfComponents << " scalar component(s) but reference has "
+      << reference->GetNumberOfScalarComponents());
+    return IGSIO_FAIL;
+  }
+
+  double maxDifference = 0.0;
+  for (int z = volumeExtent[4]; z <= volumeExtent[5]; ++z)
+  {
+    for (int y = volumeExtent[2]; y <= volumeExtent[3]; ++y)
+    {
+      for (int x = volumeExtent[0]; x <= volumeExtent[1]; ++x)
+      {
+        for (int c = 0; c < numberOfComponents; ++c)
+        {
+          double difference = std::fabs(volume->GetScalarComponentAsDouble(x, y, z, c)
+            - reference->GetScalarComponentAsDouble(x, y, z, c));
+          if (difference > maxDifference)
+          {
+            maxDifference = difference;
+          }
+        }
+      }
+    }
+  }
+
+  if (maxDifference > threshold)
+  {
+    LOG_ERROR("Reconstructed volume differs from reference: maximum voxel difference " << maxDifference
+      << " exceeds threshold " << threshold);
+    return IGSIO_FAIL;
+  }
+
+  LOG_INFO("Reconstructed volume matches reference (maximum voxel difference " << maxDifference
+    << ", threshold " << threshold << ")");
+  return IGSIO_SUCCESS;
+}
+
 int main(int argc, char* argv[])
 {
   bool printHelp(false);
@@ -29,6 +129,8 @@ int main(int argc, char* argv[])
   std::string outputFrameFileName;
   std::string importanceMaskFileName;
   std::string inputImageToReferenceTransformName;
+  std::string referenceVolumeFileName;
+  double comparisonThreshold = 0.0;
 
   // Deprecated arguments (2013-07-29, #800)
   std::string inputImageToReferenceTransformNameDeprecated;
@@ -51,6 +153,8 @@ int main(int argc, char* argv[])
   cmdargs.AddArgument("--disable-compression", vtksys::CommandLineArguments::NO_ARGUMENT, &disableCompression, "Do not compress output image files.");
   cmdargs.AddArgument("--verbose", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &verboseLevel, "Verbose level (1=error only, 2=warning, 3=info, 4=debug, 5=trace)");
   cmdargs.AddArgument("--importance-mask-file", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &importanceMaskFileName, "The file to use as the importance mask.");
+  cmdargs.AddArgument("--reference-volume-file", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &referenceVolumeFileName, "Reference volume file name (.mha/.nrrd) to compare against. When specified, the test runs in comparison mode: it reads --output-volume-file and this reference file and verifies that the maximum absolute voxel difference is within --comparison-threshold, instead of performing a reconstruction.");
+  cmdargs.AddArgument("--comparison-threshold", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &comparisonThreshold, "Maximum allowed absolute per-voxel difference when comparing against a reference volume (default: 0). Used only with --reference-volume-file.");
 
   // Deprecated arguments (2013-07-29, #800)
   cmdargs.AddArgument("--transform", vtksys::CommandLineArguments::EQUAL_ARGUMENT, &inputImageToReferenceTransformNameDeprecated, "Image to reference transform name used for the reconstruction. DEPRECATED, use --image-to-reference-transform argument instead");
@@ -99,6 +203,22 @@ int main(int argc, char* argv[])
     {
       outputVolumeAccumulationFileName = outputVolumeAlphaFileNameDeprecated;
     }
+  }
+
+  // Comparison mode: compare a previously reconstructed volume against a reference volume.
+  if (!referenceVolumeFileName.empty())
+  {
+    if (outputVolumeFileName.empty())
+    {
+      std::cout << "ERROR: --output-volume-file must be specified to compare against --reference-volume-file!" << std::endl;
+      std::cout << "Help: " << cmdargs.GetHelp() << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    if (CompareVolumeToReference(outputVolumeFileName, referenceVolumeFileName, comparisonThreshold) != IGSIO_SUCCESS)
+    {
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
   }
 
   if (inputConfigFileName.empty())
