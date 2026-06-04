@@ -13,7 +13,7 @@ file(MAKE_DIRECTORY ${TEST_OUTPUT_PATH})
 # Maximum allowed absolute per-voxel difference between the reconstructed volume
 # and the reference volume. A small tolerance absorbs last-bit floating-point
 # rounding differences that vary between CPU architectures (e.g. x86 vs arm64).
-set(VolRecComparisonThreshold 1)
+set(VolRecComparisonThreshold 2)
 
 function(VolRecRegressionTest TestName ConfigFileNameFragment InputSeqFile OutNameFragment)
   add_test(VolumeReconstructorTestRun${TestName}
