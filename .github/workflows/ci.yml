@@ -196,7 +196,7 @@ jobs:
       working-directory: ${{github.workspace}}
       shell: bash
       run: |
-        cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVTK_DIR="${{github.workspace}}/vtk-install/lib/cmake/vtk" -DITK_DIR="${{github.workspace}}/itk-install/lib/cmake/ITK-5.4" -DIGSIO_SUPERBUILD=ON ${{ env.BUILD_OPTIONS }}
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DVTK_DIR="${{github.workspace}}/vtk-install/lib/cmake/vtk" -DITK_DIR="${{github.workspace}}/itk-install/lib/cmake/ITK-5.4" -DIGSIO_SUPERBUILD=ON -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }} Build" ${{ env.BUILD_OPTIONS }}
 
     - name: Build and Test
       working-directory: ${{github.workspace}}/build
@@ -204,22 +204,16 @@ jobs:
       env:
         DASHBOARD: ${{ github.event_name == 'schedule' && 'Nightly' || 'Experimental' }}
       run: |
-        ctest -C ${{ matrix.build_type }} -D ${DASHBOARD} -V \
-          -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }} superbuild"
+        # Superbuild dashboard: configures and builds everything, including the
+        # inner project (BUILD_ALWAYS), so build warnings/errors are captured
+        # under the "Build" entry.
+        ctest -C ${{ matrix.build_type }} -D ${DASHBOARD} -V
 
         if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.run_tests }}" == "true" ]]; then
+          # The inner project is already built above, so this entry only runs
+          # and submits the tests. Rename it (regenerates DartConfiguration.tcl)
+          # so it is a distinct "Test" entry on CDash.
+          cmake -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }} Test" inner-build
           cd inner-build
-          ctest -C ${{ matrix.build_type }} -D ${DASHBOARD} -V \
-            -DBUILDNAME="GH Action ${{ matrix.os }} ${{ github.event_name }} inner-build"
+          ctest -C ${{ matrix.build_type }} -D ${DASHBOARD}Start -D ${DASHBOARD}Test -D ${DASHBOARD}Submit -V
         fi
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: test-results-${{ matrix.os }}-${{ matrix.build_type }}
-        path: |
-          build/Testing/
-          build/inner-build/Testing/
-        retention-days: 7
-        if-no-files-found: ignore
