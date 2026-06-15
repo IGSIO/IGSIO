@@ -6,6 +6,7 @@
 
 // IGSIO includes
 #include "igsioMath.h"
+#include <iostream>
 #include "igsioTrackedFrame.h"
 #include "vtkIGSIOTrackedFrameList.h"
 #include "vtkIGSIOTransformRepository.h"

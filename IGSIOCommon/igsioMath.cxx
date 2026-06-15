@@ -6,6 +6,7 @@
 
 // IGSIO includes
 #include "igsioMath.h"
+#include <iostream>
 
 // VNL includes
 #include "vnl/vnl_sparse_matrix.h"

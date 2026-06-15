@@ -5,6 +5,7 @@
 =========================================================IGSIO=header=end*/
 
 #include "igsioConfigure.h"
+#include <iostream>
 #include "igsioTrackedFrame.h"
 #include "igsioXmlUtils.h"
 #include "vtkImageData.h"

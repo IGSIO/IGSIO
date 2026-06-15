@@ -6,6 +6,7 @@ See License.txt for details.
 
 // Local includes
 #include "vtkIGSIORecursiveCriticalSection.h"
+#include <iostream>
 #include "igsioCommon.h"
 #include "igsioXmlUtils.h"
 
