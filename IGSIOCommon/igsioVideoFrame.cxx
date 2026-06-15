@@ -7,6 +7,7 @@ See License.txt for details.
 // Local includes
 //#include "PlusConfigure.h"
 #include "igsioVideoFrame.h"
+#include <iostream>
 
 // VTK includes
 #include <vtkBMPReader.h>

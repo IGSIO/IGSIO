@@ -6,6 +6,7 @@ See License.txt for details.
 
 // Local includes
 #include "igsioCommon.h"
+#include <iostream>
 #include "igsioTrackedFrame.h"
 #include "vtkIGSIOTrackedFrameList.h"
 #include "vtkIGSIOAccurateTimer.h"

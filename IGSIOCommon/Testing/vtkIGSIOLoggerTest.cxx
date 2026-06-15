@@ -5,6 +5,7 @@
 =========================================================Plus=header=end*/
 
 #include <vtkObject.h>
+#include <iostream>
 #include "vtksys/CommandLineArguments.hxx"
 #include "vtkSmartPointer.h"
 

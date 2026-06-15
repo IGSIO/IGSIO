@@ -8,6 +8,7 @@
 // On Windows also test if the timings are accurate enough
 
 #include <vtkSmartPointer.h>
+#include <iostream>
 #include <time.h>
 #include "vtksys/CommandLineArguments.hxx"
 #include "vtkMultiThreader.h"

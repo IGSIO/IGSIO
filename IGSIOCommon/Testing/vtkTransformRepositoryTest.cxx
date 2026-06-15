@@ -5,6 +5,7 @@
 =========================================================Plus=header=end*/
 
 #include "igsioCommon.h"
+#include <iostream>
 #include "vtksys/CommandLineArguments.hxx"
 #include "vtkSmartPointer.h"
 #include "vtkTransform.h"

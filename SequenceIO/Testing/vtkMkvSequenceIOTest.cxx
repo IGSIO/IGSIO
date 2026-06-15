@@ -6,6 +6,7 @@ See License.txt for details.
 
 // std includes
 #include <iomanip>
+#include <iostream>
 
 // VTK includes
 #include <vtkMatrix4x4.h>

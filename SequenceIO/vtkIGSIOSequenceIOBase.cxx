@@ -6,6 +6,7 @@ See License.txt for details.
 
 //#include "PlusConfigure.h"
 #include "vtkObjectFactory.h"
+#include <iostream>
 #include "vtkIGSIOSequenceIOBase.h"
 #include "vtkIGSIOTrackedFrameList.h"
 #include "vtksys/Encoding.hxx"

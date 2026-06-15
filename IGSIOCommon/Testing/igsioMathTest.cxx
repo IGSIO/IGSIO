@@ -6,6 +6,7 @@
 
 
 #include <deque>
+#include <iostream>
 
 #include "vtkDebugLeaksManager.h"
 #include "vtkSystemIncludes.h"

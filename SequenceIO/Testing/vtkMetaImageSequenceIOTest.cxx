@@ -6,6 +6,7 @@ See License.txt for details.
 
 //#include "PlusConfigure.h"
 #include "vtksys/CommandLineArguments.hxx"
+#include <iostream>
 #include <iomanip>
 
 #include "vtkSmartPointer.h"

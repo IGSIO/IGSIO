@@ -41,6 +41,7 @@ POSSIBILITY OF SUCH DAMAGES.
 =========================================================================*/
 
 #include "igsioConfigure.h"
+#include <iostream>
 
 // VTK includes
 #include <vtkDataArray.h>
