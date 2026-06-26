@@ -37,7 +37,7 @@ jobs:
     steps:
     - name: Cache VTK Build
       id: cache-vtk
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: vtk-install
         lookup-only: true
@@ -98,7 +98,7 @@ jobs:
     steps:
     - name: Cache ITK Build
       id: cache-itk
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         lookup-only: true
         path: itk-install
@@ -173,14 +173,14 @@ jobs:
 
     - name: Restore VTK Cache
       id: cache-vtk
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: vtk-install
         key: vtk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.VTK_HASH }}
 
     - name: Restore ITK Cache
       id: cache-itk
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: itk-install
         key: itk-${{ runner.os }}-${{ matrix.build_type }}-${{ env.ITK_HASH }}
