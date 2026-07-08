@@ -55,6 +55,10 @@ POSSIBILITY OF SUCH DAMAGES.
 
 #include "vtkIGSIOPasteSliceIntoVolumeHelperCommon.h"
 
+// Newer OpenCL C++ bindings (as shipped e.g. with recent CUDA toolkits) gate the
+// deprecated cl::size_t<N> compatibility class used below behind this macro.
+#define CL_HPP_ENABLE_SIZE_T_COMPATIBILITY
+
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
 #else
