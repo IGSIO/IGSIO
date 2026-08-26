@@ -20,7 +20,6 @@
 #include <limits>
 
 // VTK includes
-#include <vtkDataSetWriter.h>
 #include <vtkImageData.h>
 #include <vtkImageExtractComponents.h>
 #include <vtkImageFlip.h>
