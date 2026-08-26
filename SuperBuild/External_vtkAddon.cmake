@@ -24,10 +24,10 @@ else()
   set(IGSIO_vtkAddon_PREFIX_DIR ${CMAKE_BINARY_DIR}/vtkAddon-prefix CACHE INTERNAL "Path to store vtkAddon prefix data.")
   set(IGSIO_vtkAddon_DIR ${CMAKE_BINARY_DIR}/vtkAddon-bin CACHE INTERNAL "Path to store vtkAddon binaries")
 
+  set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS}")
+  set(ep_common_c_flags "${CMAKE_C_FLAGS}")
   if(WIN32)
-    set(ep_common_cxx_flags
-      /DWIN32
-      )
+    set(ep_common_cxx_flags "${ep_common_cxx_flags} /DWIN32")
   endif()
 
   if(NOT DEFINED vtkAddon_GIT_REPOSITORY)
