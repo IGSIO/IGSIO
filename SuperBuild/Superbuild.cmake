@@ -91,6 +91,7 @@ ExternalProject_Add( inner-build
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
     -DBUILD_TESTING:BOOL=${BUILD_TESTING}
     -DBUILDNAME=${BUILDNAME}
+    -DSITE=${SITE}
     ${BUILD_OPTIONS}
 
   #--Build step-----------------
@@ -99,3 +100,16 @@ ExternalProject_Add( inner-build
   INSTALL_COMMAND ""
   DEPENDS ${IGSIO_DEPENDENCIES}
   )
+
+#---------------------------------------------------
+# Run the inner-build tests from the superbuild.
+# ctest reads the generated CTestTestfile.cmake of this directory; including a
+# file that points at the inner-build directory makes the inner-build tests
+# part of the superbuild's test set, so "ctest -D Nightly" (or Experimental)
+# in this directory builds everything and then runs and submits the tests as
+# the same dashboard entry.
+if(BUILD_TESTING)
+  set(_inner_build_tests_file "${CMAKE_BINARY_DIR}/IGSIOInnerBuildTests.cmake")
+  file(WRITE "${_inner_build_tests_file}" "subdirs(\"${CMAKE_BINARY_DIR}/inner-build\")\n")
+  set_property(DIRECTORY APPEND PROPERTY TEST_INCLUDE_FILES "${_inner_build_tests_file}")
+endif()
