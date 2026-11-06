@@ -49,3 +49,7 @@ set(vcProj_vtk${PROJECT_NAME} vtk${PROJECT_NAME};${IGSIO_BINARY_DIR}/src/${PROJE
 # Install
 #
 IGSIOInstallLibrary(vtk${PROJECT_NAME} ${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  add_subdirectory(Testing)
+endif()
